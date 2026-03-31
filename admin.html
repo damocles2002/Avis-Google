@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur de QR Code - Avis Google</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex items-center justify-center p-6 font-sans">
+
+    <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl max-w-md w-full border border-slate-700">
+        <h1 class="text-2xl font-bold mb-2 text-indigo-400">Générateur de QR Code</h1>
+        <p class="text-slate-400 mb-6 text-sm">Entrez l'ID du restaurant pour créer son QR Code personnalisé.</p>
+
+        <div class="mb-6">
+            <label class="block text-xs font-semibold uppercase text-slate-500 mb-2">ID du Restaurant (UUID Supabase)</label>
+            <input type="text" id="id-resto" placeholder="Copiez l'ID de la table restaurants ici..." 
+                   class="w-full p-3 rounded-lg bg-slate-700 border border-slate-600 focus:border-indigo-500 outline-none text-white text-sm transition-all">
+        </div>
+
+        <button onclick="genererQR()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-lg transition-all shadow-lg active:scale-95">
+            Générer le QR Code
+        </button>
+
+        <div id="resultat" class="mt-8 hidden flex flex-col items-center">
+            <div class="bg-white p-5 rounded-xl shadow-inner mb-4">
+                <div id="qrcode"></div>
+            </div>
+            <p class="text-slate-400 text-[10px] uppercase tracking-widest mb-2">Lien généré :</p>
+            <p id="lien-txt" class="text-[11px] text-indigo-300 break-all text-center font-mono bg-slate-900 p-2 rounded w-full border border-slate-700"></p>
+            
+            <div class="mt-6 p-4 border-t border-slate-700 w-full">
+                <p class="text-center text-slate-500 text-xs italic">
+                    Astuce : Faites un clic-droit sur le QR Code pour l'enregistrer comme image.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function genererQR() {
+            const inputId = document.getElementById('id-resto').value.trim();
+            const qrcodeDiv = document.getElementById('qrcode');
+            const resultDiv = document.getElementById('resultat');
+            const lienTxt = document.getElementById('lien-txt');
+
+            if (!inputId) {
+                alert("Erreur : Veuillez coller l'ID du restaurant provenant de Supabase.");
+                return;
+            }
+
+            // --- CONFIGURATION DU LIEN FINAL ---
+            // Le lien pointe vers ton fichier index.html
+            const urlBase = "https://damocles2002.github.io/Avis-Google/index.html";
+            const lienFinal = urlBase + "?id=" + inputId;
+
+            // On efface le QR précédent s'il existe
+            qrcodeDiv.innerHTML = "";
+            
+            // On génère le nouveau QR Code
+            new QRCode(qrcodeDiv, {
+                text: lienFinal,
+                width: 180,
+                height: 180,
+                colorDark : "#0f172a",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+
+            // On affiche la zone de résultat
+            resultDiv.classList.remove('hidden');
+            lienTxt.innerText = lienFinal;
+        }
+    </script>
+</body>
+</html>
