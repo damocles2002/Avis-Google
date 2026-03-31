@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Votre avis nous intéresse</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+    <div class="bg-white p-8 rounded-xl shadow-lg max-w-sm w-full text-center">
+        <h1 class="text-2xl font-bold mb-4">Comment s'est passé votre repas ?</h1>
+        
+        <div class="flex justify-center space-x-2 mb-6 text-4xl">
+            <button onclick="choisirNote(1)">⭐</button>
+            <button onclick="choisirNote(2)">⭐</button>
+            <button onclick="choisirNote(3)">⭐</button>
+            <button onclick="choisirNote(4)">⭐</button>
+            <button onclick="choisirNote(5)">⭐</button>
+        </div>
+
+        <div id="form-negatif" class="hidden">
+            <p class="text-red-500 mb-2">Dites-nous ce qui n'a pas été :</p>
+            <textarea id="feedback" class="border w-full p-2 rounded mb-4" rows="3"></textarea>
+            <button onclick="envoyerInterne()" class="bg-black text-white px-4 py-2 rounded">Envoyer</button>
+        </div>
+    </div>
+
+    <script>
+        let noteSelectionnee = 0;
+        const urlGoogle = "VOTRE_LIEN_GOOGLE_MAPS";
+
+        function choisirNote(n) {
+            noteSelectionnee = n;
+            if (n >= 4) {
+                // Redirection directe vers Google pour les bons avis
+                window.location.href = urlGoogle;
+            } else {
+                // Afficher le formulaire interne pour les mauvais avis
+                document.getElementById('form-negatif').classList.remove('hidden');
+            }
+        }
+
+        async function envoyerInterne() {
+            const texte = document.getElementById('feedback').value;
+            // Ici on enverra les données vers votre base de données Supabase
+            alert("Merci, votre retour a été envoyé à la direction.");
+        }
+    </script>
+</body>
+</html>
