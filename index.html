@@ -5,46 +5,119 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Votre avis nous intéresse</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .star { cursor: pointer; transition: transform 0.2s; }
+        .star:hover { transform: scale(1.2); }
+    </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center h-screen">
-    <div class="bg-white p-8 rounded-xl shadow-lg max-w-sm w-full text-center">
-        <h1 class="text-2xl font-bold mb-4">Comment s'est passé votre repas ?</h1>
-        
-        <div class="flex justify-center space-x-2 mb-6 text-4xl">
-            <button onclick="choisirNote(1)">⭐</button>
-            <button onclick="choisirNote(2)">⭐</button>
-            <button onclick="choisirNote(3)">⭐</button>
-            <button onclick="choisirNote(4)">⭐</button>
-            <button onclick="choisirNote(5)">⭐</button>
+<body class="bg-slate-50 flex items-center justify-center min-h-screen p-4">
+
+    <div id="app-container" class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
+        <h1 id="nom-resto" class="text-2xl font-bold text-slate-800 mb-2">Chargement...</h1>
+        <p id="instruction" class="text-slate-500 mb-8">Comment s'est passée votre expérience aujourd'hui ?</p>
+
+        <div id="stars-container" class="flex justify-center gap-2 mb-8">
+            <span onclick="gererChoix(1)" class="star text-4xl">⭐</span>
+            <span onclick="gererChoix(2)" class="star text-4xl">⭐</span>
+            <span onclick="gererChoix(3)" class="star text-4xl">⭐</span>
+            <span onclick="gererChoix(4)" class="star text-4xl">⭐</span>
+            <span onclick="gererChoix(5)" class="star text-4xl">⭐</span>
         </div>
 
-        <div id="form-negatif" class="hidden">
-            <p class="text-red-500 mb-2">Dites-nous ce qui n'a pas été :</p>
-            <textarea id="feedback" class="border w-full p-2 rounded mb-4" rows="3"></textarea>
-            <button onclick="envoyerInterne()" class="bg-black text-white px-4 py-2 rounded">Envoyer</button>
+        <div id="form-negatif" class="hidden animate-fade-in">
+            <p class="text-amber-600 font-medium mb-4">Nous sommes désolés. Dites-nous comment nous améliorer :</p>
+            <textarea id="commentaire" class="w-full border-2 border-slate-200 rounded-lg p-3 focus:border-indigo-500 outline-none mb-4" rows="4" placeholder="Votre message..."></textarea>
+            <button onclick="envoyerAvisInterne()" class="w-full bg-slate-800 text-white font-bold py-3 rounded-lg hover:bg-slate-700 transition">
+                Envoyer à la direction
+            </button>
+        </div>
+
+        <div id="success-message" class="hidden">
+            <div class="text-green-500 text-5xl mb-4">✅</div>
+            <p class="text-slate-700 font-medium">Merci pour votre retour précieux !</p>
         </div>
     </div>
 
     <script>
-        let noteSelectionnee = 0;
-        const urlGoogle = "VOTRE_LIEN_GOOGLE_MAPS";
+        // CONFIGURATION SUPABASE (À REMPLACER)
+        const SB_URL = "https://urpfgiaocxfnyfdoiapf.supabase.co";
+        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVycGZnaWFvY3hmbnlmZG9pYXBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NDQ3MzMsImV4cCI6MjA5MDUyMDczM30.8OkTr_1pXbPn73e64Vgg8ovLGnkNNGDdWvmrzVBmzwo";
+        const supabase = window.supabase.createClient(SB_URL, SB_KEY);
 
-        function choisirNote(n) {
-            noteSelectionnee = n;
-            if (n >= 4) {
-                // Redirection directe vers Google pour les bons avis
-                window.location.href = urlGoogle;
+        let noteSelectionnee = 0;
+        let googleUrl = "";
+        let idResto = "";
+
+        // 1. AU CHARGEMENT : On identifie le restaurant
+        async function init() {
+            const params = new URLSearchParams(window.location.search);
+            idResto = params.get('id');
+
+            if (!idResto) {
+                document.getElementById('nom-resto').innerText = "Erreur : ID manquant";
+                return;
+            }
+
+            // Récupérer les infos du resto dans la base
+            const { data, error } = await supabase
+                .from('restaurants')
+                .select('nom, google_maps_url')
+                .eq('id', idResto)
+                .single();
+
+            if (data) {
+                document.getElementById('nom-resto').innerText = data.nom;
+                googleUrl = data.google_maps_url;
             } else {
-                // Afficher le formulaire interne pour les mauvais avis
+                document.getElementById('nom-resto').innerText = "Restaurant inconnu";
+            }
+        }
+
+        // 2. GESTION DU CLIC SUR LES ÉTOILES
+        function gererChoix(note) {
+            noteSelectionnee = note;
+            
+            if (note >= 4) {
+                // REDIRECTION GOOGLE DIRECTE
+                if (googleUrl) {
+                    window.location.href = googleUrl;
+                } else {
+                    alert("Lien Google indisponible.");
+                }
+            } else {
+                // AFFICHAGE DU FILTRE (FORMULAIRE)
+                document.getElementById('stars-container').classList.add('hidden');
+                document.getElementById('instruction').classList.add('hidden');
                 document.getElementById('form-negatif').classList.remove('hidden');
             }
         }
 
-        async function envoyerInterne() {
-            const texte = document.getElementById('feedback').value;
-            // Ici on enverra les données vers votre base de données Supabase
-            alert("Merci, votre retour a été envoyé à la direction.");
+        // 3. ENVOI DE L'AVIS NÉGATIF À SUPABASE
+        async function envoyerAvisInterne() {
+            const texte = document.getElementById('commentaire').value;
+
+            if (!texte) {
+                alert("Merci d'écrire un petit mot.");
+                return;
+            }
+
+            const { error } = await supabase
+                .from('avis_internes')
+                .insert([
+                    { id_restaurant: idResto, note: noteSelectionnee, commentaire: texte }
+                ]);
+
+            if (!error) {
+                document.getElementById('form-negatif').classList.add('hidden');
+                document.getElementById('success-message').classList.remove('hidden');
+            } else {
+                alert("Erreur lors de l'envoi. Réessayez.");
+                console.error(error);
+            }
         }
+
+        init();
     </script>
 </body>
 </html>
