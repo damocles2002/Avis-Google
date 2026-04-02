@@ -3,116 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Votre avis nous intéresse</title>
+    <title>Donner un avis</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .star { cursor: pointer; transition: transform 0.2s; }
-        .star:hover { transform: scale(1.2); }
+        .star { cursor: pointer; transition: transform 0.2s; color: #e5e7eb; }
+        .star.active { color: #facc15; }
+        .btn-select { border: 1px solid #e2e8f0; padding: 8px 16px; border-radius: 20px; font-size: 13px; transition: 0.3s; color: #475569; }
+        .btn-select.active { background-color: #3b82f6; color: white; border-color: #3b82f6; shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-google { animation: fadeIn 0.4s ease-out; }
     </style>
 </head>
-<body class="bg-slate-50 flex items-center justify-center min-h-screen p-4">
+<body class="bg-[#f8f9fa] min-h-screen flex items-center justify-center p-4 font-sans text-[#202124]">
 
-    <div id="app-container" class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
-        <h1 id="nom-resto" class="text-2xl font-bold text-slate-800 mb-2">Chargement...</h1>
-        <p id="instruction" class="text-slate-500 mb-8">Comment s'est passée votre expérience aujourd'hui ?</p>
-
-        <div id="stars-container" class="flex justify-center gap-2 mb-8">
-            <span onclick="gererChoix(1)" class="star text-4xl">⭐</span>
-            <span onclick="gererChoix(2)" class="star text-4xl">⭐</span>
-            <span onclick="gererChoix(3)" class="star text-4xl">⭐</span>
-            <span onclick="gererChoix(4)" class="star text-4xl">⭐</span>
-            <span onclick="gererChoix(5)" class="star text-4xl">⭐</span>
+    <div id="app-container" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 max-w-md w-full">
+        <div class="flex items-center gap-4 mb-8">
+            <div class="w-10 h-10 bg-[#4285F4] rounded-full flex items-center justify-center text-white font-bold text-xl shadow-sm">G</div>
+            <div>
+                <h1 id="nom-resto" class="font-medium text-[16px] leading-tight">Chargement...</h1>
+                <p class="text-[12px] text-[#70757a]">Votre avis sera transmis à l'établissement</p>
+            </div>
         </div>
 
-        <div id="form-negatif" class="hidden animate-fade-in">
-            <p class="text-amber-600 font-medium mb-4">Nous sommes désolés. Dites-nous comment nous améliorer :</p>
-            <textarea id="commentaire" class="w-full border-2 border-slate-200 rounded-lg p-3 focus:border-indigo-500 outline-none mb-4" rows="4" placeholder="Votre message..."></textarea>
-            <button onclick="envoyerAvisInterne()" class="w-full bg-slate-800 text-white font-bold py-3 rounded-lg hover:bg-slate-700 transition">
-                Envoyer à la direction
-            </button>
+        <div id="stars-section" class="text-center mb-6">
+            <div id="stars-container" class="flex justify-center gap-3 mb-4">
+                <span onclick="gererChoix(1)" class="star text-4xl">★</span>
+                <span onclick="gererChoix(2)" class="star text-4xl">★</span>
+                <span onclick="gererChoix(3)" class="star text-4xl">★</span>
+                <span onclick="gererChoix(4)" class="star text-4xl">★</span>
+                <span onclick="gererChoix(5)" class="star text-4xl">★</span>
+            </div>
+            <p id="instruction" class="text-sm text-gray-500">Cliquez sur une étoile pour noter</p>
         </div>
 
-        <div id="success-message" class="hidden">
-            <div class="text-green-500 text-5xl mb-4">✅</div>
-            <p class="text-slate-700 font-medium">Merci pour votre retour précieux !</p>
+        <div id="form-google" class="hidden animate-google border-t border-gray-100 pt-6">
+            <div class="space-y-6 text-left">
+                
+                <div>
+                    <p class="font-medium text-sm mb-3">Comment était la cuisine ?</p>
+                    <div class="flex gap-2 flex-wrap">
+                        <button type="button" onclick="selectTag(this, 'cuisine')" class="btn-select">Excellente</button>
+                        <button type="button" onclick="selectTag(this, 'cuisine')" class="btn-select">Moyenne</button>
+                        <button type="button" onclick="selectTag(this, 'cuisine')" class="btn-select">Décevante</button>
+                    </div>
+                </div>
+
+                <div>
+                    <p class="font-medium text-sm mb-3">Le service était-il satisfaisant ?</p>
+                    <div class="flex gap-2 flex-wrap">
+                        <button type="button" onclick="selectTag(this, 'service')" class="btn-select">Professionnel</button>
+                        <button type="button" onclick="selectTag(this, 'service')" class="btn-select">Trop lent</button>
+                        <button type="button" onclick="selectTag(this, 'service')" class="btn-select">Peu aimable</button>
+                    </div>
+                </div>
+
+                <div>
+                    <p class="font-medium text-sm mb-3">Partagez votre expérience (Optionnel)</p>
+                    <textarea id="commentaire" class="w-full border border-gray-300 rounded-xl p-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all" rows="3" placeholder="Qu'est-ce qui pourrait être amélioré ?"></textarea>
+                </div>
+
+                <button onclick="envoyerAvisComplet()" class="w-full bg-[#1a73e8] text-white font-medium py-3 rounded-full hover:bg-blue-700 transition shadow-md">
+                    Publier l'avis
+                </button>
+            </div>
+        </div>
+
+        <div id="success-message" class="hidden py-8 text-center animate-google">
+            <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="text-green-600 text-3xl">✓</span>
+            </div>
+            <p class="text-gray-900 font-bold text-lg">Merci pour votre avis !</p>
+            <p class="text-gray-500 text-sm mt-2">Vos remarques ont été transmises à la direction pour nous aider à nous améliorer.</p>
         </div>
     </div>
 
     <script>
-        // CONFIGURATION SUPABASE (À REMPLACER)
+        // --- TES INFOS RÉCUPÉRÉES ---
         const SB_URL = "https://urpfgiaocxfnyfdoiapf.supabase.co";
         const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVycGZnaWFvY3hmbnlmZG9pYXBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NDQ3MzMsImV4cCI6MjA5MDUyMDczM30.8OkTr_1pXbPn73e64Vgg8ovLGnkNNGDdWvmrzVBmzwo";
-        const supabase = window.supabase.createClient(SB_URL, SB_KEY);
+        
+        const _supabase = window.supabase.createClient(SB_URL, SB_KEY);
 
         let noteSelectionnee = 0;
-        let googleUrl = "";
         let idResto = "";
+        let googleUrl = "";
+        let tags = { cuisine: "Non précisé", service: "Non précisé" };
 
-        // 1. AU CHARGEMENT : On identifie le restaurant
         async function init() {
             const params = new URLSearchParams(window.location.search);
             idResto = params.get('id');
-
             if (!idResto) {
-                document.getElementById('nom-resto').innerText = "Erreur : ID manquant";
+                document.getElementById('nom-resto').innerText = "ID manquant";
                 return;
             }
 
-            // Récupérer les infos du resto dans la base
-            const { data, error } = await supabase
-                .from('restaurants')
-                .select('nom, google_maps_url')
-                .eq('id', idResto)
-                .single();
-
+            const { data, error } = await _supabase.from('restaurants').select('nom, google_maps_url').eq('id', idResto).single();
             if (data) {
                 document.getElementById('nom-resto').innerText = data.nom;
                 googleUrl = data.google_maps_url;
             } else {
-                document.getElementById('nom-resto').innerText = "Restaurant inconnu";
+                document.getElementById('nom-resto').innerText = "Erreur de chargement";
             }
         }
 
-        // 2. GESTION DU CLIC SUR LES ÉTOILES
         function gererChoix(note) {
             noteSelectionnee = note;
-            
+            const stars = document.querySelectorAll('.star');
+            stars.forEach((s, i) => {
+                if(i < note) s.classList.add('active');
+                else s.classList.remove('active');
+            });
+
             if (note >= 4) {
-                // REDIRECTION GOOGLE DIRECTE
                 if (googleUrl) {
-                    window.location.href = googleUrl;
+                    document.getElementById('instruction').innerText = "Merci ! Redirection vers Google...";
+                    setTimeout(() => { window.location.href = googleUrl; }, 800);
                 } else {
-                    alert("Lien Google indisponible.");
+                    alert("Lien Google manquant dans la base.");
                 }
             } else {
-                // AFFICHAGE DU FILTRE (FORMULAIRE)
-                document.getElementById('stars-container').classList.add('hidden');
-                document.getElementById('instruction').classList.add('hidden');
-                document.getElementById('form-negatif').classList.remove('hidden');
+                document.getElementById('form-google').classList.remove('hidden');
+                document.getElementById('instruction').innerText = "Nous sommes désolés...";
+                document.getElementById('stars-section').classList.add('mb-2');
             }
         }
 
-        // 3. ENVOI DE L'AVIS NÉGATIF À SUPABASE
-        async function envoyerAvisInterne() {
+        function selectTag(btn, categorie) {
+            btn.parentNode.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            tags[categorie] = btn.innerText;
+        }
+
+        async function envoyerAvisComplet() {
             const texte = document.getElementById('commentaire').value;
+            // On combine les questions Google dans le champ commentaire
+            const messageFinal = `CUISINE: ${tags.cuisine} | SERVICE: ${tags.service} | MESSAGE: ${texte || 'Aucun'}`;
 
-            if (!texte) {
-                alert("Merci d'écrire un petit mot.");
-                return;
-            }
-
-            const { error } = await supabase
-                .from('avis_internes')
-                .insert([
-                    { id_restaurant: idResto, note: noteSelectionnee, commentaire: texte }
-                ]);
+            const { error } = await _supabase.from('avis_internes').insert([
+                { id_restaurant: idResto, note: noteSelectionnee, commentaire: messageFinal }
+            ]);
 
             if (!error) {
-                document.getElementById('form-negatif').classList.add('hidden');
+                document.getElementById('form-google').classList.add('hidden');
+                document.getElementById('stars-section').classList.add('hidden');
                 document.getElementById('success-message').classList.remove('hidden');
             } else {
-                alert("Erreur lors de l'envoi. Réessayez.");
+                alert("Une erreur est survenue lors de l'envoi.");
                 console.error(error);
             }
         }
