@@ -2,166 +2,215 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Avis Client</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donner un avis</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* SYSTEME D'ETOILES RADIALES */
-        .rating { display: flex; flex-direction: row-reverse; justify-content: center; gap: 10px; }
-        .rating input { display: none; }
-        .rating label { cursor: pointer; font-size: 3.5rem; color: #cbd5e1; transition: all 0.2s; }
-        .rating label:before { content: '★'; }
-        .rating input:checked ~ label { color: #fbbf24; }
-        
-        /* DESIGN DES CARTES */
-        .card { background: white; padding: 1.5rem; border-radius: 1.5rem; border: 1px solid #f1f5f9; margin-bottom: 1rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
-        
-        /* FIX MOBILE CLIC */
-        body { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-        .btn-active { background-color: #4f46e5 !important; color: white !important; shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4); opacity: 1 !important; }
+        .star { cursor: pointer; transition: transform 0.15s, color 0.15s; color: #e5e7eb; font-size: 2rem; }
+        .star:hover { transform: scale(1.2); }
+        .star.active { color: #facc15; }
+        .btn-select { border: 1px solid #e2e8f0; padding: 8px 16px; border-radius: 20px; font-size: 13px; transition: 0.3s; color: #475569; }
+        .btn-select.active { background-color: #3b82f6; color: white; border-color: #3b82f6; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-in { animation: fadeIn 0.4s ease-out; }
+        .row-label { font-size: 13px; color: #70757a; width: 80px; text-align: right; padding-right: 10px; flex-shrink: 0; }
+        .star-row { display: flex; align-items: center; margin-bottom: 14px; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4 text-center font-sans">
+<body class="bg-[#f8f9fa] min-h-screen flex items-center justify-center p-4 font-sans text-[#202124]">
 
-    <div class="w-full max-w-md bg-white p-6 rounded-[2.5rem] shadow-2xl border border-slate-100">
-        <h2 class="text-indigo-600 font-black text-2xl uppercase tracking-tighter mb-1">Votre avis</h2>
-        <h1 id="nom-resto" class="text-lg font-bold text-slate-800 mb-8 italic">Chargement...</h1>
+    <div id="app-container" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 max-w-md w-full">
 
-        <div id="section-vote">
-            <div class="card">
-                <span class="text-[11px] font-black uppercase text-slate-400 block mb-2">🍳 Cuisine</span>
-                <div class="rating">
-                    <input type="radio" name="c" id="c5" value="5" onchange="checkStars()"><label for="c5"></label>
-                    <input type="radio" name="c" id="c4" value="4" onchange="checkStars()"><label for="c4"></label>
-                    <input type="radio" name="c" id="c3" value="3" onchange="checkStars()"><label for="c3"></label>
-                    <input type="radio" name="c" id="c2" value="2" onchange="checkStars()"><label for="c2"></label>
-                    <input type="radio" name="c" id="c1" value="1" onchange="checkStars()"><label for="c1"></label>
-                </div>
+        <!-- Header -->
+        <div class="flex items-center gap-4 mb-8">
+            <div class="w-10 h-10 bg-[#4285F4] rounded-full flex items-center justify-center text-white font-bold text-xl shadow-sm">G</div>
+            <div>
+                <h1 id="nom-resto" class="font-medium text-[16px] leading-tight">Chargement...</h1>
+                <p class="text-[12px] text-[#70757a]">Votre avis sera transmis à l'établissement</p>
             </div>
-
-            <div class="card">
-                <span class="text-[11px] font-black uppercase text-slate-400 block mb-2">✨ Ambiance</span>
-                <div class="rating">
-                    <input type="radio" name="a" id="a5" value="5" onchange="checkStars()"><label for="a5"></label>
-                    <input type="radio" name="a" id="a4" value="4" onchange="checkStars()"><label for="a4"></label>
-                    <input type="radio" name="a" id="a3" value="3" onchange="checkStars()"><label for="a3"></label>
-                    <input type="radio" name="a" id="a2" value="2" onchange="checkStars()"><label for="a2"></label>
-                    <input type="radio" name="a" id="a1" value="1" onchange="checkStars()"><label for="a1"></label>
-                </div>
-            </div>
-
-            <div class="card">
-                <span class="text-[11px] font-black uppercase text-slate-400 block mb-2">👨‍🍳 Service</span>
-                <div class="rating">
-                    <input type="radio" name="s" id="s5" value="5" onchange="checkStars()"><label for="s5"></label>
-                    <input type="radio" name="s" id="s4" value="4" onchange="checkStars()"><label for="s4"></label>
-                    <input type="radio" name="s" id="s3" value="3" onchange="checkStars()"><label for="s3"></label>
-                    <input type="radio" name="s" id="s2" value="2" onchange="verifierFormulaire()"><label for="s2"></label>
-                    <input type="radio" name="s" id="s1" value="1" onchange="checkStars()"><label for="s1"></label>
-                </div>
-            </div>
-
-            <button id="btn-valider" onclick="analyserNote()" 
-                class="w-full bg-slate-100 text-slate-300 font-bold py-5 rounded-2xl mt-4 opacity-50 cursor-not-allowed transition-all duration-300" disabled>
-                Valider mon avis
-            </button>
         </div>
 
-        <div id="section-reclamation" class="hidden text-left">
-            <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 mb-4">
-                <p class="text-indigo-900 text-sm font-bold">Merci pour votre retour.</p>
-                <p class="text-indigo-700 text-xs">Dites-nous comment nous améliorer :</p>
+        <!-- SECTION 3 LIGNES D'ÉTOILES -->
+        <div id="stars-section" class="mb-6">
+            <p class="text-sm text-gray-500 text-center mb-5">Notez votre expérience sur chaque critère</p>
+
+            <!-- Cuisine -->
+            <div class="star-row">
+                <span class="row-label">🍽️ Cuisine</span>
+                <div class="flex gap-2">
+                    <span onclick="noterCritere('cuisine', 1)" class="star" data-cat="cuisine" data-val="1">★</span>
+                    <span onclick="noterCritere('cuisine', 2)" class="star" data-cat="cuisine" data-val="2">★</span>
+                    <span onclick="noterCritere('cuisine', 3)" class="star" data-cat="cuisine" data-val="3">★</span>
+                    <span onclick="noterCritere('cuisine', 4)" class="star" data-cat="cuisine" data-val="4">★</span>
+                    <span onclick="noterCritere('cuisine', 5)" class="star" data-cat="cuisine" data-val="5">★</span>
+                </div>
+                <span id="label-cuisine" class="ml-3 text-xs text-gray-400 italic"></span>
             </div>
-            <textarea id="msg-prive" class="w-full border-2 border-slate-200 rounded-2xl p-4 mb-4 focus:border-indigo-500 outline-none" rows="4" placeholder="Votre message..."></textarea>
-            <button onclick="envoyerFeedback()" class="w-full bg-slate-900 text-white font-bold py-5 rounded-2xl shadow-lg">Envoyer à la direction</button>
+
+            <!-- Ambiance -->
+            <div class="star-row">
+                <span class="row-label">✨ Ambiance</span>
+                <div class="flex gap-2">
+                    <span onclick="noterCritere('ambiance', 1)" class="star" data-cat="ambiance" data-val="1">★</span>
+                    <span onclick="noterCritere('ambiance', 2)" class="star" data-cat="ambiance" data-val="2">★</span>
+                    <span onclick="noterCritere('ambiance', 3)" class="star" data-cat="ambiance" data-val="3">★</span>
+                    <span onclick="noterCritere('ambiance', 4)" class="star" data-cat="ambiance" data-val="4">★</span>
+                    <span onclick="noterCritere('ambiance', 5)" class="star" data-cat="ambiance" data-val="5">★</span>
+                </div>
+                <span id="label-ambiance" class="ml-3 text-xs text-gray-400 italic"></span>
+            </div>
+
+            <!-- Service -->
+            <div class="star-row">
+                <span class="row-label">👋 Service</span>
+                <div class="flex gap-2">
+                    <span onclick="noterCritere('service', 1)" class="star" data-cat="service" data-val="1">★</span>
+                    <span onclick="noterCritere('service', 2)" class="star" data-cat="service" data-val="2">★</span>
+                    <span onclick="noterCritere('service', 3)" class="star" data-cat="service" data-val="3">★</span>
+                    <span onclick="noterCritere('service', 4)" class="star" data-cat="service" data-val="4">★</span>
+                    <span onclick="noterCritere('service', 5)" class="star" data-cat="service" data-val="5">★</span>
+                </div>
+                <span id="label-service" class="ml-3 text-xs text-gray-400 italic"></span>
+            </div>
+
+            <!-- Moyenne -->
+            <div id="moyenne-block" class="hidden mt-4 text-center animate-in">
+                <p class="text-sm text-gray-500">Moyenne globale : <span id="moyenne-val" class="font-bold text-[#202124]"></span> / 5</p>
+                <button onclick="validerMoyenne()" class="mt-3 w-full bg-[#1a73e8] text-white font-medium py-3 rounded-full hover:bg-blue-700 transition shadow-md">
+                    Valider ma note
+                </button>
+            </div>
         </div>
 
-        <div id="section-merci" class="hidden py-10 font-bold text-green-600">
-            <div class="text-6xl mb-4">✅</div>
-            Merci ! Votre avis a été pris en compte.
+        <!-- FORMULAIRE INTERNE (avis négatif) -->
+        <div id="form-interne" class="hidden animate-in border-t border-gray-100 pt-6">
+            <p class="text-sm text-gray-500 text-center mb-4">Nous sommes désolés 😔 Aidez-nous à nous améliorer :</p>
+            <div class="space-y-5 text-left">
+                <div>
+                    <p class="font-medium text-sm mb-3">Qu'est-ce qui n'a pas fonctionné ?</p>
+                    <div class="flex gap-2 flex-wrap">
+                        <button type="button" onclick="selectTag(this, 'probleme')" class="btn-select">La cuisine</button>
+                        <button type="button" onclick="selectTag(this, 'probleme')" class="btn-select">L'ambiance</button>
+                        <button type="button" onclick="selectTag(this, 'probleme')" class="btn-select">Le service</button>
+                        <button type="button" onclick="selectTag(this, 'probleme')" class="btn-select">L'attente</button>
+                        <button type="button" onclick="selectTag(this, 'probleme')" class="btn-select">Autre</button>
+                    </div>
+                </div>
+                <div>
+                    <p class="font-medium text-sm mb-2">Votre message (optionnel)</p>
+                    <textarea id="commentaire" class="w-full border border-gray-300 rounded-xl p-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all" rows="3" placeholder="Dites-nous ce qui pourrait être amélioré..."></textarea>
+                </div>
+                <button onclick="envoyerAvisInterne()" class="w-full bg-[#1a73e8] text-white font-medium py-3 rounded-full hover:bg-blue-700 transition shadow-md">
+                    Envoyer mon avis
+                </button>
+            </div>
         </div>
+
+        <!-- MESSAGE SUCCÈS -->
+        <div id="success-message" class="hidden py-8 text-center animate-in">
+            <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="text-green-600 text-3xl">✓</span>
+            </div>
+            <p class="text-gray-900 font-bold text-lg">Merci pour votre avis !</p>
+            <p class="text-gray-500 text-sm mt-2">Vos remarques ont été transmises à la direction pour nous aider à nous améliorer.</p>
+        </div>
+
     </div>
 
     <script>
         const SB_URL = "https://urpfgiaocxfnyfdoiapf.supabase.co";
-        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVycGZnaWFvY3hmbnlmZG9pYXBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTI0ODgzMzgsImV4cCI6MjAyODA0NDMzOH0.pW3D38zI0S6S8A69_0j_N9l3D38zI0S6S8A69_0j_N9l";
-        const supabase = window.supabase.createClient(SB_URL, SB_KEY);
-        
-        let targetGoogle = ""; 
-        let currentId = "";
+        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVycGZnaWFvY3hmbnlmZG9pYXBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NDQ3MzMsImV4cCI6MjA5MDUyMDczM30.8OkTr_1pXbPn73e64Vgg8ovLGnkNNGDdWvmrzVBmzwo";
+        const _supabase = window.supabase.createClient(SB_URL, SB_KEY);
 
-        // 1. CHARGEMENT INITIAL
+        let idResto = "";
+        let googleUrl = "";
+        let notes = { cuisine: 0, ambiance: 0, service: 0 };
+        let tags = { probleme: "Non précisé" };
+
+        const labels = ["", "Mauvais 😞", "Passable 😐", "Bien 🙂", "Très bien 😊", "Excellent 🤩"];
+
         async function init() {
-            const urlParams = new URLSearchParams(window.location.search);
-            currentId = urlParams.get('id');
-            
-            if(!currentId) {
-                document.getElementById('nom-resto').innerText = "Bienvenue !";
-                return;
-            }
-
-            const { data, error } = await supabase.from('restaurants').select('nom, google_maps_url').eq('id', currentId).single();
-            
-            if (data) { 
-                document.getElementById('nom-resto').innerText = data.nom; 
-                targetGoogle = data.google_maps_url; 
+            const params = new URLSearchParams(window.location.search);
+            idResto = params.get('id');
+            if (!idResto) { document.getElementById('nom-resto').innerText = "ID manquant"; return; }
+            const { data } = await _supabase.from('restaurants').select('nom, google_maps_url').eq('id', idResto).single();
+            if (data) {
+                document.getElementById('nom-resto').innerText = data.nom;
+                googleUrl = data.google_maps_url;
             } else {
-                document.getElementById('nom-resto').innerText = "Restaurant partenaire";
+                document.getElementById('nom-resto').innerText = "Erreur de chargement";
             }
         }
 
-        // 2. VERIFIER LES ETOILES (Active le bouton)
-        function checkStars() {
-            const c = document.querySelector('input[name="c"]:checked');
-            const a = document.querySelector('input[name="a"]:checked');
-            const s = document.querySelector('input[name="s"]:checked');
-            
-            const btn = document.getElementById('btn-valider');
+        function noterCritere(categorie, valeur) {
+            notes[categorie] = valeur;
 
-            if (c && a && s) {
-                btn.disabled = false;
-                btn.classList.add('btn-active');
+            // Mettre à jour les étoiles de la ligne
+            document.querySelectorAll(`.star[data-cat="${categorie}"]`).forEach(s => {
+                s.classList.toggle('active', parseInt(s.dataset.val) <= valeur);
+            });
+
+            // Mettre à jour le label
+            document.getElementById(`label-${categorie}`).innerText = labels[valeur];
+
+            // Afficher le bouton valider si les 3 critères sont notés
+            const tousNotes = notes.cuisine > 0 && notes.ambiance > 0 && notes.service > 0;
+            const moyenneBlock = document.getElementById('moyenne-block');
+            if (tousNotes) {
+                const moy = ((notes.cuisine + notes.ambiance + notes.service) / 3).toFixed(1);
+                document.getElementById('moyenne-val').innerText = moy;
+                moyenneBlock.classList.remove('hidden');
+            } else {
+                moyenneBlock.classList.add('hidden');
             }
         }
 
-        // 3. ANALYSE ET REDIRECTION
-        function analyserNote() {
-            const nC = parseInt(document.querySelector('input[name="c"]:checked').value);
-            const nA = parseInt(document.querySelector('input[name="a"]:checked').value);
-            const nS = parseInt(document.querySelector('input[name="s"]:checked').value);
-            const moy = (nC + nA + nS) / 3;
+        function validerMoyenne() {
+            const moyenne = (notes.cuisine + notes.ambiance + notes.service) / 3;
 
-            if (moy >= 4) {
-                // REDIRECTION GOOGLE
-                if(targetGoogle) {
-                    window.location.href = targetGoogle;
+            if (moyenne >= 4) {
+                // Avis positif → Google
+                if (googleUrl) {
+                    document.getElementById('stars-section').innerHTML = `
+                        <div class="text-center py-4 animate-in">
+                            <p class="text-green-600 font-medium">Merci ! 🎉 Redirection vers Google...</p>
+                        </div>`;
+                    setTimeout(() => { window.location.href = googleUrl; }, 900);
                 } else {
-                    alert("Merci pour votre note !");
+                    alert("Lien Google manquant.");
                 }
             } else {
-                // FORMULAIRE INTERNE
-                document.getElementById('section-vote').classList.add('hidden');
-                document.getElementById('section-reclamation').classList.remove('hidden');
+                // Avis négatif → formulaire interne
+                document.getElementById('stars-section').classList.add('hidden');
+                document.getElementById('form-interne').classList.remove('hidden');
             }
         }
 
-        // 4. ENVOI SUPABASE
-        async function envoyerFeedback() {
-            const nC = document.querySelector('input[name="c"]:checked').value;
-            const nA = document.querySelector('input[name="a"]:checked').value;
-            const nS = document.querySelector('input[name="s"]:checked').value;
-            const txt = document.getElementById('msg-prive').value;
-            const moy = (parseInt(nC) + parseInt(nA) + parseInt(nS)) / 3;
+        function selectTag(btn, categorie) {
+            btn.parentNode.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            tags[categorie] = btn.innerText;
+        }
 
-            await supabase.from('avis_internes').insert([{ 
-                id_restaurant: currentId || "inconnu", 
-                note: moy, 
-                commentaire: `C:${nC} A:${nA} S:${nS} | Msg: ${txt}`
+        async function envoyerAvisInterne() {
+            const texte = document.getElementById('commentaire').value;
+            const moy = ((notes.cuisine + notes.ambiance + notes.service) / 3).toFixed(2);
+            const messageFinal = `CUISINE: ${notes.cuisine}/5 | AMBIANCE: ${notes.ambiance}/5 | SERVICE: ${notes.service}/5 | PROBLÈME: ${tags.probleme} | MESSAGE: ${texte || 'Aucun'}`;
+
+            const { error } = await _supabase.from('avis_internes').insert([{
+                id_restaurant: idResto,
+                note: parseFloat(moy),
+                commentaire: messageFinal
             }]);
 
-            document.getElementById('section-reclamation').classList.add('hidden');
-            document.getElementById('section-merci').classList.remove('hidden');
+            if (!error) {
+                document.getElementById('form-interne').classList.add('hidden');
+                document.getElementById('success-message').classList.remove('hidden');
+            } else {
+                alert("Une erreur est survenue lors de l'envoi.");
+                console.error(error);
+            }
         }
 
         init();
