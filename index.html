@@ -7,8 +7,19 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .star { cursor: pointer; font-size: 2.5rem; transition: all 0.2s; color: #cbd5e1; display: inline-block; }
-        .star.active { color: #fbbf24; transform: scale(1.1); }
+        /* On force les étoiles à être cliquables et visibles */
+        .star { 
+            cursor: pointer !important; 
+            font-size: 2.5rem; 
+            transition: transform 0.1s; 
+            color: #cbd5e1; /* Gris par défaut */
+            user-select: none;
+            padding: 0 5px;
+        }
+        .star.active { 
+            color: #fbbf24 !important; /* Jaune quand actif */
+        }
+        .star:active { transform: scale(1.2); }
         .category-card { background: white; padding: 1rem; border-radius: 1rem; border: 1px solid #f1f5f9; margin-bottom: 1rem; }
     </style>
 </head>
@@ -16,41 +27,39 @@
 
     <div class="bg-white p-8 rounded-3xl shadow-2xl max-w-md w-full border border-slate-100">
         <h2 class="text-indigo-600 font-black text-2xl mb-2 tracking-tighter uppercase">Avis en ligne</h2>
-        
         <h1 id="nom-resto" class="text-xl font-bold text-slate-900 mb-6 italic">Chargement...</h1>
 
         <div id="evaluation-section" class="space-y-4">
-            
             <div class="category-card">
                 <span class="block text-xs font-bold uppercase text-slate-400 mb-2">🍳 Cuisine</span>
-                <div class="flex justify-around" data-cat="cuisine">
-                    <span onclick="noter('cuisine', 1)" class="star">★</span>
-                    <span onclick="noter('cuisine', 2)" class="star">★</span>
-                    <span onclick="noter('cuisine', 3)" class="star">★</span>
-                    <span onclick="noter('cuisine', 4)" class="star">★</span>
-                    <span onclick="noter('cuisine', 5)" class="star">★</span>
+                <div class="flex justify-around stars-row" data-cat="cuisine">
+                    <span class="star" onclick="noter('cuisine', 1)">★</span>
+                    <span class="star" onclick="noter('cuisine', 2)">★</span>
+                    <span class="star" onclick="noter('cuisine', 3)">★</span>
+                    <span class="star" onclick="noter('cuisine', 4)">★</span>
+                    <span class="star" onclick="noter('cuisine', 5)">★</span>
                 </div>
             </div>
 
             <div class="category-card">
                 <span class="block text-xs font-bold uppercase text-slate-400 mb-2">✨ Ambiance</span>
-                <div class="flex justify-around" data-cat="ambiance">
-                    <span onclick="noter('ambiance', 1)" class="star">★</span>
-                    <span onclick="noter('ambiance', 2)" class="star">★</span>
-                    <span onclick="noter('ambiance', 3)" class="star">★</span>
-                    <span onclick="noter('ambiance', 4)" class="star">★</span>
-                    <span onclick="noter('ambiance', 5)" class="star">★</span>
+                <div class="flex justify-around stars-row" data-cat="ambiance">
+                    <span class="star" onclick="noter('ambiance', 1)">★</span>
+                    <span class="star" onclick="noter('ambiance', 2)">★</span>
+                    <span class="star" onclick="noter('ambiance', 3)">★</span>
+                    <span class="star" onclick="noter('ambiance', 4)">★</span>
+                    <span class="star" onclick="noter('ambiance', 5)">★</span>
                 </div>
             </div>
 
             <div class="category-card">
                 <span class="block text-xs font-bold uppercase text-slate-400 mb-2">👨‍🍳 Service</span>
-                <div class="flex justify-around" data-cat="service">
-                    <span onclick="noter('service', 1)" class="star">★</span>
-                    <span onclick="noter('service', 2)" class="star">★</span>
-                    <span onclick="noter('service', 3)" class="star">★</span>
-                    <span onclick="noter('service', 4)" class="star">★</span>
-                    <span onclick="noter('service', 5)" class="star">★</span>
+                <div class="flex justify-around stars-row" data-cat="service">
+                    <span class="star" onclick="noter('service', 1)">★</span>
+                    <span class="star" onclick="noter('service', 2)">★</span>
+                    <span class="star" onclick="noter('service', 3)">★</span>
+                    <span class="star" onclick="noter('service', 4)">★</span>
+                    <span class="star" onclick="noter('service', 5)">★</span>
                 </div>
             </div>
 
@@ -73,10 +82,8 @@
     </div>
 
     <script>
-        // Remplace par tes vrais identifiants si besoin
         const SB_URL = "https://urpfgiaocxfnyfdoiapf.supabase.co";
         const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVycGZnaWFvY3hmbnlmZG9pYXBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTI0ODgzMzgsImV4cCI6MjAyODA0NDMzOH0.pW3D38zI0S6S8A69_0j_N9l3D38zI0S6S8A69_0j_N9l"; 
-        
         const supabase = window.supabase.createClient(SB_URL, SB_KEY);
 
         let notes = { cuisine: 0, ambiance: 0, service: 0 };
@@ -93,9 +100,14 @@
             }
         }
 
+        // FONCTION DE NOTATION CORRIGÉE
         function noter(cat, valeur) {
             notes[cat] = valeur;
-            const stars = document.querySelectorAll(`[data-cat="${cat}"] .star`);
+            
+            // On récupère toutes les étoiles de la ligne concernée
+            const row = document.querySelector(`[data-cat="${cat}"]`);
+            const stars = row.querySelectorAll('.star');
+            
             stars.forEach((s, i) => {
                 if (i < valeur) {
                     s.classList.add('active');
@@ -104,10 +116,11 @@
                 }
             });
             
+            // Vérification si tout est rempli pour activer le bouton
             if (notes.cuisine > 0 && notes.ambiance > 0 && notes.service > 0) {
                 const btn = document.getElementById('btn-valider');
                 btn.disabled = false;
-                btn.className = "w-full bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-lg mt-4";
+                btn.className = "w-full bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-lg mt-4 cursor-pointer hover:bg-indigo-700";
             }
         }
 
@@ -124,11 +137,12 @@
         async function envoyerAvisInterne() {
             const texte = document.getElementById('commentaire').value;
             const detail = `C: ${notes.cuisine} | A: ${notes.ambiance} | S: ${notes.service}`;
+            const moyenne = (notes.cuisine + notes.ambiance + notes.service) / 3;
             
             await supabase.from('avis_internes').insert([{ 
                 id_restaurant: idResto, 
-                note: (notes.cuisine + notes.ambiance + notes.service) / 3, 
-                commentaire: detail + " | Message: " + texte 
+                note: moyenne, 
+                commentaire: detail + " | Msg: " + texte 
             }]);
 
             document.getElementById('form-negatif').classList.add('hidden');
