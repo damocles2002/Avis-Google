@@ -2,76 +2,69 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Avis en ligne</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* La méthode qui marchait sur ton ancien code */
-        .star { 
-            cursor: pointer; 
-            font-size: 3rem; 
-            color: #cbd5e1; 
-            padding: 0 5px;
-            display: inline-block;
-        }
+        .star { font-size: 3rem; cursor: pointer; color: #cbd5e1; padding: 0 8px; display: inline-block; transition: transform 0.1s; }
         .star.active { color: #fbbf24; }
-        .category-card { background: white; padding: 1rem; border-radius: 1rem; border: 1px solid #f1f5f9; margin-bottom: 1rem; }
+        .category-card { background: white; padding: 1.5rem 1rem; border-radius: 1.5rem; border: 1px solid #f1f5f9; margin-bottom: 1rem; shadow: sm; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex items-center justify-center p-4 font-sans text-center">
 
-    <div class="bg-white p-8 rounded-3xl shadow-2xl max-w-md w-full border border-slate-100">
-        <h2 class="text-indigo-600 font-black text-2xl mb-2 tracking-tighter uppercase">Avis en ligne</h2>
-        <h1 id="nom-resto" class="text-xl font-bold text-slate-900 mb-6 italic">Chargement...</h1>
+    <div class="bg-white p-6 rounded-3xl shadow-2xl max-w-md w-full border border-slate-100">
+        <h2 class="text-indigo-600 font-black text-2xl mb-1 uppercase tracking-tighter">Avis en ligne</h2>
+        <h1 id="nom-resto" class="text-lg font-bold text-slate-900 mb-6 italic">Chargement...</h1>
 
         <div id="evaluation-section">
             <div class="category-card">
                 <span class="block text-xs font-bold uppercase text-slate-400 mb-2">🍳 Cuisine</span>
-                <div class="flex justify-around" id="stars-cuisine">
-                    <span class="star" onclick="noter('cuisine', 1)">★</span>
-                    <span class="star" onclick="noter('cuisine', 2)">★</span>
-                    <span class="star" onclick="noter('cuisine', 3)">★</span>
-                    <span class="star" onclick="noter('cuisine', 4)">★</span>
-                    <span class="star" onclick="noter('cuisine', 5)">★</span>
+                <div class="flex justify-center">
+                    <span id="c1" class="star" onclick="voterCuisine(1)">★</span>
+                    <span id="c2" class="star" onclick="voterCuisine(2)">★</span>
+                    <span id="c3" class="star" onclick="voterCuisine(3)">★</span>
+                    <span id="c4" class="star" onclick="voterCuisine(4)">★</span>
+                    <span id="c5" class="star" onclick="voterCuisine(5)">★</span>
                 </div>
             </div>
 
             <div class="category-card">
                 <span class="block text-xs font-bold uppercase text-slate-400 mb-2">✨ Ambiance</span>
-                <div class="flex justify-around" id="stars-ambiance">
-                    <span class="star" onclick="noter('ambiance', 1)">★</span>
-                    <span class="star" onclick="noter('ambiance', 2)">★</span>
-                    <span class="star" onclick="noter('ambiance', 3)">★</span>
-                    <span class="star" onclick="noter('ambiance', 4)">★</span>
-                    <span class="star" onclick="noter('ambiance', 5)">★</span>
+                <div class="flex justify-center">
+                    <span id="a1" class="star" onclick="voterAmbiance(1)">★</span>
+                    <span id="a2" class="star" onclick="voterAmbiance(2)">★</span>
+                    <span id="a3" class="star" onclick="voterAmbiance(3)">★</span>
+                    <span id="a4" class="star" onclick="voterAmbiance(4)">★</span>
+                    <span id="a5" class="star" onclick="voterAmbiance(5)">★</span>
                 </div>
             </div>
 
             <div class="category-card">
                 <span class="block text-xs font-bold uppercase text-slate-400 mb-2">👨‍🍳 Service</span>
-                <div class="flex justify-around" id="stars-service">
-                    <span class="star" onclick="noter('service', 1)">★</span>
-                    <span class="star" onclick="noter('service', 2)">★</span>
-                    <span class="star" onclick="noter('service', 3)">★</span>
-                    <span class="star" onclick="noter('service', 4)">★</span>
-                    <span class="star" onclick="noter('service', 5)">★</span>
+                <div class="flex justify-center">
+                    <span id="s1" class="star" onclick="voterService(1)">★</span>
+                    <span id="s2" class="star" onclick="voterService(2)">★</span>
+                    <span id="s3" class="star" onclick="voterService(3)">★</span>
+                    <span id="s4" class="star" onclick="voterService(4)">★</span>
+                    <span id="s5" class="star" onclick="voterService(5)">★</span>
                 </div>
             </div>
 
-            <button id="btn-valider" onclick="verifierMoyenne()" 
-                class="w-full bg-slate-200 text-slate-400 font-bold py-4 rounded-2xl mt-4 cursor-not-allowed" disabled>
+            <button id="btn-valider" onclick="finaliser()" 
+                class="w-full bg-slate-200 text-slate-400 font-bold py-4 rounded-2xl mt-4 opacity-50" disabled>
                 Valider mon avis
             </button>
         </div>
 
         <div id="form-negatif" class="hidden text-left">
-            <textarea id="commentaire" class="w-full border-2 border-slate-200 rounded-xl p-4 focus:border-indigo-500 outline-none mb-4 text-sm" rows="4" placeholder="Que pouvons-nous améliorer ?"></textarea>
-            <button onclick="envoyerAvisInterne()" class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl">Envoyer mon retour</button>
+            <textarea id="commentaire" class="w-full border-2 border-slate-200 rounded-xl p-4 mb-4" rows="4" placeholder="Un commentaire ?"></textarea>
+            <button onclick="envoyer()" class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl">Envoyer</button>
         </div>
 
-        <div id="success-message" class="hidden py-10 font-bold text-green-600">
-            ✅ Merci ! Avis bien reçu.
+        <div id="success-message" class="hidden py-10 font-bold text-green-600 italic">
+            ✅ Merci ! Avis reçu.
         </div>
     </div>
 
@@ -80,65 +73,51 @@
         const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVycGZnaWFvY3hmbnlmZG9pYXBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTI0ODgzMzgsImV4cCI6MjAyODA0NDMzOH0.pW3D38zI0S6S8A69_0j_N9l3D38zI0S6S8A69_0j_N9l"; 
         const supabase = window.supabase.createClient(SB_URL, SB_KEY);
 
-        let notes = { cuisine: 0, ambiance: 0, service: 0 };
-        let googleUrl = "";
-        let idResto = "";
+        let nC = 0, nA = 0, nS = 0;
+        let gUrl = "";
+        let idR = "";
 
         async function init() {
-            const params = new URLSearchParams(window.location.search);
-            idResto = params.get('id');
-            const { data } = await supabase.from('restaurants').select('nom, google_maps_url').eq('id', idResto).single();
-            if (data) { 
-                document.getElementById('nom-resto').innerText = data.nom; 
-                googleUrl = data.google_maps_url; 
+            const p = new URLSearchParams(window.location.search);
+            idR = p.get('id');
+            const { data } = await supabase.from('restaurants').select('nom, google_maps_url').eq('id', idR).single();
+            if (data) { document.getElementById('nom-resto').innerText = data.nom; gUrl = data.google_maps_url; }
+        }
+
+        // Fonctions séparées pour éviter tout bug de clic
+        function voterCuisine(v) { nC = v; updateStars('c', v); checkBtn(); }
+        function voterAmbiance(v) { nA = v; updateStars('a', v); checkBtn(); }
+        function voterService(v) { nS = v; updateStars('s', v); checkBtn(); }
+
+        function updateStars(prefix, v) {
+            for (let i = 1; i <= 5; i++) {
+                const s = document.getElementById(prefix + i);
+                if (i <= v) s.classList.add('active');
+                else s.classList.remove('active');
             }
         }
 
-        // C'est cette fonction qui gérait les étoiles sur ton ancien code
-        function noter(cat, valeur) {
-            notes[cat] = valeur;
-            
-            // On cible spécifiquement le conteneur de la catégorie
-            const container = document.getElementById('stars-' + cat);
-            const stars = container.getElementsByClassName('star');
-            
-            for (let i = 0; i < stars.length; i++) {
-                if (i < valeur) {
-                    stars[i].classList.add('active');
-                } else {
-                    stars[i].classList.remove('active');
-                }
-            }
-            
-            // On active le bouton seulement si tout est rempli
-            if (notes.cuisine > 0 && notes.ambiance > 0 && notes.service > 0) {
-                const btn = document.getElementById('btn-valider');
-                btn.disabled = false;
-                btn.classList.remove('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
-                btn.classList.add('bg-indigo-600', 'text-white', 'shadow-lg');
+        function checkBtn() {
+            if (nC > 0 && nA > 0 && nS > 0) {
+                const b = document.getElementById('btn-valider');
+                b.disabled = false;
+                b.className = "w-full bg-indigo-600 text-white font-bold py-4 rounded-2xl mt-4 shadow-lg";
             }
         }
 
-        function verifierMoyenne() {
-            const moy = (notes.cuisine + notes.ambiance + notes.service) / 3;
-            if (moy >= 4) {
-                window.location.href = googleUrl; 
-            } else {
+        function finaliser() {
+            const moy = (nC + nA + nS) / 3;
+            if (moy >= 4) { window.location.href = gUrl; }
+            else { 
                 document.getElementById('evaluation-section').classList.add('hidden');
                 document.getElementById('form-negatif').classList.remove('hidden');
             }
         }
 
-        async function envoyerAvisInterne() {
+        async function envoyer() {
             const txt = document.getElementById('commentaire').value;
-            const detail = `Cuisine: ${notes.cuisine} | Ambiance: ${notes.ambiance} | Service: ${notes.service}`;
-            
-            await supabase.from('avis_internes').insert([{ 
-                id_restaurant: idResto, 
-                note: (notes.cuisine + notes.ambiance + notes.service) / 3, 
-                commentaire: detail + " | Msg: " + txt 
-            }]);
-
+            const det = `C:${nC} A:${nA} S:${nS} | ${txt}`;
+            await supabase.from('avis_internes').insert([{ id_restaurant: idR, note: (nC+nA+nS)/3, commentaire: det }]);
             document.getElementById('form-negatif').classList.add('hidden');
             document.getElementById('success-message').classList.remove('hidden');
         }
