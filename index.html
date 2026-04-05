@@ -7,27 +7,26 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* STYLE DES ÉTOILES - COMPATIBLE IPHONE/ANDROIDE */
         .rating { display: flex; flex-direction: row-reverse; justify-content: center; gap: 10px; }
         .rating input { display: none; }
         .rating label { cursor: pointer; font-size: 3.5rem; color: #cbd5e1; transition: color 0.2s; }
         .rating label:before { content: '★'; }
         .rating input:checked ~ label { color: #fbbf24; }
-        
-        /* Design des cartes */
-        .card { background: white; padding: 20px; border-radius: 20px; border: 1px solid #e2e8f0; margin-bottom: 15px; shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
-        
-        /* Empêcher les bugs de clic sur mobile */
+        .card { background: white; padding: 20px; border-radius: 20px; border: 1px solid #e2e8f0; margin-bottom: 15px; }
         body { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+        .animate-fade { animation: fadeIn 0.4s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex items-center justify-center p-4 text-center font-sans">
 
     <div class="w-full max-w-md bg-white p-6 rounded-3xl shadow-xl">
-        <h2 class="text-indigo-600 font-black text-2xl uppercase mb-1">Avis en ligne</h2>
+        <img src="logo_damavis_v2.svg" alt="Logo" class="h-10 mx-auto mb-4">
+        
+        <h2 class="text-indigo-600 font-black text-2xl uppercase mb-1 tracking-tighter">Avis en ligne</h2>
         <h1 id="nom-resto" class="text-lg font-bold text-slate-800 mb-6 italic">Chargement...</h1>
 
-        <div id="section-vote">
+        <div id="section-vote" class="animate-fade">
             <div class="card">
                 <span class="text-xs font-bold uppercase text-slate-400 block mb-2">🍳 Cuisine</span>
                 <div class="rating">
@@ -61,19 +60,34 @@
                 </div>
             </div>
 
-            <button id="btn-submit" onclick="calculerMoyenne()" 
-                class="w-full bg-slate-200 text-slate-400 font-bold py-4 rounded-2xl mt-4 cursor-not-allowed" disabled>
+            <button id="btn-submit" onclick="lancerTraitement()" 
+                class="w-full bg-slate-200 text-slate-400 font-bold py-4 rounded-2xl mt-4 transition-all" disabled>
                 Valider mon avis
             </button>
         </div>
 
-        <div id="section-feedback" class="hidden text-left">
-            <p class="text-slate-600 mb-4 text-sm font-medium">Nous sommes désolés. Comment pouvons-nous nous améliorer ?</p>
-            <textarea id="msg" class="w-full border-2 border-slate-200 rounded-xl p-4 mb-4 focus:border-indigo-500 outline-none" rows="4"></textarea>
-            <button onclick="envoyerData()" class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl">Envoyer au gérant</button>
+        <div id="section-redirect" class="hidden py-10 animate-fade">
+            <div class="mb-4 text-indigo-600 animate-bounce">
+                <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+            </div>
+            <h2 class="text-xl font-bold text-slate-800">Merci !</h2>
+            <p class="text-slate-500 mb-6">Nous vous redirigeons vers notre page d'avis...</p>
+            <a id="fallback-link" href="#" class="inline-block bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg">Cliquez ici si rien ne se passe</a>
         </div>
 
-        <div id="section-success" class="hidden py-10 font-bold text-green-600">✅ Merci !</div>
+        <div id="section-feedback" class="hidden text-left animate-fade">
+            <div class="bg-amber-50 border-l-4 border-amber-400 p-4 mb-4">
+                <p class="text-amber-800 text-sm font-bold italic">Votre avis nous est précieux</p>
+                <p class="text-amber-700 text-xs">Comment pouvons-nous nous améliorer ?</p>
+            </div>
+            <textarea id="msg" class="w-full border-2 border-slate-200 rounded-xl p-4 mb-4 outline-none focus:border-indigo-500" rows="4" placeholder="Votre message privé au gérant..."></textarea>
+            <button onclick="envoyerData()" class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl">Envoyer directement</button>
+        </div>
+
+        <div id="section-success" class="hidden py-10 font-bold text-green-600 animate-fade">
+            <div class="text-5xl mb-4">✅</div>
+            Merci ! Votre message a été envoyé.
+        </div>
     </div>
 
     <script>
@@ -88,16 +102,15 @@
             const { data } = await supabase.from('restaurants').select('nom, google_maps_url').eq('id', idResto).single();
             if (data) { 
                 document.getElementById('nom-resto').innerText = data.nom; 
-                googleUrl = data.google_maps_url; 
+                googleUrl = data.google_maps_url;
+                document.getElementById('fallback-link').href = googleUrl;
             }
         }
 
-        // Active le bouton si les 3 sont cochés
         function verifier() {
             const c = document.querySelector('input[name="c"]:checked');
             const a = document.querySelector('input[name="a"]:checked');
             const s = document.querySelector('input[name="s"]:checked');
-            
             if (c && a && s) {
                 const b = document.getElementById('btn-submit');
                 b.disabled = false;
@@ -105,16 +118,22 @@
             }
         }
 
-        function calculerMoyenne() {
+        function lancerTraitement() {
             const c = parseInt(document.querySelector('input[name="c"]:checked').value);
             const a = parseInt(document.querySelector('input[name="a"]:checked').value);
             const s = parseInt(document.querySelector('input[name="s"]:checked').value);
             const moyenne = (c + a + s) / 3;
 
+            document.getElementById('section-vote').classList.add('hidden');
+
             if (moyenne >= 4) {
-                window.location.href = googleUrl;
+                // REDIRECTION VERS L'URL SUPABASE
+                document.getElementById('section-redirect').classList.remove('hidden');
+                setTimeout(() => {
+                    window.location.href = googleUrl;
+                }, 1500);
             } else {
-                document.getElementById('section-vote').classList.add('hidden');
+                // FORMULAIRE INTERNE
                 document.getElementById('section-feedback').classList.remove('hidden');
             }
         }
@@ -125,14 +144,16 @@
             const s = document.querySelector('input[name="s"]:checked').value;
             const m = document.getElementById('msg').value;
             
-            await supabase.from('avis_internes').insert([{ 
+            const { error } = await supabase.from('avis_internes').insert([{ 
                 id_restaurant: idResto, 
                 note: (parseInt(c)+parseInt(a)+parseInt(s))/3, 
-                commentaire: `Audit: C${c} A${a} S${s} | ${m}`
+                commentaire: `C:${c} A:${a} S:${s} | ${m}`
             }]);
             
-            document.getElementById('section-feedback').classList.add('hidden');
-            document.getElementById('section-success').classList.remove('hidden');
+            if(!error) {
+                document.getElementById('section-feedback').classList.add('hidden');
+                document.getElementById('section-success').classList.remove('hidden');
+            }
         }
 
         init();
