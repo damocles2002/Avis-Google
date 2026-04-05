@@ -7,19 +7,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* On force les étoiles à être cliquables et visibles */
+        /* La méthode qui marchait sur ton ancien code */
         .star { 
-            cursor: pointer !important; 
-            font-size: 2.5rem; 
-            transition: transform 0.1s; 
-            color: #cbd5e1; /* Gris par défaut */
-            user-select: none;
+            cursor: pointer; 
+            font-size: 3rem; 
+            color: #cbd5e1; 
             padding: 0 5px;
+            display: inline-block;
         }
-        .star.active { 
-            color: #fbbf24 !important; /* Jaune quand actif */
-        }
-        .star:active { transform: scale(1.2); }
+        .star.active { color: #fbbf24; }
         .category-card { background: white; padding: 1rem; border-radius: 1rem; border: 1px solid #f1f5f9; margin-bottom: 1rem; }
     </style>
 </head>
@@ -29,10 +25,10 @@
         <h2 class="text-indigo-600 font-black text-2xl mb-2 tracking-tighter uppercase">Avis en ligne</h2>
         <h1 id="nom-resto" class="text-xl font-bold text-slate-900 mb-6 italic">Chargement...</h1>
 
-        <div id="evaluation-section" class="space-y-4">
+        <div id="evaluation-section">
             <div class="category-card">
                 <span class="block text-xs font-bold uppercase text-slate-400 mb-2">🍳 Cuisine</span>
-                <div class="flex justify-around stars-row" data-cat="cuisine">
+                <div class="flex justify-around" id="stars-cuisine">
                     <span class="star" onclick="noter('cuisine', 1)">★</span>
                     <span class="star" onclick="noter('cuisine', 2)">★</span>
                     <span class="star" onclick="noter('cuisine', 3)">★</span>
@@ -43,7 +39,7 @@
 
             <div class="category-card">
                 <span class="block text-xs font-bold uppercase text-slate-400 mb-2">✨ Ambiance</span>
-                <div class="flex justify-around stars-row" data-cat="ambiance">
+                <div class="flex justify-around" id="stars-ambiance">
                     <span class="star" onclick="noter('ambiance', 1)">★</span>
                     <span class="star" onclick="noter('ambiance', 2)">★</span>
                     <span class="star" onclick="noter('ambiance', 3)">★</span>
@@ -54,7 +50,7 @@
 
             <div class="category-card">
                 <span class="block text-xs font-bold uppercase text-slate-400 mb-2">👨‍🍳 Service</span>
-                <div class="flex justify-around stars-row" data-cat="service">
+                <div class="flex justify-around" id="stars-service">
                     <span class="star" onclick="noter('service', 1)">★</span>
                     <span class="star" onclick="noter('service', 2)">★</span>
                     <span class="star" onclick="noter('service', 3)">★</span>
@@ -64,20 +60,18 @@
             </div>
 
             <button id="btn-valider" onclick="verifierMoyenne()" 
-                class="w-full bg-slate-200 text-slate-400 font-bold py-4 rounded-2xl transition-all shadow-md cursor-not-allowed mt-4" disabled>
+                class="w-full bg-slate-200 text-slate-400 font-bold py-4 rounded-2xl mt-4 cursor-not-allowed" disabled>
                 Valider mon avis
             </button>
         </div>
 
         <div id="form-negatif" class="hidden text-left">
-            <textarea id="commentaire" class="w-full border-2 border-slate-200 rounded-xl p-4 focus:border-indigo-500 outline-none mb-4 text-sm" rows="4" placeholder="Dites-nous comment nous améliorer..."></textarea>
-            <button onclick="envoyerAvisInterne()" class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-lg">Envoyer mon retour</button>
+            <textarea id="commentaire" class="w-full border-2 border-slate-200 rounded-xl p-4 focus:border-indigo-500 outline-none mb-4 text-sm" rows="4" placeholder="Que pouvons-nous améliorer ?"></textarea>
+            <button onclick="envoyerAvisInterne()" class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl">Envoyer mon retour</button>
         </div>
 
-        <div id="success-message" class="hidden py-10">
-            <div class="text-5xl mb-4">✅</div>
-            <h2 class="text-xl font-bold text-slate-900">Merci !</h2>
-            <p class="text-slate-500 text-sm mt-2">Votre message a été bien reçu.</p>
+        <div id="success-message" class="hidden py-10 font-bold text-green-600">
+            ✅ Merci ! Avis bien reçu.
         </div>
     </div>
 
@@ -100,33 +94,34 @@
             }
         }
 
-        // FONCTION DE NOTATION CORRIGÉE
+        // C'est cette fonction qui gérait les étoiles sur ton ancien code
         function noter(cat, valeur) {
             notes[cat] = valeur;
             
-            // On récupère toutes les étoiles de la ligne concernée
-            const row = document.querySelector(`[data-cat="${cat}"]`);
-            const stars = row.querySelectorAll('.star');
+            // On cible spécifiquement le conteneur de la catégorie
+            const container = document.getElementById('stars-' + cat);
+            const stars = container.getElementsByClassName('star');
             
-            stars.forEach((s, i) => {
+            for (let i = 0; i < stars.length; i++) {
                 if (i < valeur) {
-                    s.classList.add('active');
+                    stars[i].classList.add('active');
                 } else {
-                    s.classList.remove('active');
+                    stars[i].classList.remove('active');
                 }
-            });
+            }
             
-            // Vérification si tout est rempli pour activer le bouton
+            // On active le bouton seulement si tout est rempli
             if (notes.cuisine > 0 && notes.ambiance > 0 && notes.service > 0) {
                 const btn = document.getElementById('btn-valider');
                 btn.disabled = false;
-                btn.className = "w-full bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-lg mt-4 cursor-pointer hover:bg-indigo-700";
+                btn.classList.remove('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
+                btn.classList.add('bg-indigo-600', 'text-white', 'shadow-lg');
             }
         }
 
         function verifierMoyenne() {
-            const moyenne = (notes.cuisine + notes.ambiance + notes.service) / 3;
-            if (moyenne >= 4) {
+            const moy = (notes.cuisine + notes.ambiance + notes.service) / 3;
+            if (moy >= 4) {
                 window.location.href = googleUrl; 
             } else {
                 document.getElementById('evaluation-section').classList.add('hidden');
@@ -135,14 +130,13 @@
         }
 
         async function envoyerAvisInterne() {
-            const texte = document.getElementById('commentaire').value;
-            const detail = `C: ${notes.cuisine} | A: ${notes.ambiance} | S: ${notes.service}`;
-            const moyenne = (notes.cuisine + notes.ambiance + notes.service) / 3;
+            const txt = document.getElementById('commentaire').value;
+            const detail = `Cuisine: ${notes.cuisine} | Ambiance: ${notes.ambiance} | Service: ${notes.service}`;
             
             await supabase.from('avis_internes').insert([{ 
                 id_restaurant: idResto, 
-                note: moyenne, 
-                commentaire: detail + " | Msg: " + texte 
+                note: (notes.cuisine + notes.ambiance + notes.service) / 3, 
+                commentaire: detail + " | Msg: " + txt 
             }]);
 
             document.getElementById('form-negatif').classList.add('hidden');
