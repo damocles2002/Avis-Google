@@ -7,119 +7,132 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .star { font-size: 3rem; cursor: pointer; color: #cbd5e1; padding: 0 8px; display: inline-block; transition: transform 0.1s; }
-        .star.active { color: #fbbf24; }
-        .category-card { background: white; padding: 1.5rem 1rem; border-radius: 1.5rem; border: 1px solid #f1f5f9; margin-bottom: 1rem; shadow: sm; }
+        /* STYLE DES ÉTOILES - COMPATIBLE IPHONE/ANDROIDE */
+        .rating { display: flex; flex-direction: row-reverse; justify-content: center; gap: 10px; }
+        .rating input { display: none; }
+        .rating label { cursor: pointer; font-size: 3.5rem; color: #cbd5e1; transition: color 0.2s; }
+        .rating label:before { content: '★'; }
+        .rating input:checked ~ label { color: #fbbf24; }
+        
+        /* Design des cartes */
+        .card { background: white; padding: 20px; border-radius: 20px; border: 1px solid #e2e8f0; margin-bottom: 15px; shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        
+        /* Empêcher les bugs de clic sur mobile */
+        body { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex items-center justify-center p-4 font-sans text-center">
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4 text-center font-sans">
 
-    <div class="bg-white p-6 rounded-3xl shadow-2xl max-w-md w-full border border-slate-100">
-        <h2 class="text-indigo-600 font-black text-2xl mb-1 uppercase tracking-tighter">Avis en ligne</h2>
-        <h1 id="nom-resto" class="text-lg font-bold text-slate-900 mb-6 italic">Chargement...</h1>
+    <div class="w-full max-w-md bg-white p-6 rounded-3xl shadow-xl">
+        <h2 class="text-indigo-600 font-black text-2xl uppercase mb-1">Avis en ligne</h2>
+        <h1 id="nom-resto" class="text-lg font-bold text-slate-800 mb-6 italic">Chargement...</h1>
 
-        <div id="evaluation-section">
-            <div class="category-card">
-                <span class="block text-xs font-bold uppercase text-slate-400 mb-2">🍳 Cuisine</span>
-                <div class="flex justify-center">
-                    <span id="c1" class="star" onclick="voterCuisine(1)">★</span>
-                    <span id="c2" class="star" onclick="voterCuisine(2)">★</span>
-                    <span id="c3" class="star" onclick="voterCuisine(3)">★</span>
-                    <span id="c4" class="star" onclick="voterCuisine(4)">★</span>
-                    <span id="c5" class="star" onclick="voterCuisine(5)">★</span>
+        <div id="section-vote">
+            <div class="card">
+                <span class="text-xs font-bold uppercase text-slate-400 block mb-2">🍳 Cuisine</span>
+                <div class="rating">
+                    <input type="radio" name="c" id="c5" value="5" onchange="verifier()"><label for="c5"></label>
+                    <input type="radio" name="c" id="c4" value="4" onchange="verifier()"><label for="c4"></label>
+                    <input type="radio" name="c" id="c3" value="3" onchange="verifier()"><label for="c3"></label>
+                    <input type="radio" name="c" id="c2" value="2" onchange="verifier()"><label for="c2"></label>
+                    <input type="radio" name="c" id="c1" value="1" onchange="verifier()"><label for="c1"></label>
                 </div>
             </div>
 
-            <div class="category-card">
-                <span class="block text-xs font-bold uppercase text-slate-400 mb-2">✨ Ambiance</span>
-                <div class="flex justify-center">
-                    <span id="a1" class="star" onclick="voterAmbiance(1)">★</span>
-                    <span id="a2" class="star" onclick="voterAmbiance(2)">★</span>
-                    <span id="a3" class="star" onclick="voterAmbiance(3)">★</span>
-                    <span id="a4" class="star" onclick="voterAmbiance(4)">★</span>
-                    <span id="a5" class="star" onclick="voterAmbiance(5)">★</span>
+            <div class="card">
+                <span class="text-xs font-bold uppercase text-slate-400 block mb-2">✨ Ambiance</span>
+                <div class="rating">
+                    <input type="radio" name="a" id="a5" value="5" onchange="verifier()"><label for="a5"></label>
+                    <input type="radio" name="a" id="a4" value="4" onchange="verifier()"><label for="a4"></label>
+                    <input type="radio" name="a" id="a3" value="3" onchange="verifier()"><label for="a3"></label>
+                    <input type="radio" name="a" id="a2" value="2" onchange="verifier()"><label for="a2"></label>
+                    <input type="radio" name="a" id="a1" value="1" onchange="verifier()"><label for="a1"></label>
                 </div>
             </div>
 
-            <div class="category-card">
-                <span class="block text-xs font-bold uppercase text-slate-400 mb-2">👨‍🍳 Service</span>
-                <div class="flex justify-center">
-                    <span id="s1" class="star" onclick="voterService(1)">★</span>
-                    <span id="s2" class="star" onclick="voterService(2)">★</span>
-                    <span id="s3" class="star" onclick="voterService(3)">★</span>
-                    <span id="s4" class="star" onclick="voterService(4)">★</span>
-                    <span id="s5" class="star" onclick="voterService(5)">★</span>
+            <div class="card">
+                <span class="text-xs font-bold uppercase text-slate-400 block mb-2">👨‍🍳 Service</span>
+                <div class="rating">
+                    <input type="radio" name="s" id="s5" value="5" onchange="verifier()"><label for="s5"></label>
+                    <input type="radio" name="s" id="s4" value="4" onchange="verifier()"><label for="s4"></label>
+                    <input type="radio" name="s" id="s3" value="3" onchange="verifier()"><label for="s3"></label>
+                    <input type="radio" name="s" id="s2" value="2" onchange="verifier()"><label for="s2"></label>
+                    <input type="radio" name="s" id="s1" value="1" onchange="verifier()"><label for="s1"></label>
                 </div>
             </div>
 
-            <button id="btn-valider" onclick="finaliser()" 
-                class="w-full bg-slate-200 text-slate-400 font-bold py-4 rounded-2xl mt-4 opacity-50" disabled>
+            <button id="btn-submit" onclick="calculerMoyenne()" 
+                class="w-full bg-slate-200 text-slate-400 font-bold py-4 rounded-2xl mt-4 cursor-not-allowed" disabled>
                 Valider mon avis
             </button>
         </div>
 
-        <div id="form-negatif" class="hidden text-left">
-            <textarea id="commentaire" class="w-full border-2 border-slate-200 rounded-xl p-4 mb-4" rows="4" placeholder="Un commentaire ?"></textarea>
-            <button onclick="envoyer()" class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl">Envoyer</button>
+        <div id="section-feedback" class="hidden text-left">
+            <p class="text-slate-600 mb-4 text-sm font-medium">Nous sommes désolés. Comment pouvons-nous nous améliorer ?</p>
+            <textarea id="msg" class="w-full border-2 border-slate-200 rounded-xl p-4 mb-4 focus:border-indigo-500 outline-none" rows="4"></textarea>
+            <button onclick="envoyerData()" class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl">Envoyer au gérant</button>
         </div>
 
-        <div id="success-message" class="hidden py-10 font-bold text-green-600 italic">
-            ✅ Merci ! Avis reçu.
-        </div>
+        <div id="section-success" class="hidden py-10 font-bold text-green-600">✅ Merci !</div>
     </div>
 
     <script>
         const SB_URL = "https://urpfgiaocxfnyfdoiapf.supabase.co";
-        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVycGZnaWFvY3hmbnlmZG9pYXBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTI0ODgzMzgsImV4cCI6MjAyODA0NDMzOH0.pW3D38zI0S6S8A69_0j_N9l3D38zI0S6S8A69_0j_N9l"; 
+        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVycGZnaWFvY3hmbnlmZG9pYXBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTI0ODgzMzgsImV4cCI6MjAyODA0NDMzOH0.pW3D38zI0S6S8A69_0j_N9l3D38zI0S6S8A69_0j_N9l";
         const supabase = window.supabase.createClient(SB_URL, SB_KEY);
-
-        let nC = 0, nA = 0, nS = 0;
-        let gUrl = "";
-        let idR = "";
+        let googleUrl = ""; let idResto = "";
 
         async function init() {
             const p = new URLSearchParams(window.location.search);
-            idR = p.get('id');
-            const { data } = await supabase.from('restaurants').select('nom, google_maps_url').eq('id', idR).single();
-            if (data) { document.getElementById('nom-resto').innerText = data.nom; gUrl = data.google_maps_url; }
-        }
-
-        // Fonctions séparées pour éviter tout bug de clic
-        function voterCuisine(v) { nC = v; updateStars('c', v); checkBtn(); }
-        function voterAmbiance(v) { nA = v; updateStars('a', v); checkBtn(); }
-        function voterService(v) { nS = v; updateStars('s', v); checkBtn(); }
-
-        function updateStars(prefix, v) {
-            for (let i = 1; i <= 5; i++) {
-                const s = document.getElementById(prefix + i);
-                if (i <= v) s.classList.add('active');
-                else s.classList.remove('active');
+            idResto = p.get('id');
+            const { data } = await supabase.from('restaurants').select('nom, google_maps_url').eq('id', idResto).single();
+            if (data) { 
+                document.getElementById('nom-resto').innerText = data.nom; 
+                googleUrl = data.google_maps_url; 
             }
         }
 
-        function checkBtn() {
-            if (nC > 0 && nA > 0 && nS > 0) {
-                const b = document.getElementById('btn-valider');
+        // Active le bouton si les 3 sont cochés
+        function verifier() {
+            const c = document.querySelector('input[name="c"]:checked');
+            const a = document.querySelector('input[name="a"]:checked');
+            const s = document.querySelector('input[name="s"]:checked');
+            
+            if (c && a && s) {
+                const b = document.getElementById('btn-submit');
                 b.disabled = false;
-                b.className = "w-full bg-indigo-600 text-white font-bold py-4 rounded-2xl mt-4 shadow-lg";
+                b.className = "w-full bg-indigo-600 text-white font-bold py-4 rounded-2xl mt-4 shadow-lg active:scale-95 transition-all";
             }
         }
 
-        function finaliser() {
-            const moy = (nC + nA + nS) / 3;
-            if (moy >= 4) { window.location.href = gUrl; }
-            else { 
-                document.getElementById('evaluation-section').classList.add('hidden');
-                document.getElementById('form-negatif').classList.remove('hidden');
+        function calculerMoyenne() {
+            const c = parseInt(document.querySelector('input[name="c"]:checked').value);
+            const a = parseInt(document.querySelector('input[name="a"]:checked').value);
+            const s = parseInt(document.querySelector('input[name="s"]:checked').value);
+            const moyenne = (c + a + s) / 3;
+
+            if (moyenne >= 4) {
+                window.location.href = googleUrl;
+            } else {
+                document.getElementById('section-vote').classList.add('hidden');
+                document.getElementById('section-feedback').classList.remove('hidden');
             }
         }
 
-        async function envoyer() {
-            const txt = document.getElementById('commentaire').value;
-            const det = `C:${nC} A:${nA} S:${nS} | ${txt}`;
-            await supabase.from('avis_internes').insert([{ id_restaurant: idR, note: (nC+nA+nS)/3, commentaire: det }]);
-            document.getElementById('form-negatif').classList.add('hidden');
-            document.getElementById('success-message').classList.remove('hidden');
+        async function envoyerData() {
+            const c = document.querySelector('input[name="c"]:checked').value;
+            const a = document.querySelector('input[name="a"]:checked').value;
+            const s = document.querySelector('input[name="s"]:checked').value;
+            const m = document.getElementById('msg').value;
+            
+            await supabase.from('avis_internes').insert([{ 
+                id_restaurant: idResto, 
+                note: (parseInt(c)+parseInt(a)+parseInt(s))/3, 
+                commentaire: `Audit: C${c} A${a} S${s} | ${m}`
+            }]);
+            
+            document.getElementById('section-feedback').classList.add('hidden');
+            document.getElementById('section-success').classList.remove('hidden');
         }
 
         init();
