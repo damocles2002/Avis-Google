@@ -74,15 +74,13 @@
                 <span id="label-service" class="ml-3 text-xs text-gray-400 italic w-20"></span>
             </div>
 
-            <!-- Moyenne + Bouton (apparaît quand les 3 sont notés) -->
+            <!-- Moyenne (apparaît quand les 3 sont notés) -->
             <div id="moyenne-block" class="hidden mt-5 text-center animate-in">
                 <div class="bg-gray-50 rounded-xl p-3 mb-4 inline-block px-8">
                     <p class="text-xs text-gray-400 mb-1">Moyenne globale</p>
                     <p class="text-2xl font-bold text-[#202124]"><span id="moyenne-val"></span> <span class="text-lg text-gray-400">/ 5</span></p>
                 </div>
-                <button onclick="validerMoyenne()" class="w-full bg-[#1a73e8] text-white font-medium py-3 rounded-full hover:bg-blue-700 transition shadow-md">
-                    Valider ma note
-                </button>
+                <p class="text-gray-400 text-sm mt-1">Redirection en cours...</p>
             </div>
         </div>
 
@@ -128,9 +126,10 @@
 
         let idResto     = "";
         let googleUrl   = "";
-        let seuilGoogle = 4; // écrasé par la valeur Supabase
+        let seuilGoogle = 4;
         let notes       = { cuisine: 0, ambiance: 0, service: 0 };
         let tags        = { probleme: "Non précisé" };
+        let redirectionLancee = false; // ← empêche de lancer 2 fois
 
         const labels = ["", "Mauvais 😞", "Passable 😐", "Bien 🙂", "Très bien 😊", "Excellent 🤩"];
 
@@ -153,7 +152,7 @@
             if (data) {
                 document.getElementById('nom-resto').innerText = data.nom;
                 googleUrl   = data.google_maps_url || "";
-                seuilGoogle = data.seuil_google ?? 4; // valeur du resto, sinon 4 par défaut
+                seuilGoogle = data.seuil_google ?? 4;
             } else {
                 document.getElementById('nom-resto').innerText = "Restaurant introuvable";
                 console.error(error);
@@ -172,51 +171,36 @@
             // Label
             document.getElementById(`label-${categorie}`).innerText = labels[valeur];
 
-            // Afficher moyenne + bouton si les 3 critères sont notés et redirection auto
-            if (notes.cuisine > 0 && notes.ambiance > 0 && notes.service > 0) {
-    const moy = (notes.cuisine + notes.ambiance + notes.service) / 3;
-    document.getElementById('moyenne-val').innerText = moy.toFixed(1);
-    document.getElementById('moyenne-block').classList.remove('hidden');
+            // Si les 3 critères sont notés et qu'on n'a pas encore lancé de redirection
+            if (notes.cuisine > 0 && notes.ambiance > 0 && notes.service > 0 && !redirectionLancee) {
+                redirectionLancee = true; // ← bloquer les appels suivants
 
-    if (moy >= seuilGoogle) {
-        // ✅ Bonne note → Google automatique
-        document.getElementById('stars-section').innerHTML = `
-            <div class="text-center py-6 animate-in">
-                <div class="text-4xl mb-3">🎉</div>
-                <p class="text-green-600 font-semibold text-base">Merci ! Redirection vers Google...</p>
-                <p class="text-gray-400 text-sm mt-1">Votre avis positif nous aide beaucoup !</p>
-            </div>`;
-        setTimeout(() => { window.location.href = googleUrl; }, 1500);
-    } else {
-        // ❌ Mauvaise note → formulaire interne automatique
-        setTimeout(() => {
-            document.getElementById('stars-section').classList.add('hidden');
-            document.getElementById('form-interne').classList.remove('hidden');
-        }, 1500);
-    }
-}
+                const moy = (notes.cuisine + notes.ambiance + notes.service) / 3;
+                document.getElementById('moyenne-val').innerText = moy.toFixed(1);
+                document.getElementById('moyenne-block').classList.remove('hidden');
 
-        // ── VALIDER ───────────────────────────────────────────
-        function validerMoyenne() {
-            const moyenne = (notes.cuisine + notes.ambiance + notes.service) / 3;
-
-            if (moyenne >= seuilGoogle) {
-                // ✅ Positif → Google
-                if (googleUrl) {
+                if (moy >= seuilGoogle) {
+                    // ✅ Bonne note → Google automatique
                     document.getElementById('stars-section').innerHTML = `
                         <div class="text-center py-6 animate-in">
                             <div class="text-4xl mb-3">🎉</div>
                             <p class="text-green-600 font-semibold text-base">Merci ! Redirection vers Google...</p>
                             <p class="text-gray-400 text-sm mt-1">Votre avis positif nous aide beaucoup !</p>
                         </div>`;
-                    setTimeout(() => { window.location.href = googleUrl; }, 1000);
+                    setTimeout(() => { window.location.href = googleUrl; }, 1500);
                 } else {
-                    alert("Lien Google manquant pour ce restaurant.");
+                    // ❌ Mauvaise note → formulaire interne automatique
+                    document.getElementById('stars-section').innerHTML = `
+                        <div class="text-center py-6 animate-in">
+                            <div class="text-4xl mb-3">😔</div>
+                            <p class="text-orange-500 font-semibold text-base">Nous sommes désolés...</p>
+                            <p class="text-gray-400 text-sm mt-1">Chargement du formulaire...</p>
+                        </div>`;
+                    setTimeout(() => {
+                        document.getElementById('stars-section').classList.add('hidden');
+                        document.getElementById('form-interne').classList.remove('hidden');
+                    }, 1500);
                 }
-            } else {
-                // ❌ Négatif → formulaire interne
-                document.getElementById('stars-section').classList.add('hidden');
-                document.getElementById('form-interne').classList.remove('hidden');
             }
         }
 
