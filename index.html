@@ -172,13 +172,29 @@
             // Label
             document.getElementById(`label-${categorie}`).innerText = labels[valeur];
 
-            // Afficher moyenne + bouton si les 3 critères sont notés
+            // Afficher moyenne + bouton si les 3 critères sont notés et redirection auto
             if (notes.cuisine > 0 && notes.ambiance > 0 && notes.service > 0) {
-                const moy = ((notes.cuisine + notes.ambiance + notes.service) / 3).toFixed(1);
-                document.getElementById('moyenne-val').innerText = moy;
-                document.getElementById('moyenne-block').classList.remove('hidden');
-            }
-        }
+    const moy = (notes.cuisine + notes.ambiance + notes.service) / 3;
+    document.getElementById('moyenne-val').innerText = moy.toFixed(1);
+    document.getElementById('moyenne-block').classList.remove('hidden');
+
+    if (moy >= seuilGoogle) {
+        // ✅ Bonne note → Google automatique
+        document.getElementById('stars-section').innerHTML = `
+            <div class="text-center py-6 animate-in">
+                <div class="text-4xl mb-3">🎉</div>
+                <p class="text-green-600 font-semibold text-base">Merci ! Redirection vers Google...</p>
+                <p class="text-gray-400 text-sm mt-1">Votre avis positif nous aide beaucoup !</p>
+            </div>`;
+        setTimeout(() => { window.location.href = googleUrl; }, 1500);
+    } else {
+        // ❌ Mauvaise note → formulaire interne automatique
+        setTimeout(() => {
+            document.getElementById('stars-section').classList.add('hidden');
+            document.getElementById('form-interne').classList.remove('hidden');
+        }, 1500);
+    }
+}
 
         // ── VALIDER ───────────────────────────────────────────
         function validerMoyenne() {
