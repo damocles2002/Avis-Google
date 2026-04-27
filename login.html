@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DAMAVIS — Connexion</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --surface: #12121a;
+            --border: #2a2a3d;
+            --accent: #6c63ff;
+            --text: #f0f0f8;
+            --muted: #7070a0;
+            --green: #00d4aa;
+            --red: #ff6584;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* BACKGROUND ANIMÉ */
+        .bg-orbs {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .orb1 {
+            width: 400px; height: 400px;
+            background: var(--accent);
+            top: -100px; left: -100px;
+            animation-delay: 0s;
+        }
+
+        .orb2 {
+            width: 300px; height: 300px;
+            background: #ff6584;
+            bottom: -80px; right: -80px;
+            animation-delay: -3s;
+        }
+
+        .orb3 {
+            width: 200px; height: 200px;
+            background: var(--green);
+            top: 50%; left: 60%;
+            animation-delay: -5s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(20px, -20px) scale(1.05); }
+            66% { transform: translate(-15px, 15px) scale(0.95); }
+        }
+
+        /* CARD */
+        .card {
+            position: relative;
+            z-index: 1;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 48px 40px;
+            width: 420px;
+            max-width: 95vw;
+            animation: slideUp 0.5s ease-out both;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* LOGO */
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 36px;
+        }
+
+        .logo-icon {
+            width: 44px; height: 44px;
+            background: var(--accent);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 0 24px rgba(108,99,255,0.4);
+        }
+
+        .logo-text {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 24px;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-tagline {
+            font-size: 11px;
+            color: var(--muted);
+            letter-spacing: 0.5px;
+        }
+
+        /* TITRE */
+        .title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 22px;
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--muted);
+            margin-bottom: 32px;
+        }
+
+        /* TABS */
+        .tabs {
+            display: flex;
+            background: rgba(255,255,255,0.04);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 28px;
+            gap: 4px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 9px;
+            text-align: center;
+            border-radius: 9px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            color: var(--muted);
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* FORM */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(108,99,255,0.15);
+        }
+
+        input::placeholder { color: var(--muted); }
+
+        /* BOUTON */
+        .btn {
+            width: 100%;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 15px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            background: #7c74ff;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(108,99,255,0.35);
+        }
+
+        .btn:active { transform: translateY(0); }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-loader {
+            display: inline-block;
+            width: 16px; height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* MESSAGES */
+        .msg {
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 18px;
+            display: none;
+        }
+
+        .msg.error {
+            background: rgba(255,101,132,0.12);
+            border: 1px solid rgba(255,101,132,0.3);
+            color: var(--red);
+            display: block;
+        }
+
+        .msg.success {
+            background: rgba(0,212,170,0.12);
+            border: 1px solid rgba(0,212,170,0.3);
+            color: var(--green);
+            display: block;
+        }
+
+        /* DIVIDER */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* FOOTER */
+        .card-footer {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .card-footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        /* FORGOT */
+        .forgot {
+            text-align: right;
+            margin-top: -10px;
+            margin-bottom: 16px;
+        }
+
+        .forgot a {
+            font-size: 12px;
+            color: var(--muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .forgot a:hover { color: var(--accent); }
+
+        /* SUCCESS STATE */
+        .success-state {
+            display: none;
+            text-align: center;
+            padding: 20px 0;
+            animation: slideUp 0.4s ease-out both;
+        }
+
+        .success-icon {
+            width: 64px; height: 64px;
+            background: rgba(0,212,170,0.15);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px;
+            margin: 0 auto 16px;
+            border: 1px solid rgba(0,212,170,0.3);
+        }
+
+        .success-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .success-sub {
+            font-size: 14px;
+            color: var(--muted);
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg-orbs">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+</div>
+
+<div class="card">
+
+    <!-- LOGO -->
+    <div class="logo">
+        <div class="logo-icon">🛡️</div>
+        <div>
+            <div class="logo-text">DAMAVIS</div>
+            <div class="logo-tagline">Gestion de réputation</div>
+        </div>
+    </div>
+
+    <!-- CONTENU PRINCIPAL -->
+    <div id="main-content">
+        <div class="title">Bon retour 👋</div>
+        <div class="subtitle">Connectez-vous pour accéder à votre dashboard</div>
+
+        <!-- TABS -->
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('login')">Connexion</div>
+            <div class="tab" onclick="switchTab('signup')">Inscription</div>
+        </div>
+
+        <!-- MESSAGE ERREUR / SUCCÈS -->
+        <div class="msg" id="msg"></div>
+
+        <!-- FORMULAIRE CONNEXION -->
+        <div id="form-login">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="login-email" placeholder="votre@email.com" />
+            </div>
+            <div class="form-group">
+                <label>Mot de passe</label>
+                <input type="password" id="login-password" placeholder="••••••••" />
+            </div>
+            <div class="forgot"><a href="#" onclick="forgotPassword()">Mot de passe oublié ?</a></div>
+            <button class="btn" id="btn-login" onclick="handleLogin()">
+                Se connecter →
+            </button>
+        </div>
+
+        <!-- FORMULAIRE INSCRIPTION -->
+        <div id="form-signup" style="display:none">
+            <div class="form-group">
+                <label>Nom du restaurant</label>
+                <input type="text" id="signup-name" placeholder="Le Bistrot Parisien" />
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="signup-email" placeholder="votre@email.com" />
+            </div>
+            <div class="form-group">
+                <label>Mot de passe</label>
+                <input type="password" id="signup-password" placeholder="Min. 8 caractères" />
+            </div>
+            <button class="btn" id="btn-signup" onclick="handleSignup()">
+                Créer mon compte →
+            </button>
+        </div>
+    </div>
+
+    <!-- ÉTAT SUCCÈS INSCRIPTION -->
+    <div class="success-state" id="success-state">
+        <div class="success-icon">✉️</div>
+        <div class="success-title">Vérifiez vos emails !</div>
+        <div class="success-sub">Un lien de confirmation vous a été envoyé.<br>Cliquez dessus pour activer votre compte.</div>
+    </div>
+
+    <div class="card-footer">
+        Protégé par <strong>Supabase Auth</strong> · <a href="avis.html">Page client</a>
+    </div>
+
+</div>
+
+<script>
+    const SB_URL = "https://urpfgiaocxfnyfdoiapf.supabase.co";
+    const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVycGZnaWFvY3hmbnlmZG9pYXBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NDQ3MzMsImV4cCI6MjA5MDUyMDczM30.8OkTr_1pXbPn73e64Vgg8ovLGnkNNGDdWvmrzVBmzwo";
+    const _supabase = window.supabase.createClient(SB_URL, SB_KEY);
+
+    // ── VÉRIFIER SI DÉJÀ CONNECTÉ ─────────────────────────
+    async function checkSession() {
+        const { data: { session } } = await _supabase.auth.getSession();
+        if (session) {
+            window.location.href = 'dashboard.html';
+        }
+    }
+
+    checkSession();
+
+    // ── SWITCH TABS ───────────────────────────────────────
+    function switchTab(tab) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
+        document.getElementById('form-signup').style.display = tab === 'signup' ? 'block' : 'none';
+        clearMsg();
+    }
+
+    // ── MESSAGES ──────────────────────────────────────────
+    function showMsg(text, type) {
+        const el = document.getElementById('msg');
+        el.textContent = text;
+        el.className = `msg ${type}`;
+    }
+
+    function clearMsg() {
+        const el = document.getElementById('msg');
+        el.className = 'msg';
+    }
+
+    function setLoading(btnId, loading) {
+        const btn = document.getElementById(btnId);
+        if (loading) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="btn-loader"></span> Chargement...';
+        } else {
+            btn.disabled = false;
+            btn.innerHTML = btnId === 'btn-login' ? 'Se connecter →' : 'Créer mon compte →';
+        }
+    }
+
+    // ── CONNEXION ─────────────────────────────────────────
+    async function handleLogin() {
+        const email    = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+
+        if (!email || !password) {
+            showMsg('Veuillez remplir tous les champs.', 'error');
+            return;
+        }
+
+        setLoading('btn-login', true);
+        clearMsg();
+
+        const { error } = await _supabase.auth.signInWithPassword({ email, password });
+
+        if (error) {
+            showMsg('Email ou mot de passe incorrect.', 'error');
+            setLoading('btn-login', false);
+        } else {
+            showMsg('Connexion réussie ! Redirection...', 'success');
+            setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
+        }
+    }
+
+    // ── INSCRIPTION ───────────────────────────────────────
+    async function handleSignup() {
+        const name     = document.getElementById('signup-name').value.trim();
+        const email    = document.getElementById('signup-email').value.trim();
+        const password = document.getElementById('signup-password').value;
+
+        if (!name || !email || !password) {
+            showMsg('Veuillez remplir tous les champs.', 'error');
+            return;
+        }
+
+        if (password.length < 8) {
+            showMsg('Le mot de passe doit faire au moins 8 caractères.', 'error');
+            return;
+        }
+
+        setLoading('btn-signup', true);
+        clearMsg();
+
+        const { error } = await _supabase.auth.signUp({
+            email,
+            password,
+            options: { data: { restaurant_name: name } }
+        });
+
+        if (error) {
+            showMsg(error.message, 'error');
+            setLoading('btn-signup', false);
+        } else {
+            document.getElementById('main-content').style.display = 'none';
+            document.getElementById('success-state').style.display = 'block';
+        }
+    }
+
+    // ── MOT DE PASSE OUBLIÉ ───────────────────────────────
+    async function forgotPassword() {
+        const email = document.getElementById('login-email').value.trim();
+        if (!email) {
+            showMsg('Entrez votre email d\'abord.', 'error');
+            return;
+        }
+
+        const { error } = await _supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin + '/dashboard.html'
+        });
+
+        if (!error) {
+            showMsg('Email de réinitialisation envoyé !', 'success');
+        } else {
+            showMsg('Erreur lors de l\'envoi.', 'error');
+        }
+    }
+
+    // ── ENTER KEY ─────────────────────────────────────────
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+            const loginVisible = document.getElementById('form-login').style.display !== 'none';
+            if (loginVisible) handleLogin();
+            else handleSignup();
+        }
+    });
+</script>
+</body>
+</html>
