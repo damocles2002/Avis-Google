@@ -4,140 +4,143 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DAMAVIS — Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        :root { --primary:#1a73e8; --primary-light:#e8f0fe; --bg:#f0f4f8; --card:#fff; --text:#1a202c; --text-muted:#718096; --border:#e2e8f0; --positive:#22c55e; --negative:#ef4444; }
+        :root { --primary:#1a73e8; --primary-light:#e8f0fe; --bg:#f0f4f8; --card:#fff; --text:#1a202c; --muted:#718096; --border:#e2e8f0; --green:#22c55e; --red:#ef4444; }
         * { box-sizing:border-box; margin:0; padding:0; }
         body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
 
+        /* SIDEBAR */
         .sidebar { position:fixed; left:0; top:0; bottom:0; width:240px; background:var(--card); border-right:1px solid var(--border); display:flex; flex-direction:column; z-index:100; padding:24px 0; }
         .logo { padding:0 20px 24px; border-bottom:1px solid var(--border); }
-        .logo-text { font-size:22px; font-weight:700; letter-spacing:-0.5px; }
+        .logo-text { font-size:22px; font-weight:700; }
         .logo-text span { color:var(--primary); }
-        .logo-sub { font-size:11px; color:var(--text-muted); margin-top:2px; font-family:'DM Mono',monospace; }
+        .logo-sub { font-size:11px; color:var(--muted); margin-top:2px; font-family:'DM Mono',monospace; }
         .nav-section { padding:16px 12px 8px; }
-        .nav-label { font-size:10px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; padding:0 8px; margin-bottom:6px; }
-        .nav-item { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:10px; cursor:pointer; font-size:14px; font-weight:500; color:var(--text-muted); transition:all 0.15s; }
+        .nav-label { font-size:10px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:1px; padding:0 8px; margin-bottom:6px; }
+        .nav-item { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:10px; cursor:pointer; font-size:14px; font-weight:500; color:var(--muted); transition:all 0.15s; }
         .nav-item:hover { background:var(--bg); color:var(--text); }
         .nav-item.active { background:var(--primary-light); color:var(--primary); }
-        .nav-dot { width:14px; height:14px; border-radius:50%; flex-shrink:0; }
-        .nav-sq { width:14px; height:14px; border-radius:3px; flex-shrink:0; }
+        .dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; display:inline-block; }
+        .sq { width:12px; height:12px; border-radius:3px; flex-shrink:0; display:inline-block; }
         .sidebar-footer { margin-top:auto; padding:16px 20px; border-top:1px solid var(--border); }
         .resto-badge { background:var(--bg); border-radius:10px; padding:10px 12px; font-size:13px; font-weight:600; display:flex; align-items:center; margin-bottom:10px; }
-        .resto-dot { width:8px; height:8px; background:var(--positive); border-radius:50%; margin-right:8px; flex-shrink:0; }
-        .btn-logout { width:100%; background:none; border:1px solid var(--border); border-radius:10px; padding:9px; font-size:13px; font-weight:500; color:var(--text-muted); cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.15s; }
+        .rdot { width:8px; height:8px; background:var(--green); border-radius:50%; margin-right:8px; flex-shrink:0; }
+        .btn-logout { width:100%; background:none; border:1px solid var(--border); border-radius:10px; padding:9px; font-size:13px; font-weight:500; color:var(--muted); cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.15s; }
         .btn-logout:hover { background:#fee2e2; color:#dc2626; border-color:#fca5a5; }
 
+        /* MAIN */
         .main { margin-left:240px; padding:32px; }
         .topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; gap:12px; flex-wrap:wrap; }
-        .page-title { font-size:24px; font-weight:700; letter-spacing:-0.5px; }
-        .page-sub { font-size:14px; color:var(--text-muted); margin-top:2px; }
-        .topbar-right { display:flex; align-items:center; gap:10px; }
-        .btn-topbar { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:8px 16px; font-size:13px; font-weight:500; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.15s; display:flex; align-items:center; gap:6px; }
-        .btn-topbar:hover { background:var(--bg); }
+        .page-title { font-size:24px; font-weight:700; }
+        .page-sub { font-size:14px; color:var(--muted); margin-top:2px; }
+        .btn-top { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:8px 16px; font-size:13px; font-weight:500; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.15s; display:flex; align-items:center; gap:6px; }
+        .btn-top:hover { background:var(--bg); }
+        .topbar-right { display:flex; gap:10px; }
 
+        /* RESTO HEADER */
         .resto-header { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px 24px; margin-bottom:24px; display:flex; align-items:center; gap:14px; }
-        .resto-avatar { width:48px; height:48px; border-radius:12px; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:22px; color:white; font-weight:700; flex-shrink:0; }
+        .resto-av { width:48px; height:48px; border-radius:12px; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:22px; color:white; font-weight:700; flex-shrink:0; }
         .resto-nom { font-size:20px; font-weight:700; }
-        .resto-sous { font-size:13px; color:var(--text-muted); margin-top:2px; }
+        .resto-sub { font-size:13px; color:var(--muted); margin-top:2px; }
 
+        /* STATS */
         .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
-        .stat-card { background:var(--card); border-radius:16px; padding:20px 16px; border:1px solid var(--border); position:relative; overflow:hidden; min-width:0; }
-        .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--accent-color,var(--primary)); }
-        .stat-label { font-size:12px; color:var(--text-muted); font-weight:500; margin-bottom:10px; line-height:1.3; }
+        .stat-card { background:var(--card); border-radius:16px; padding:20px 16px; border:1px solid var(--border); position:relative; overflow:hidden; }
+        .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--ac,var(--primary)); }
+        .stat-label { font-size:12px; color:var(--muted); font-weight:500; margin-bottom:10px; }
         .stat-value { font-size:32px; font-weight:700; letter-spacing:-1px; line-height:1; }
         .stat-icon { position:absolute; top:14px; right:14px; font-size:20px; opacity:0.15; }
 
-        /* PLATEFORMES GRID */
-        .platforms-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
-        .platform-card { background:var(--card); border-radius:16px; padding:18px; border:1px solid var(--border); display:flex; align-items:center; gap:14px; min-width:0; text-decoration:none; color:inherit; transition:all 0.15s; }
-        .platform-card:hover { border-color:var(--primary); box-shadow:0 4px 12px rgba(26,115,232,0.1); }
-        .platform-logo { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; color:white; font-weight:700; }
-        .platform-info { flex:1; min-width:0; }
-        .platform-name { font-size:13px; font-weight:600; margin-bottom:2px; }
-        .platform-note { font-size:20px; font-weight:700; }
-        .platform-count { font-size:11px; color:var(--text-muted); }
-        .stars-mini { color:#facc15; font-size:11px; }
-        .platform-status { font-size:11px; padding:3px 8px; border-radius:20px; font-weight:500; white-space:nowrap; flex-shrink:0; }
-        .status-connected { background:#dcfce7; color:#16a34a; }
-        .status-pending { background:#fef9c3; color:#ca8a04; }
+        /* PLATEFORMES */
+        .section-title { font-size:16px; font-weight:700; margin-bottom:16px; }
+        .platforms-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; margin-bottom:24px; }
 
-        /* SOCIAL CARDS */
+        /* CARTE PLATEFORME */
+        .pcard { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px; transition:all 0.15s; }
+        .pcard:hover { border-color:var(--primary); box-shadow:0 4px 16px rgba(26,115,232,0.08); }
+        .pcard-header { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+        .pcard-logo { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; color:white; font-weight:700; flex-shrink:0; }
+        .pcard-name { font-size:15px; font-weight:700; }
+        .pcard-status { margin-left:auto; font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px; }
+        .s-ok { background:#dcfce7; color:#16a34a; }
+        .s-no { background:#fef9c3; color:#ca8a04; }
+        .pcard-note { font-size:28px; font-weight:700; letter-spacing:-1px; margin-bottom:4px; }
+        .pcard-stars { color:#facc15; font-size:14px; margin-bottom:4px; }
+        .pcard-count { font-size:12px; color:var(--muted); }
+        .pcard-link { display:inline-flex; align-items:center; gap:4px; margin-top:10px; font-size:12px; font-weight:600; text-decoration:none; padding:6px 12px; border-radius:8px; transition:all 0.15s; }
+        .pcard-link:hover { opacity:0.85; }
+
+        /* MAPS EMBED */
+        .maps-embed { width:100%; height:160px; border-radius:10px; border:none; margin-top:10px; }
+
+        /* SOCIAL */
         .social-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
-        .social-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px; display:flex; align-items:center; gap:12px; }
-        .social-icon { width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; color:white; font-weight:700; }
-        .social-info { flex:1; min-width:0; }
-        .social-name { font-size:13px; font-weight:600; }
-        .social-sub { font-size:11px; color:var(--text-muted); margin-top:2px; }
-        .btn-social { padding:7px 14px; border-radius:8px; border:none; font-size:12px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; text-decoration:none; white-space:nowrap; }
+        .scard { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px; display:flex; align-items:center; gap:12px; }
+        .scard-icon { width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; color:white; }
+        .scard-name { font-size:13px; font-weight:600; }
+        .scard-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+        .scard-btn { margin-left:auto; padding:7px 14px; border-radius:8px; border:none; font-size:12px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; text-decoration:none; color:white; white-space:nowrap; }
 
-        .section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px; }
-        .section-title { font-size:16px; font-weight:700; }
-        .filter-tabs { display:flex; gap:6px; flex-wrap:wrap; }
-        .filter-tab { padding:6px 14px; border-radius:20px; font-size:12px; font-weight:500; cursor:pointer; border:1px solid var(--border); background:var(--card); color:var(--text-muted); transition:all 0.15s; }
-        .filter-tab.active { background:var(--primary); color:white; border-color:var(--primary); }
-
+        /* AVIS */
+        .filter-tabs { display:flex; gap:6px; margin-bottom:16px; }
+        .ftab { padding:6px 14px; border-radius:20px; font-size:12px; font-weight:500; cursor:pointer; border:1px solid var(--border); background:var(--card); color:var(--muted); transition:all 0.15s; }
+        .ftab.active { background:var(--primary); color:white; border-color:var(--primary); }
         .avis-list { background:var(--card); border-radius:16px; border:1px solid var(--border); overflow:hidden; }
-        .avis-item { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; gap:14px; transition:background 0.15s; }
+        .avis-item { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; gap:14px; }
         .avis-item:last-child { border-bottom:none; }
-        .avis-item:hover { background:var(--bg); }
         .avis-dot { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; color:white; font-weight:700; }
-        .avis-content { flex:1; min-width:0; }
+        .avis-content { flex:1; }
         .avis-top { display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap; }
         .avis-auteur { font-size:13px; font-weight:600; }
         .avis-note { font-size:12px; color:#facc15; }
-        .avis-tag { font-size:10px; font-weight:600; padding:2px 7px; border-radius:20px; text-transform:uppercase; }
-        .avis-date { font-size:11px; color:var(--text-muted); margin-left:auto; }
-        .avis-text { font-size:13px; color:var(--text-muted); line-height:1.5; margin-bottom:8px; }
-        .btn-rep { font-size:12px; font-weight:500; padding:5px 12px; border-radius:8px; border:1px solid var(--border); background:white; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.15s; }
-        .btn-rep:hover { background:var(--primary); color:white; border-color:var(--primary); }
+        .avis-tag { font-size:10px; font-weight:600; padding:2px 7px; border-radius:20px; }
+        .avis-date { font-size:11px; color:var(--muted); margin-left:auto; }
+        .avis-text { font-size:13px; color:var(--muted); line-height:1.5; margin-bottom:8px; }
+        .btn-rep { font-size:12px; padding:5px 12px; border-radius:8px; border:1px solid var(--border); background:white; cursor:pointer; font-family:'DM Sans',sans-serif; }
+        .btn-rep:hover { background:var(--primary); color:white; }
         .rep-area { display:none; margin-top:10px; }
         .rep-area.open { display:block; }
         .rep-input { width:100%; border:1px solid var(--border); border-radius:10px; padding:10px 14px; font-size:13px; font-family:'DM Sans',sans-serif; resize:none; outline:none; }
         .rep-input:focus { border-color:var(--primary); }
         .rep-btns { display:flex; gap:8px; margin-top:8px; justify-content:flex-end; }
-        .btn-send { background:var(--primary); color:white; border:none; border-radius:8px; padding:7px 16px; font-size:12px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; }
-        .btn-cancel { background:white; color:var(--text-muted); border:1px solid var(--border); border-radius:8px; padding:7px 16px; font-size:12px; cursor:pointer; font-family:'DM Sans',sans-serif; }
+        .btn-send { background:var(--primary); color:white; border:none; border-radius:8px; padding:7px 16px; font-size:12px; cursor:pointer; font-family:'DM Sans',sans-serif; }
+        .btn-cancel { background:white; color:var(--muted); border:1px solid var(--border); border-radius:8px; padding:7px 16px; font-size:12px; cursor:pointer; font-family:'DM Sans',sans-serif; }
 
         /* MODAL */
         .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:200; display:none; align-items:center; justify-content:center; padding:16px; }
         .modal-overlay.open { display:flex; }
-        .modal { background:white; border-radius:20px; padding:28px; width:480px; max-width:100%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.15); }
+        .modal { background:white; border-radius:20px; padding:28px; width:500px; max-width:100%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.15); }
         .modal-title { font-size:18px; font-weight:700; margin-bottom:24px; display:flex; align-items:center; justify-content:space-between; }
-        .modal-close { cursor:pointer; font-size:20px; color:var(--text-muted); background:none; border:none; padding:4px; }
-        .modal-section { margin-bottom:24px; padding-bottom:24px; border-bottom:1px solid var(--border); }
-        .modal-section:last-child { margin-bottom:0; padding-bottom:0; border-bottom:none; }
-        .modal-section-title { font-size:14px; font-weight:700; margin-bottom:12px; }
-        .field-group { margin-bottom:10px; }
-        .field-label { font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:0.5px; }
-        .field-input { width:100%; border:1px solid var(--border); border-radius:10px; padding:10px 14px; font-size:14px; font-family:'DM Sans',sans-serif; outline:none; transition:border-color 0.15s; }
-        .field-input:focus { border-color:var(--primary); }
+        .modal-close { cursor:pointer; font-size:20px; color:var(--muted); background:none; border:none; }
+        .msection { margin-bottom:22px; padding-bottom:22px; border-bottom:1px solid var(--border); }
+        .msection:last-child { margin-bottom:0; padding-bottom:0; border-bottom:none; }
+        .msection-title { font-size:13px; font-weight:700; margin-bottom:12px; }
+        .fgroup { margin-bottom:10px; }
+        .flabel { font-size:11px; font-weight:600; color:var(--muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:0.5px; display:block; }
+        .finput { width:100%; border:1px solid var(--border); border-radius:10px; padding:10px 14px; font-size:14px; font-family:'DM Sans',sans-serif; outline:none; transition:border-color 0.15s; }
+        .finput:focus { border-color:var(--primary); }
+        .finput-hint { font-size:11px; color:var(--muted); margin-top:4px; }
         .btn-save { background:var(--primary); color:white; border:none; border-radius:10px; padding:10px 20px; font-size:13px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; width:100%; margin-top:6px; }
-        .btn-save:hover { opacity:0.9; }
         .msg-ok { background:#dcfce7; color:#16a34a; border-radius:8px; padding:8px 12px; font-size:13px; margin-top:8px; display:none; }
         .msg-err { background:#fee2e2; color:#dc2626; border-radius:8px; padding:8px 12px; font-size:13px; margin-top:8px; display:none; }
         .color-grid { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:12px; }
-        .color-swatch { width:32px; height:32px; border-radius:50%; cursor:pointer; border:3px solid transparent; transition:all 0.15s; }
-        .color-swatch:hover, .color-swatch.selected { transform:scale(1.15); border-color:#1a202c; }
-        .color-input-row { display:flex; gap:8px; align-items:center; }
-        .color-hex { border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13px; font-family:'DM Mono',monospace; width:120px; outline:none; }
+        .cswatch { width:32px; height:32px; border-radius:50%; cursor:pointer; border:3px solid transparent; transition:all 0.15s; }
+        .cswatch:hover, .cswatch.sel { transform:scale(1.15); border-color:#1a202c; }
+        .color-row { display:flex; gap:8px; align-items:center; }
+        .chex { border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13px; font-family:'DM Mono',monospace; width:120px; outline:none; }
         .lang-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-        .lang-btn { border:1px solid var(--border); border-radius:10px; padding:9px 14px; font-size:13px; font-weight:500; cursor:pointer; background:white; font-family:'DM Sans',sans-serif; text-align:left; transition:all 0.15s; }
-        .lang-btn:hover { background:var(--bg); }
-        .lang-btn.selected { background:var(--primary-light); border-color:var(--primary); color:var(--primary); font-weight:600; }
+        .lbtn { border:1px solid var(--border); border-radius:10px; padding:9px 14px; font-size:13px; cursor:pointer; background:white; font-family:'DM Sans',sans-serif; text-align:left; }
+        .lbtn.sel { background:var(--primary-light); border-color:var(--primary); color:var(--primary); font-weight:600; }
 
-        .loading { text-align:center; padding:40px; color:var(--text-muted); font-size:14px; }
+        .loading { text-align:center; padding:40px; color:var(--muted); }
         .spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--primary); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 12px; }
         @keyframes spin { to { transform:rotate(360deg); } }
-        .empty { text-align:center; padding:48px; color:var(--text-muted); }
+        .empty { text-align:center; padding:48px; color:var(--muted); font-size:14px; }
 
-        .badge-interne { background:#fef3c7; color:#d97706; }
-        .badge-google { background:#dbeafe; color:#1d4ed8; }
-
-        @media (max-width:1100px) { .stats-grid { grid-template-columns:repeat(2,1fr); } .platforms-grid { grid-template-columns:repeat(2,1fr); } .social-grid { grid-template-columns:repeat(2,1fr); } }
-        @media (max-width:768px) { .sidebar { transform:translateX(-100%); } .main { margin-left:0; padding:16px; } .stats-grid { grid-template-columns:repeat(2,1fr); } .platforms-grid { grid-template-columns:1fr; } .social-grid { grid-template-columns:1fr; } }
+        @media(max-width:1100px) { .stats-grid{grid-template-columns:repeat(2,1fr);} .platforms-grid{grid-template-columns:1fr;} .social-grid{grid-template-columns:repeat(2,1fr);} }
+        @media(max-width:768px) { .sidebar{transform:translateX(-100%);} .main{margin-left:0;padding:16px;} .stats-grid{grid-template-columns:repeat(2,1fr);} .social-grid{grid-template-columns:1fr;} }
     </style>
 </head>
 <body>
@@ -149,25 +152,22 @@
         <div class="logo-sub">Reputation Manager</div>
     </div>
     <div class="nav-section">
-        <div class="nav-label" id="nav-label-1">Tableau de bord</div>
-        <div class="nav-item active"><span>📊</span> <span id="nav-dashboard">Dashboard</span></div>
-        <div class="nav-item" onclick="filtrerAvis('tous',null)"><span>💬</span> <span id="nav-avis">Tous les avis</span></div>
-        <div class="nav-item" onclick="filtrerPlateforme('interne')"><span>🔒</span> <span id="nav-internes">Avis internes</span></div>
+        <div class="nav-label" id="nl1">Tableau de bord</div>
+        <div class="nav-item active"><span>📊</span> <span id="n-dash">Dashboard</span></div>
+        <div class="nav-item" onclick="filtrerAvis('tous',null)"><span>💬</span> <span id="n-avis">Tous les avis</span></div>
+        <div class="nav-item" onclick="filtrerPlateforme('interne')"><span>🔒</span> <span id="n-int">Avis internes</span></div>
     </div>
     <div class="nav-section">
-        <div class="nav-label" id="nav-label-2">Plateformes</div>
-        <div class="nav-item" onclick="filtrerPlateforme('google')"><span class="nav-dot" style="background:#4285F4"></span> Google</div>
-        <div class="nav-item" onclick="filtrerPlateforme('tripadvisor')"><span class="nav-dot" style="background:#00af87"></span> TripAdvisor</div>
-        <div class="nav-item" onclick="filtrerPlateforme('thefork')"><span class="nav-sq" style="background:#00b0ae"></span> TheFork</div>
-        <div class="nav-item" onclick="filtrerPlateforme('facebook')"><span class="nav-dot" style="background:#1877F2"></span> Facebook</div>
-        <div class="nav-item" onclick="filtrerPlateforme('instagram')"><span class="nav-sq" style="background:linear-gradient(45deg,#f09433,#dc2743,#bc1888)"></span> Instagram</div>
-        <div class="nav-item" onclick="filtrerPlateforme('tiktok')"><span class="nav-sq" style="background:#010101"></span> TikTok</div>
+        <div class="nav-label" id="nl2">Plateformes</div>
+        <div class="nav-item" onclick="filtrerPlateforme('google')"><span class="dot" style="background:#4285F4"></span> Google</div>
+        <div class="nav-item" onclick="filtrerPlateforme('tripadvisor')"><span class="dot" style="background:#00af87"></span> TripAdvisor</div>
+        <div class="nav-item" onclick="filtrerPlateforme('thefork')"><span class="sq" style="background:#00b0ae"></span> TheFork</div>
+        <div class="nav-item" onclick="filtrerPlateforme('facebook')"><span class="dot" style="background:#1877F2"></span> Facebook</div>
+        <div class="nav-item" onclick="filtrerPlateforme('instagram')"><span class="sq" style="background:linear-gradient(45deg,#f09433,#dc2743,#bc1888)"></span> Instagram</div>
+        <div class="nav-item" onclick="filtrerPlateforme('tiktok')"><span class="sq" style="background:#010101"></span> TikTok</div>
     </div>
     <div class="sidebar-footer">
-        <div class="resto-badge">
-            <div class="resto-dot"></div>
-            <span id="sidebar-resto-name">Chargement...</span>
-        </div>
+        <div class="resto-badge"><div class="rdot"></div><span id="resto-name">Chargement...</span></div>
         <button class="btn-logout" onclick="deconnecter()">🚪 Déconnexion</button>
     </div>
 </div>
@@ -176,152 +176,160 @@
 <div class="main">
     <div class="topbar">
         <div>
-            <div class="page-title" id="page-title">Dashboard</div>
-            <div class="page-sub" id="page-sub">Vue d'ensemble de votre réputation</div>
+            <div class="page-title" id="p-title">Dashboard</div>
+            <div class="page-sub" id="p-sub">Vue d'ensemble de votre réputation</div>
         </div>
         <div class="topbar-right">
-            <button class="btn-topbar" onclick="chargerDonnees()">🔄 <span id="btn-refresh-lbl">Actualiser</span></button>
-            <button class="btn-topbar" onclick="ouvrirParametres()">⚙️ <span id="btn-params-lbl">Paramètres</span></button>
+            <button class="btn-top" onclick="chargerDonnees()">🔄 <span id="b-refresh">Actualiser</span></button>
+            <button class="btn-top" onclick="ouvrirParams()">⚙️ <span id="b-params">Paramètres</span></button>
         </div>
     </div>
 
-    <!-- NOM RESTAURANT -->
+    <!-- RESTO -->
     <div class="resto-header">
-        <div class="resto-avatar" id="resto-avatar">🍽️</div>
+        <div class="resto-av" id="resto-av">🍽️</div>
         <div>
-            <div class="resto-nom" id="resto-nom-header">Chargement...</div>
-            <div class="resto-sous" id="resto-sous">Tableau de bord de réputation</div>
+            <div class="resto-nom" id="resto-nom">Chargement...</div>
+            <div class="resto-sub" id="resto-sub">Tableau de bord de réputation</div>
         </div>
     </div>
 
     <!-- STATS -->
     <div class="stats-grid">
-        <div class="stat-card" style="--accent-color:#facc15"><div class="stat-icon">⭐</div><div class="stat-label" id="lbl-note-moy">Note moyenne</div><div class="stat-value" id="stat-note">—</div></div>
-        <div class="stat-card" style="--accent-color:#22c55e"><div class="stat-icon">💬</div><div class="stat-label" id="lbl-total-avis">Total avis</div><div class="stat-value" id="stat-total">—</div></div>
-        <div class="stat-card" style="--accent-color:#ef4444"><div class="stat-icon">🔒</div><div class="stat-label" id="lbl-avis-int">Avis interceptés</div><div class="stat-value" id="stat-internes">—</div></div>
-        <div class="stat-card" style="--accent-color:#1a73e8"><div class="stat-icon">📈</div><div class="stat-label" id="lbl-taux">Taux satisfaction</div><div class="stat-value" id="stat-taux">—</div></div>
+        <div class="stat-card" style="--ac:#facc15"><div class="stat-icon">⭐</div><div class="stat-label" id="l-note">Note moyenne</div><div class="stat-value" id="s-note">—</div></div>
+        <div class="stat-card" style="--ac:#22c55e"><div class="stat-icon">💬</div><div class="stat-label" id="l-total">Total avis</div><div class="stat-value" id="s-total">—</div></div>
+        <div class="stat-card" style="--ac:#ef4444"><div class="stat-icon">🔒</div><div class="stat-label" id="l-int">Avis interceptés</div><div class="stat-value" id="s-int">—</div></div>
+        <div class="stat-card" style="--ac:#1a73e8"><div class="stat-icon">📈</div><div class="stat-label" id="l-taux">Taux satisfaction</div><div class="stat-value" id="s-taux">—</div></div>
     </div>
 
     <!-- PLATEFORMES AVEC AVIS -->
-    <div class="section-header"><div class="section-title" id="lbl-plateformes">Plateformes connectées</div></div>
+    <div class="section-title" id="l-plat">Plateformes</div>
     <div class="platforms-grid" id="platforms-grid"></div>
 
     <!-- RÉSEAUX SOCIAUX -->
-    <div id="social-section" style="display:none;margin-bottom:24px">
-        <div class="section-header"><div class="section-title">📱 Réseaux sociaux & Contact</div></div>
+    <div id="social-section" style="display:none">
+        <div class="section-title">📱 Réseaux sociaux & Contact</div>
         <div class="social-grid" id="social-grid"></div>
     </div>
 
     <!-- AVIS -->
-    <div class="section-header">
-        <div class="section-title" id="lbl-derniers">Derniers avis reçus</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+        <div class="section-title" id="l-avis">Derniers avis reçus</div>
         <div class="filter-tabs">
-            <div class="filter-tab active" onclick="filtrerAvis('tous',this)" id="tab-tous">Tous</div>
-            <div class="filter-tab" onclick="filtrerAvis('positif',this)" id="tab-pos">😊 Positifs</div>
-            <div class="filter-tab" onclick="filtrerAvis('negatif',this)" id="tab-neg">😞 Négatifs</div>
+            <div class="ftab active" onclick="filtrerAvis('tous',this)" id="t-tous">Tous</div>
+            <div class="ftab" onclick="filtrerAvis('positif',this)" id="t-pos">😊 Positifs</div>
+            <div class="ftab" onclick="filtrerAvis('negatif',this)" id="t-neg">😞 Négatifs</div>
         </div>
     </div>
     <div class="avis-list" id="avis-list"><div class="loading"><div class="spinner"></div>Chargement...</div></div>
 </div>
 
 <!-- MODAL PARAMÈTRES -->
-<div class="modal-overlay" id="modal-overlay" onclick="fermerSiDehors(event)">
+<div class="modal-overlay" id="modal" onclick="fermerSiDehors(event)">
     <div class="modal">
         <div class="modal-title">
-            <span id="modal-titre">⚙️ Paramètres</span>
-            <button class="modal-close" onclick="fermerParametres()">✕</button>
+            <span>⚙️ Paramètres</span>
+            <button class="modal-close" onclick="fermerParams()">✕</button>
         </div>
 
         <!-- RESTAURANT -->
-        <div class="modal-section">
-            <div class="modal-section-title">🍽️ Mon restaurant</div>
-            <div class="field-group">
-                <div class="field-label">Nom du restaurant</div>
-                <input type="text" class="field-input" id="input-nom-resto" placeholder="Mon Restaurant">
-            </div>
+        <div class="msection">
+            <div class="msection-title">🍽️ Mon restaurant</div>
+            <div class="fgroup"><label class="flabel">Nom</label><input type="text" class="finput" id="i-nom" placeholder="Mon Restaurant"></div>
             <button class="btn-save" onclick="sauvegarderNom()">💾 Sauvegarder</button>
-            <div class="msg-ok" id="msg-nom-ok">✅ Nom mis à jour !</div>
+            <div class="msg-ok" id="m-nom">✅ Nom mis à jour !</div>
         </div>
 
         <!-- COMPTE -->
-        <div class="modal-section">
-            <div class="modal-section-title">👤 Mon compte</div>
-            <div class="field-group">
-                <div class="field-label">Email</div>
-                <input type="email" class="field-input" id="input-email" placeholder="email@restaurant.com">
-            </div>
+        <div class="msection">
+            <div class="msection-title">👤 Mon compte</div>
+            <div class="fgroup"><label class="flabel">Email</label><input type="email" class="finput" id="i-email" placeholder="email@restaurant.com"></div>
             <button class="btn-save" onclick="sauvegarderEmail()">✉️ Changer l'email</button>
-            <div class="msg-ok" id="msg-email-ok">✅ Email mis à jour !</div>
-            <div class="msg-err" id="msg-email-err">❌ Erreur</div>
-        </div>
-
-        <!-- MOT DE PASSE -->
-        <div class="modal-section">
-            <div class="modal-section-title">🔑 Mot de passe</div>
-            <div class="field-group">
-                <div class="field-label">Nouveau mot de passe</div>
-                <input type="password" class="field-input" id="input-mdp-new" placeholder="••••••••">
-            </div>
-            <div class="field-group">
-                <div class="field-label">Confirmer</div>
-                <input type="password" class="field-input" id="input-mdp-confirm" placeholder="••••••••">
-            </div>
+            <div class="msg-ok" id="m-email">✅ Email mis à jour !</div>
+            <div class="msg-err" id="m-email-err">❌ Erreur</div>
+            <div class="fgroup" style="margin-top:12px"><label class="flabel">Nouveau mot de passe</label><input type="password" class="finput" id="i-mdp1" placeholder="••••••••"></div>
+            <div class="fgroup"><label class="flabel">Confirmer</label><input type="password" class="finput" id="i-mdp2" placeholder="••••••••"></div>
             <button class="btn-save" onclick="sauvegarderMdp()">🔒 Changer le mot de passe</button>
-            <div class="msg-ok" id="msg-mdp-ok">✅ Mot de passe mis à jour !</div>
-            <div class="msg-err" id="msg-mdp-err">❌ Les mots de passe ne correspondent pas</div>
+            <div class="msg-ok" id="m-mdp">✅ Mot de passe mis à jour !</div>
+            <div class="msg-err" id="m-mdp-err">❌ Les mots de passe ne correspondent pas</div>
         </div>
 
         <!-- LIENS PLATEFORMES -->
-        <div class="modal-section">
-            <div class="modal-section-title">🔗 Liens de mes profils</div>
-            <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">Entrez les liens de vos pages. Une carte apparaîtra dans votre dashboard pour chaque lien renseigné.</p>
-            <div class="field-group"><div class="field-label">🔵 Google Maps</div><input type="url" class="field-input" id="lien-google" placeholder="https://g.page/..."></div>
-            <div class="field-group"><div class="field-label">🟢 TripAdvisor</div><input type="url" class="field-input" id="lien-tripadvisor" placeholder="https://www.tripadvisor.fr/Restaurant_Review-..."></div>
-            <div class="field-group"><div class="field-label">🩵 TheFork</div><input type="url" class="field-input" id="lien-thefork" placeholder="https://www.thefork.fr/restaurant/..."></div>
-            <div class="field-group"><div class="field-label">🔷 Facebook (URL ou ID de page)</div><input type="text" class="field-input" id="lien-facebook" placeholder="https://www.facebook.com/monrestaurant"></div>
-            <div class="field-group"><div class="field-label">📸 Instagram (@username)</div><input type="text" class="field-input" id="lien-instagram" placeholder="monrestaurant (sans @)"></div>
-            <div class="field-group"><div class="field-label">🎵 TikTok (@username)</div><input type="text" class="field-input" id="lien-tiktok" placeholder="monrestaurant (sans @)"></div>
-            <div class="field-group"><div class="field-label">💬 WhatsApp Business (avec indicatif)</div><input type="tel" class="field-input" id="lien-whatsapp" placeholder="+237612345678"></div>
+        <div class="msection">
+            <div class="msection-title">🔗 Liens de mes profils</div>
+            <p class="finput-hint" style="margin-bottom:12px">Entrez les liens de vos pages. Les cartes apparaissent automatiquement quand un lien est renseigné.</p>
+
+            <div class="fgroup">
+                <label class="flabel">🔵 Google Maps (URL de votre fiche)</label>
+                <input type="url" class="finput" id="l-google" placeholder="https://maps.google.com/...">
+                <p class="finput-hint">Optionnel : Place ID Google pour afficher la carte interactive</p>
+                <input type="text" class="finput" id="l-google-placeid" placeholder="Place ID : ChIJ..." style="margin-top:6px">
+            </div>
+            <div class="fgroup">
+                <label class="flabel">🟢 TripAdvisor (URL de votre page)</label>
+                <input type="url" class="finput" id="l-tripadvisor" placeholder="https://www.tripadvisor.fr/Restaurant_Review-...">
+            </div>
+            <div class="fgroup">
+                <label class="flabel">🩵 TheFork (URL de votre page)</label>
+                <input type="url" class="finput" id="l-thefork" placeholder="https://www.thefork.fr/restaurant/...">
+            </div>
+            <div class="fgroup">
+                <label class="flabel">🔷 Facebook (URL de votre page)</label>
+                <input type="url" class="finput" id="l-facebook" placeholder="https://www.facebook.com/monrestaurant">
+            </div>
+            <div class="fgroup">
+                <label class="flabel">📸 Instagram (username sans @)</label>
+                <input type="text" class="finput" id="l-instagram" placeholder="monrestaurant">
+            </div>
+            <div class="fgroup">
+                <label class="flabel">🎵 TikTok (username sans @)</label>
+                <input type="text" class="finput" id="l-tiktok" placeholder="monrestaurant">
+            </div>
+            <div class="fgroup">
+                <label class="flabel">💬 WhatsApp Business (avec indicatif pays)</label>
+                <input type="tel" class="finput" id="l-whatsapp" placeholder="+237612345678">
+                <p class="finput-hint">Laissez vide si vous n'utilisez pas WhatsApp</p>
+            </div>
             <button class="btn-save" onclick="sauvegarderLiens()">🔗 Sauvegarder les liens</button>
-            <div class="msg-ok" id="msg-liens-ok">✅ Liens mis à jour !</div>
+            <div class="msg-ok" id="m-liens">✅ Liens mis à jour !</div>
         </div>
 
         <!-- LANGUE -->
-        <div class="modal-section">
-            <div class="modal-section-title">🌐 Langue</div>
+        <div class="msection">
+            <div class="msection-title">🌐 Langue</div>
             <div class="lang-grid">
-                <button class="lang-btn" onclick="selectionnerLangue('fr')">🇫🇷 Français</button>
-                <button class="lang-btn" onclick="selectionnerLangue('en')">🇬🇧 English</button>
-                <button class="lang-btn" onclick="selectionnerLangue('es')">🇪🇸 Español</button>
-                <button class="lang-btn" onclick="selectionnerLangue('it')">🇮🇹 Italiano</button>
-                <button class="lang-btn" onclick="selectionnerLangue('de')">🇩🇪 Deutsch</button>
-                <button class="lang-btn" onclick="selectionnerLangue('pt')">🇵🇹 Português</button>
+                <button class="lbtn" onclick="setLangue('fr')">🇫🇷 Français</button>
+                <button class="lbtn" onclick="setLangue('en')">🇬🇧 English</button>
+                <button class="lbtn" onclick="setLangue('es')">🇪🇸 Español</button>
+                <button class="lbtn" onclick="setLangue('it')">🇮🇹 Italiano</button>
+                <button class="lbtn" onclick="setLangue('de')">🇩🇪 Deutsch</button>
+                <button class="lbtn" onclick="setLangue('pt')">🇵🇹 Português</button>
             </div>
         </div>
 
         <!-- COULEUR -->
-        <div class="modal-section">
-            <div class="modal-section-title">🎨 Couleur principale</div>
+        <div class="msection">
+            <div class="msection-title">🎨 Couleur principale</div>
             <div class="color-grid">
-                <div class="color-swatch" style="background:#1a73e8" onclick="selectionnerCouleur('#1a73e8',this)"></div>
-                <div class="color-swatch" style="background:#7c3aed" onclick="selectionnerCouleur('#7c3aed',this)"></div>
-                <div class="color-swatch" style="background:#dc2626" onclick="selectionnerCouleur('#dc2626',this)"></div>
-                <div class="color-swatch" style="background:#16a34a" onclick="selectionnerCouleur('#16a34a',this)"></div>
-                <div class="color-swatch" style="background:#ea580c" onclick="selectionnerCouleur('#ea580c',this)"></div>
-                <div class="color-swatch" style="background:#0891b2" onclick="selectionnerCouleur('#0891b2',this)"></div>
-                <div class="color-swatch" style="background:#db2777" onclick="selectionnerCouleur('#db2777',this)"></div>
-                <div class="color-swatch" style="background:#1e293b" onclick="selectionnerCouleur('#1e293b',this)"></div>
+                <div class="cswatch" style="background:#1a73e8" onclick="setCouleur('#1a73e8',this)"></div>
+                <div class="cswatch" style="background:#7c3aed" onclick="setCouleur('#7c3aed',this)"></div>
+                <div class="cswatch" style="background:#dc2626" onclick="setCouleur('#dc2626',this)"></div>
+                <div class="cswatch" style="background:#16a34a" onclick="setCouleur('#16a34a',this)"></div>
+                <div class="cswatch" style="background:#ea580c" onclick="setCouleur('#ea580c',this)"></div>
+                <div class="cswatch" style="background:#0891b2" onclick="setCouleur('#0891b2',this)"></div>
+                <div class="cswatch" style="background:#db2777" onclick="setCouleur('#db2777',this)"></div>
+                <div class="cswatch" style="background:#1e293b" onclick="setCouleur('#1e293b',this)"></div>
             </div>
-            <div class="color-input-row">
-                <input type="color" id="color-picker" style="width:36px;height:36px;border:none;border-radius:8px;cursor:pointer;padding:2px;" onchange="selectionnerCouleur(this.value,null)">
-                <input type="text" class="color-hex" id="color-hex" placeholder="#1a73e8" maxlength="7">
-                <button class="btn-save" style="width:auto;padding:8px 16px" onclick="appliquerHex()">Appliquer</button>
+            <div class="color-row">
+                <input type="color" id="c-picker" style="width:36px;height:36px;border:none;border-radius:8px;cursor:pointer;" onchange="setCouleur(this.value,null)">
+                <input type="text" class="chex" id="c-hex" placeholder="#1a73e8" maxlength="7">
+                <button class="btn-save" style="width:auto;padding:8px 16px" onclick="appliquerHex()">OK</button>
             </div>
         </div>
 
         <!-- DÉCONNEXION -->
-        <div class="modal-section">
-            <div class="modal-section-title">🚪 Déconnexion</div>
+        <div class="msection">
+            <div class="msection-title">🚪 Déconnexion</div>
             <button onclick="deconnecter()" style="width:100%;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;" onmouseover="this.style.background='#dc2626';this.style.color='white'" onmouseout="this.style.background='#fee2e2';this.style.color='#dc2626'">
                 🚪 Se déconnecter
             </button>
@@ -330,373 +338,287 @@
 </div>
 
 <script>
-    const SB_URL = "https://urpfgiaocxfnyfdoiapf.supabase.co";
-    const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVycGZnaWFvY3hmbnlmZG9pYXBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NDQ3MzMsImV4cCI6MjA5MDUyMDczM30.8OkTr_1pXbPn73e64Vgg8ovLGnkNNGDdWvmrzVBmzwo";
-    const _supabase = window.supabase.createClient(SB_URL, SB_KEY);
+const SB_URL="https://urpfgiaocxfnyfdoiapf.supabase.co";
+const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVycGZnaWFvY3hmbnlmZG9pYXBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NDQ3MzMsImV4cCI6MjA5MDUyMDczM30.8OkTr_1pXbPn73e64Vgg8ovLGnkNNGDdWvmrzVBmzwo";
+const sb=window.supabase.createClient(SB_URL,SB_KEY);
 
-    let idResto = "", nomResto = "", allAvis = [], filtreActif = "tous", filtrePlateformeActif = null;
-    let langue = localStorage.getItem('damavis_langue') || 'fr';
+let idResto="",nomResto="",allAvis=[],filtreActif="tous",filtrePlat=null;
+let langue=localStorage.getItem('dv_langue')||'fr';
 
-    const i18n = {
-        fr: { dashboard:"Dashboard", avis:"Tous les avis", internes:"Avis internes", overview:"Vue d'ensemble de votre réputation", noteMoy:"Note moyenne", totalAvis:"Total avis", avisInt:"Avis interceptés", taux:"Taux satisfaction", plateformes:"Plateformes connectées", derniers:"Derniers avis reçus", tous:"Tous", positifs:"😊 Positifs", negatifs:"😞 Négatifs", repondre:"Répondre", envoyer:"Envoyer", annuler:"Annuler", aucunAvis:"Aucun avis", tableauBord:"Tableau de bord", nav2:"Plateformes", connecte:"Connecté", configurer:"À configurer", placeholder:"Écrire une réponse...", actualiser:"Actualiser", params:"Paramètres", sousTitle:"Tableau de bord de réputation" },
-        en: { dashboard:"Dashboard", avis:"All reviews", internes:"Internal", overview:"Overview of your reputation", noteMoy:"Average rating", totalAvis:"Total reviews", avisInt:"Intercepted", taux:"Satisfaction", plateformes:"Connected platforms", derniers:"Latest reviews", tous:"All", positifs:"😊 Positive", negatifs:"😞 Negative", repondre:"Reply", envoyer:"Send", annuler:"Cancel", aucunAvis:"No reviews", tableauBord:"Overview", nav2:"Platforms", connecte:"Connected", configurer:"Configure", placeholder:"Write a reply...", actualiser:"Refresh", params:"Settings", sousTitle:"Reputation dashboard" },
-        es: { dashboard:"Panel", avis:"Reseñas", internes:"Internas", overview:"Resumen de tu reputación", noteMoy:"Nota media", totalAvis:"Total", avisInt:"Interceptadas", taux:"Satisfacción", plateformes:"Plataformas", derniers:"Últimas reseñas", tous:"Todas", positifs:"😊 Positivas", negatifs:"😞 Negativas", repondre:"Responder", envoyer:"Enviar", annuler:"Cancelar", aucunAvis:"Sin reseñas", tableauBord:"Panel", nav2:"Plataformas", connecte:"Conectado", configurer:"Configurar", placeholder:"Escribe...", actualiser:"Actualizar", params:"Ajustes", sousTitle:"Panel de reputación" },
-        it: { dashboard:"Dashboard", avis:"Recensioni", internes:"Interne", overview:"Panoramica reputazione", noteMoy:"Voto medio", totalAvis:"Totale", avisInt:"Intercettate", taux:"Soddisfazione", plateformes:"Piattaforme", derniers:"Ultime recensioni", tous:"Tutte", positifs:"😊 Positive", negatifs:"😞 Negative", repondre:"Rispondere", envoyer:"Invia", annuler:"Annulla", aucunAvis:"Nessuna recensione", tableauBord:"Panoramica", nav2:"Piattaforme", connecte:"Collegato", configurer:"Configurare", placeholder:"Scrivi...", actualiser:"Aggiorna", params:"Impostazioni", sousTitle:"Dashboard reputazione" },
-        de: { dashboard:"Dashboard", avis:"Bewertungen", internes:"Interne", overview:"Überblick Ruf", noteMoy:"Durchschnitt", totalAvis:"Gesamt", avisInt:"Abgefangen", taux:"Zufriedenheit", plateformes:"Plattformen", derniers:"Neueste Bewertungen", tous:"Alle", positifs:"😊 Positiv", negatifs:"😞 Negativ", repondre:"Antworten", envoyer:"Senden", annuler:"Abbrechen", aucunAvis:"Keine Bewertungen", tableauBord:"Überblick", nav2:"Plattformen", connecte:"Verbunden", configurer:"Konfigurieren", placeholder:"Antwort...", actualiser:"Aktualisieren", params:"Einstellungen", sousTitle:"Reputations-Dashboard" },
-        pt: { dashboard:"Dashboard", avis:"Avaliações", internes:"Internas", overview:"Visão geral reputação", noteMoy:"Nota média", totalAvis:"Total", avisInt:"Intercetadas", taux:"Satisfação", plateformes:"Plataformas", derniers:"Últimas avaliações", tous:"Todas", positifs:"😊 Positivas", negatifs:"😞 Negativas", repondre:"Responder", envoyer:"Enviar", annuler:"Cancelar", aucunAvis:"Sem avaliações", tableauBord:"Visão geral", nav2:"Plataformas", connecte:"Ligado", configurer:"Configurar", placeholder:"Escrever...", actualiser:"Atualizar", params:"Definições", sousTitle:"Dashboard reputação" }
+const i18n={
+    fr:{dash:"Dashboard",avis:"Tous les avis",int:"Avis internes",overview:"Vue d'ensemble de votre réputation",note:"Note moyenne",total:"Total avis",intercept:"Avis interceptés",taux:"Taux satisfaction",plat:"Plateformes",derniers:"Derniers avis reçus",tous:"Tous",pos:"😊 Positifs",neg:"😞 Négatifs",rep:"Répondre",envoyer:"Envoyer",annuler:"Annuler",aucun:"Aucun avis pour le moment",tb:"Tableau de bord",nav2:"Plateformes",connecte:"Connecté",config:"À configurer",ph:"Écrire une réponse...",refresh:"Actualiser",params:"Paramètres",sousT:"Tableau de bord de réputation",voirAvis:"Voir les avis",voirPage:"Voir la page",ouvrirWA:"Ouvrir WhatsApp",voirProfil:"Voir le profil"},
+    en:{dash:"Dashboard",avis:"All reviews",int:"Internal",overview:"Overview of your reputation",note:"Average rating",total:"Total reviews",intercept:"Intercepted",taux:"Satisfaction",plat:"Platforms",derniers:"Latest reviews",tous:"All",pos:"😊 Positive",neg:"😞 Negative",rep:"Reply",envoyer:"Send",annuler:"Cancel",aucun:"No reviews yet",tb:"Overview",nav2:"Platforms",connecte:"Connected",config:"Configure",ph:"Write a reply...",refresh:"Refresh",params:"Settings",sousT:"Reputation dashboard",voirAvis:"View reviews",voirPage:"View page",ouvrirWA:"Open WhatsApp",voirProfil:"View profile"},
+    es:{dash:"Panel",avis:"Reseñas",int:"Internas",overview:"Resumen reputación",note:"Nota media",total:"Total",intercept:"Interceptadas",taux:"Satisfacción",plat:"Plataformas",derniers:"Últimas reseñas",tous:"Todas",pos:"😊 Positivas",neg:"😞 Negativas",rep:"Responder",envoyer:"Enviar",annuler:"Cancelar",aucun:"Sin reseñas",tb:"Panel",nav2:"Plataformas",connecte:"Conectado",config:"Configurar",ph:"Escribe...",refresh:"Actualizar",params:"Ajustes",sousT:"Panel de reputación",voirAvis:"Ver reseñas",voirPage:"Ver página",ouvrirWA:"Abrir WhatsApp",voirProfil:"Ver perfil"},
+    it:{dash:"Dashboard",avis:"Recensioni",int:"Interne",overview:"Panoramica reputazione",note:"Voto medio",total:"Totale",intercept:"Intercettate",taux:"Soddisfazione",plat:"Piattaforme",derniers:"Ultime recensioni",tous:"Tutte",pos:"😊 Positive",neg:"😞 Negative",rep:"Rispondere",envoyer:"Invia",annuler:"Annulla",aucun:"Nessuna recensione",tb:"Panoramica",nav2:"Piattaforme",connecte:"Collegato",config:"Configurare",ph:"Scrivi...",refresh:"Aggiorna",params:"Impostazioni",sousT:"Dashboard reputazione",voirAvis:"Vedi recensioni",voirPage:"Vedi pagina",ouvrirWA:"Apri WhatsApp",voirProfil:"Vedi profilo"},
+    de:{dash:"Dashboard",avis:"Bewertungen",int:"Interne",overview:"Überblick Ruf",note:"Durchschnitt",total:"Gesamt",intercept:"Abgefangen",taux:"Zufriedenheit",plat:"Plattformen",derniers:"Neueste",tous:"Alle",pos:"😊 Positiv",neg:"😞 Negativ",rep:"Antworten",envoyer:"Senden",annuler:"Abbrechen",aucun:"Keine Bewertungen",tb:"Überblick",nav2:"Plattformen",connecte:"Verbunden",config:"Konfigurieren",ph:"Antwort...",refresh:"Aktualisieren",params:"Einstellungen",sousT:"Reputations-Dashboard",voirAvis:"Bewertungen sehen",voirPage:"Seite sehen",ouvrirWA:"WhatsApp öffnen",voirProfil:"Profil sehen"},
+    pt:{dash:"Dashboard",avis:"Avaliações",int:"Internas",overview:"Visão geral reputação",note:"Nota média",total:"Total",intercept:"Intercetadas",taux:"Satisfação",plat:"Plataformas",derniers:"Últimas avaliações",tous:"Todas",pos:"😊 Positivas",neg:"😞 Negativas",rep:"Responder",envoyer:"Enviar",annuler:"Cancelar",aucun:"Sem avaliações",tb:"Visão geral",nav2:"Plataformas",connecte:"Ligado",config:"Configurar",ph:"Escrever...",refresh:"Atualizar",params:"Definições",sousT:"Dashboard reputação",voirAvis:"Ver avaliações",voirPage:"Ver página",ouvrirWA:"Abrir WhatsApp",voirProfil:"Ver perfil"}
+};
+let t=i18n[langue];
+
+// ── COULEUR ──────────────────────────────────────────
+function hexLight(h){const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgba(${r},${g},${b},0.12)`;}
+function applyCouleur(){
+    const c=localStorage.getItem('dv_couleur')||'#1a73e8';
+    document.documentElement.style.setProperty('--primary',c);
+    document.documentElement.style.setProperty('--primary-light',hexLight(c));
+}
+function setCouleur(hex,el){
+    document.documentElement.style.setProperty('--primary',hex);
+    document.documentElement.style.setProperty('--primary-light',hexLight(hex));
+    localStorage.setItem('dv_couleur',hex);
+    document.getElementById('c-hex').value=hex;
+    document.getElementById('c-picker').value=hex;
+    document.querySelectorAll('.cswatch').forEach(s=>s.classList.remove('sel'));
+    if(el)el.classList.add('sel');
+}
+function appliquerHex(){const h=document.getElementById('c-hex').value.trim();if(/^#[0-9A-Fa-f]{6}$/.test(h))setCouleur(h,null);}
+
+// ── LIENS ────────────────────────────────────────────
+function getLiens(){try{return JSON.parse(localStorage.getItem('dv_liens')||'{}');}catch{return{};}}
+function sauvegarderLiens(){
+    const l={
+        google:document.getElementById('l-google').value.trim(),
+        googlePlaceId:document.getElementById('l-google-placeid').value.trim(),
+        tripadvisor:document.getElementById('l-tripadvisor').value.trim(),
+        thefork:document.getElementById('l-thefork').value.trim(),
+        facebook:document.getElementById('l-facebook').value.trim(),
+        instagram:document.getElementById('l-instagram').value.trim(),
+        tiktok:document.getElementById('l-tiktok').value.trim(),
+        whatsapp:document.getElementById('l-whatsapp').value.trim(),
     };
-    let t = i18n[langue];
+    localStorage.setItem('dv_liens',JSON.stringify(l));
+    showMsg('m-liens');
+    renderPlatformes();
+    renderSocial();
+}
 
-    const platformConfig = {
-        google:      { label:'Google',      emoji:'G',  color:'#4285F4', badge:'background:#dbeafe;color:#1d4ed8' },
-        tripadvisor: { label:'TripAdvisor', emoji:'🦉', color:'#00af87', badge:'background:#d1fae5;color:#065f46' },
-        thefork:     { label:'TheFork',     emoji:'🍴', color:'#00b0ae', badge:'background:#ccfbf1;color:#0f766e' },
-        facebook:    { label:'Facebook',    emoji:'f',  color:'#1877F2', badge:'background:#dbeafe;color:#1e40af' },
-        instagram:   { label:'Instagram',   emoji:'📸', color:'#E1306C', badge:'background:#fce7f3;color:#9d174d' },
-        tiktok:      { label:'TikTok',      emoji:'♪',  color:'#010101', badge:'background:#f3f4f6;color:#111827' },
-        interne:     { label:'Interne',     emoji:'🔒', color:'#f59e0b', badge:'background:#fef3c7;color:#d97706' },
+// ── PARAMÈTRES ───────────────────────────────────────
+function ouvrirParams(){
+    const c=localStorage.getItem('dv_couleur')||'#1a73e8';
+    document.getElementById('c-hex').value=c;
+    document.getElementById('c-picker').value=c;
+    document.querySelectorAll('.cswatch').forEach(s=>s.classList.toggle('sel',s.style.background===c));
+    document.querySelectorAll('.lbtn').forEach(b=>{const l=b.getAttribute('onclick').match(/'(\w+)'/)[1];b.classList.toggle('sel',l===langue);});
+    document.getElementById('i-nom').value=localStorage.getItem('dv_nom')||nomResto||'';
+    document.getElementById('i-email').value=localStorage.getItem('dv_email')||'';
+    const l=getLiens();
+    document.getElementById('l-google').value=l.google||'';
+    document.getElementById('l-google-placeid').value=l.googlePlaceId||'';
+    document.getElementById('l-tripadvisor').value=l.tripadvisor||'';
+    document.getElementById('l-thefork').value=l.thefork||'';
+    document.getElementById('l-facebook').value=l.facebook||'';
+    document.getElementById('l-instagram').value=l.instagram||'';
+    document.getElementById('l-tiktok').value=l.tiktok||'';
+    document.getElementById('l-whatsapp').value=l.whatsapp||'';
+    document.getElementById('modal').classList.add('open');
+}
+function fermerParams(){document.getElementById('modal').classList.remove('open');}
+function fermerSiDehors(e){if(e.target===document.getElementById('modal'))fermerParams();}
+
+function setLangue(lang){
+    langue=lang;t=i18n[lang];
+    localStorage.setItem('dv_langue',lang);
+    document.querySelectorAll('.lbtn').forEach(b=>{const l=b.getAttribute('onclick').match(/'(\w+)'/)[1];b.classList.toggle('sel',l===lang);});
+    applyTrads();renderPlatformes();renderSocial();renderAvis();
+}
+
+function sauvegarderNom(){
+    const n=document.getElementById('i-nom').value.trim();if(!n)return;
+    localStorage.setItem('dv_nom',n);nomResto=n;
+    document.getElementById('resto-nom').innerText=n;
+    document.getElementById('resto-name').innerText=n;
+    document.getElementById('resto-av').innerText=n.charAt(0).toUpperCase();
+    showMsg('m-nom');
+}
+async function sauvegarderEmail(){
+    const e=document.getElementById('i-email').value.trim();
+    if(!e||!e.includes('@')){showMsg('m-email-err');return;}
+    const{error}=await sb.auth.updateUser({email:e});
+    if(error){showMsg('m-email-err');return;}
+    localStorage.setItem('dv_email',e);showMsg('m-email');
+}
+async function sauvegarderMdp(){
+    const m1=document.getElementById('i-mdp1').value,m2=document.getElementById('i-mdp2').value;
+    if(!m1||m1!==m2){showMsg('m-mdp-err');return;}
+    if(m1.length<6){document.getElementById('m-mdp-err').innerText='❌ Minimum 6 caractères';showMsg('m-mdp-err');return;}
+    const{error}=await sb.auth.updateUser({password:m1});
+    if(error){document.getElementById('m-mdp-err').innerText='❌ '+error.message;showMsg('m-mdp-err');return;}
+    document.getElementById('i-mdp1').value='';document.getElementById('i-mdp2').value='';showMsg('m-mdp');
+}
+function showMsg(id){const el=document.getElementById(id);el.style.display='block';setTimeout(()=>el.style.display='none',3000);}
+
+// ── TRADUCTIONS ──────────────────────────────────────
+function applyTrads(){
+    const m={
+        'nl1':t.tb,'nl2':t.nav2,'n-dash':t.dash,'n-avis':t.avis,'n-int':t.int,
+        'p-title':t.dash,'p-sub':t.overview,'l-note':t.note,'l-total':t.total,
+        'l-int':t.intercept,'l-taux':t.taux,'l-plat':t.plat,'l-avis':t.derniers,
+        't-tous':t.tous,'t-pos':t.pos,'t-neg':t.neg,'b-refresh':t.refresh,'b-params':t.params,
+        'resto-sub':t.sousT,
     };
+    for(const[id,val]of Object.entries(m)){const el=document.getElementById(id);if(el)el.innerText=val;}
+}
 
-    // ── COULEUR ──────────────────────────────────────────
-    function hexToLight(hex) {
-        const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
-        return `rgba(${r},${g},${b},0.12)`;
+// ── INIT ─────────────────────────────────────────────
+async function init(){
+    applyCouleur();applyTrads();
+    const{data:{session}}=await sb.auth.getSession();
+    if(!session){window.location.href='login.html';return;}
+    const user=session.user;
+    if(user.email==='ngongangdjomo@gmail.com'){window.location.href='admin.html';return;}
+    const params=new URLSearchParams(window.location.search);
+    idResto=params.get('id')||'';
+    if(!idResto){
+        const{data}=await sb.from('restaurants').select('id,nom').eq('email_patron',user.email).single();
+        if(data){idResto=data.id;nomResto=data.nom;}
+        else{document.getElementById('resto-nom').innerText='Restaurant introuvable';return;}
+    }else{
+        const{data}=await sb.from('restaurants').select('nom').eq('id',idResto).single();
+        nomResto=localStorage.getItem('dv_nom')||data?.nom||'Mon Restaurant';
     }
-    function appliquerCouleurSauvegardee() {
-        const c = localStorage.getItem('damavis_couleur') || '#1a73e8';
-        document.documentElement.style.setProperty('--primary', c);
-        document.documentElement.style.setProperty('--primary-light', hexToLight(c));
-    }
-    function selectionnerCouleur(hex, el) {
-        document.documentElement.style.setProperty('--primary', hex);
-        document.documentElement.style.setProperty('--primary-light', hexToLight(hex));
-        localStorage.setItem('damavis_couleur', hex);
-        document.getElementById('color-hex').value = hex;
-        document.getElementById('color-picker').value = hex;
-        document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
-        if (el) el.classList.add('selected');
-    }
-    function appliquerHex() {
-        const hex = document.getElementById('color-hex').value.trim();
-        if (/^#[0-9A-Fa-f]{6}$/.test(hex)) selectionnerCouleur(hex, null);
-    }
+    if(!localStorage.getItem('dv_email'))localStorage.setItem('dv_email',user.email||'');
+    document.getElementById('resto-nom').innerText=nomResto;
+    document.getElementById('resto-name').innerText=nomResto;
+    document.getElementById('resto-av').innerText=nomResto.charAt(0).toUpperCase();
+    await chargerDonnees();
+}
 
-    // ── LIENS ────────────────────────────────────────────
-    function getLiens() {
-        try { return JSON.parse(localStorage.getItem('damavis_liens') || '{}'); }
-        catch { return {}; }
-    }
-    function sauvegarderLiens() {
-        const liens = {
-            google: document.getElementById('lien-google').value.trim(),
-            tripadvisor: document.getElementById('lien-tripadvisor').value.trim(),
-            thefork: document.getElementById('lien-thefork').value.trim(),
-            facebook: document.getElementById('lien-facebook').value.trim(),
-            instagram: document.getElementById('lien-instagram').value.trim(),
-            tiktok: document.getElementById('lien-tiktok').value.trim(),
-            whatsapp: document.getElementById('lien-whatsapp').value.trim(),
-        };
-        localStorage.setItem('damavis_liens', JSON.stringify(liens));
-        afficherMsg('msg-liens-ok');
-        renderPlatformes();
-        renderSocial();
-    }
+async function deconnecter(){await sb.auth.signOut();localStorage.removeItem('dv_email');window.location.href='login.html';}
 
-    // ── PARAMÈTRES ───────────────────────────────────────
-    function ouvrirParametres() {
-        const c = localStorage.getItem('damavis_couleur') || '#1a73e8';
-        document.getElementById('color-hex').value = c;
-        document.getElementById('color-picker').value = c;
-        document.querySelectorAll('.color-swatch').forEach(s => s.classList.toggle('selected', s.style.background === c));
-        document.querySelectorAll('.lang-btn').forEach(b => {
-            const l = b.getAttribute('onclick').match(/'(\w+)'/)[1];
-            b.classList.toggle('selected', l === langue);
-        });
-        document.getElementById('input-nom-resto').value = localStorage.getItem('damavis_nom_resto') || nomResto || '';
-        document.getElementById('input-email').value = localStorage.getItem('damavis_email') || '';
-        const liens = getLiens();
-        document.getElementById('lien-google').value = liens.google || '';
-        document.getElementById('lien-tripadvisor').value = liens.tripadvisor || '';
-        document.getElementById('lien-thefork').value = liens.thefork || '';
-        document.getElementById('lien-facebook').value = liens.facebook || '';
-        document.getElementById('lien-instagram').value = liens.instagram || '';
-        document.getElementById('lien-tiktok').value = liens.tiktok || '';
-        document.getElementById('lien-whatsapp').value = liens.whatsapp || '';
-        document.getElementById('modal-overlay').classList.add('open');
-    }
-    function fermerParametres() { document.getElementById('modal-overlay').classList.remove('open'); }
-    function fermerSiDehors(e) { if (e.target === document.getElementById('modal-overlay')) fermerParametres(); }
+async function chargerDonnees(){
+    document.getElementById('avis-list').innerHTML='<div class="loading"><div class="spinner"></div>Chargement...</div>';
+    const{data}=await sb.from('avis_internes').select('*').eq('id_restaurant',idResto).order('date_cree',{ascending:false}).limit(50);
+    allAvis=(data||[]).map(a=>({id:a.id,auteur:'Client anonyme',note:a.note,texte:a.commentaire,date:a.date_cree,plateforme:'interne'}));
+    calculerStats();renderPlatformes();renderSocial();renderAvis();
+}
 
-    function selectionnerLangue(lang) {
-        langue = lang; t = i18n[lang];
-        localStorage.setItem('damavis_langue', lang);
-        document.querySelectorAll('.lang-btn').forEach(b => {
-            const l = b.getAttribute('onclick').match(/'(\w+)'/)[1];
-            b.classList.toggle('selected', l === lang);
-        });
-        appliquerTraductions();
-        renderPlatformes();
-        renderSocial();
-        renderAvis();
-    }
+function calculerStats(){
+    const an=allAvis.filter(a=>a.note!==null);
+    const nm=an.length?(an.reduce((s,a)=>s+a.note,0)/an.length).toFixed(1):'—';
+    const pos=an.filter(a=>a.note>=4).length;
+    const tx=an.length?Math.round((pos/an.length)*100):0;
+    document.getElementById('s-note').innerText=nm!=='—'?`${nm}⭐`:'—';
+    document.getElementById('s-total').innerText=allAvis.length;
+    document.getElementById('s-int').innerText=allAvis.filter(a=>a.plateforme==='interne').length;
+    document.getElementById('s-taux').innerText=`${tx}%`;
+}
 
-    function sauvegarderNom() {
-        const nom = document.getElementById('input-nom-resto').value.trim();
-        if (!nom) return;
-        localStorage.setItem('damavis_nom_resto', nom);
-        nomResto = nom;
-        document.getElementById('resto-nom-header').innerText = nom;
-        document.getElementById('sidebar-resto-name').innerText = nom;
-        document.getElementById('resto-avatar').innerText = nom.charAt(0).toUpperCase();
-        afficherMsg('msg-nom-ok');
-    }
-    async function sauvegarderEmail() {
-        const email = document.getElementById('input-email').value.trim();
-        if (!email || !email.includes('@')) { afficherMsg('msg-email-err'); return; }
-        const { error } = await _supabase.auth.updateUser({ email });
-        if (error) { afficherMsg('msg-email-err'); return; }
-        localStorage.setItem('damavis_email', email);
-        afficherMsg('msg-email-ok');
-    }
-    async function sauvegarderMdp() {
-        const mdp = document.getElementById('input-mdp-new').value;
-        const confirm = document.getElementById('input-mdp-confirm').value;
-        if (!mdp || mdp !== confirm) { afficherMsg('msg-mdp-err'); return; }
-        if (mdp.length < 6) { document.getElementById('msg-mdp-err').innerText = '❌ Minimum 6 caractères'; afficherMsg('msg-mdp-err'); return; }
-        const { error } = await _supabase.auth.updateUser({ password: mdp });
-        if (error) { document.getElementById('msg-mdp-err').innerText = '❌ ' + error.message; afficherMsg('msg-mdp-err'); return; }
-        document.getElementById('input-mdp-new').value = '';
-        document.getElementById('input-mdp-confirm').value = '';
-        afficherMsg('msg-mdp-ok');
-    }
-    function afficherMsg(id) {
-        const el = document.getElementById(id);
-        el.style.display = 'block';
-        setTimeout(() => el.style.display = 'none', 3000);
-    }
+// ── PLATEFORMES ──────────────────────────────────────
+function renderPlatformes(){
+    const l=getLiens();
+    const plats=[
+        {id:'google',name:'Google',emoji:'G',color:'#4285F4',lien:l.google,placeId:l.googlePlaceId},
+        {id:'tripadvisor',name:'TripAdvisor',emoji:'🦉',color:'#00af87',lien:l.tripadvisor},
+        {id:'thefork',name:'TheFork',emoji:'🍴',color:'#00b0ae',lien:l.thefork},
+        {id:'facebook',name:'Facebook',emoji:'f',color:'#1877F2',lien:l.facebook},
+    ];
 
-    // ── TRADUCTIONS ──────────────────────────────────────
-    function appliquerTraductions() {
-        const ids = {
-            'nav-label-1':t.tableauBord,'nav-label-2':t.nav2,'nav-dashboard':t.dashboard,
-            'nav-avis':t.avis,'nav-internes':t.internes,'page-title':t.dashboard,
-            'page-sub':t.overview,'lbl-note-moy':t.noteMoy,'lbl-total-avis':t.totalAvis,
-            'lbl-avis-int':t.avisInt,'lbl-taux':t.taux,'lbl-plateformes':t.plateformes,
-            'lbl-derniers':t.derniers,'tab-tous':t.tous,'tab-pos':t.positifs,'tab-neg':t.negatifs,
-            'btn-refresh-lbl':t.actualiser,'btn-params-lbl':t.params,'modal-titre':'⚙️ '+t.params,
-            'resto-sous':t.sousTitle,
-        };
-        for (const [id,val] of Object.entries(ids)) { const el=document.getElementById(id); if(el) el.innerText=val; }
-    }
+    document.getElementById('platforms-grid').innerHTML=plats.map(p=>{
+        const connected=!!p.lien;
+        const statusClass=connected?'s-ok':'s-no';
+        const statusTxt=connected?t.connecte:t.config;
 
-    // ── INIT ─────────────────────────────────────────────
-    async function init() {
-        appliquerCouleurSauvegardee();
-        appliquerTraductions();
-        const { data: { session } } = await _supabase.auth.getSession();
-        if (!session) { window.location.href = 'login.html'; return; }
-        const user = session.user;
-        if (user.email === 'ngongangdjomo@gmail.com') { window.location.href = 'admin.html'; return; }
-        const params = new URLSearchParams(window.location.search);
-        idResto = params.get('id') || '';
-        if (!idResto) {
-            const { data } = await _supabase.from('restaurants').select('id,nom').eq('email_patron', user.email).single();
-            if (data) { idResto = data.id; nomResto = data.nom; }
-            else { document.getElementById('resto-nom-header').innerText = 'Restaurant introuvable'; return; }
-        } else {
-            const { data } = await _supabase.from('restaurants').select('nom').eq('id', idResto).single();
-            nomResto = localStorage.getItem('damavis_nom_resto') || data?.nom || 'Mon Restaurant';
+        // Widget spécifique par plateforme
+        let widget='';
+        if(p.id==='google'&&p.lien){
+            if(p.placeId){
+                widget=`<iframe class="maps-embed" loading="lazy" src="https://www.google.com/maps/embed/v1/place?key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY&q=place_id:${p.placeId}&language=fr"></iframe>`;
+            }
+            widget+=`<a href="${p.lien}" target="_blank" class="pcard-link" style="background:#4285F4;color:white;margin-top:8px">⭐ ${t.voirAvis} Google</a>`;
         }
-        if (!localStorage.getItem('damavis_email')) localStorage.setItem('damavis_email', user.email || '');
-        document.getElementById('resto-nom-header').innerText = nomResto;
-        document.getElementById('sidebar-resto-name').innerText = nomResto;
-        document.getElementById('resto-avatar').innerText = nomResto.charAt(0).toUpperCase();
-        await chargerDonnees();
-    }
+        if(p.id==='tripadvisor'&&p.lien){
+            widget=`<a href="${p.lien}" target="_blank" class="pcard-link" style="background:#00af87;color:white">🦉 ${t.voirAvis} TripAdvisor</a>`;
+        }
+        if(p.id==='thefork'&&p.lien){
+            widget=`<a href="${p.lien}" target="_blank" class="pcard-link" style="background:#00b0ae;color:white">🍴 ${t.voirAvis} TheFork</a>`;
+        }
+        if(p.id==='facebook'&&p.lien){
+            widget=`<a href="${p.lien}" target="_blank" class="pcard-link" style="background:#1877F2;color:white">f ${t.voirPage} Facebook</a>`;
+        }
 
-    async function deconnecter() {
-        await _supabase.auth.signOut();
-        localStorage.removeItem('damavis_email');
-        window.location.href = 'login.html';
-    }
-
-    // ── DONNÉES ──────────────────────────────────────────
-    async function chargerDonnees() {
-        document.getElementById('avis-list').innerHTML = `<div class="loading"><div class="spinner"></div>Chargement...</div>`;
-        const { data } = await _supabase.from('avis_internes').select('*').eq('id_restaurant', idResto).order('date_cree', { ascending: false }).limit(50);
-        allAvis = (data || []).map(a => ({ id:a.id, auteur:'Client anonyme', note:a.note, texte:a.commentaire, date:a.date_cree, plateforme:'interne' }));
-        calculerStats();
-        renderPlatformes();
-        renderSocial();
-        renderAvis();
-    }
-
-    function calculerStats() {
-        const avecNote = allAvis.filter(a => a.note !== null);
-        const noteMoy = avecNote.length ? (avecNote.reduce((s,a)=>s+a.note,0)/avecNote.length).toFixed(1) : '—';
-        const internes = allAvis.filter(a => a.plateforme === 'interne').length;
-        const positifs = avecNote.filter(a => a.note >= 4).length;
-        const taux = avecNote.length ? Math.round((positifs/avecNote.length)*100) : 0;
-        document.getElementById('stat-note').innerText = noteMoy !== '—' ? `${noteMoy}⭐` : '—';
-        document.getElementById('stat-total').innerText = allAvis.length;
-        document.getElementById('stat-internes').innerText = internes;
-        document.getElementById('stat-taux').innerText = `${taux}%`;
-    }
-
-    // ── PLATEFORMES (Google, TripAdvisor, TheFork, Facebook) ──
-    function renderPlatformes() {
-        const plateformes = ['google','tripadvisor','thefork','facebook'];
-        const liens = getLiens();
-        document.getElementById('platforms-grid').innerHTML = plateformes.map(p => {
-            const cfg = platformConfig[p];
-            const lien = liens[p] || '';
-            const connected = lien !== '';
-            const avisP = allAvis.filter(a => a.plateforme === p);
-            const avecNote = avisP.filter(a => a.note !== null);
-            const note = avecNote.length ? (avecNote.reduce((s,a)=>s+a.note,0)/avecNote.length).toFixed(1) : '—';
-            const stars = note !== '—' ? '★'.repeat(Math.round(note))+'☆'.repeat(5-Math.round(note)) : '';
-
-            // Widget TripAdvisor si lien renseigné
-            let extra = '';
-            if (p === 'tripadvisor' && lien) {
-                extra = `<div style="margin-top:8px"><a href="${lien}" target="_blank" style="font-size:11px;color:#00af87;font-weight:600">Voir mes avis TripAdvisor →</a></div>`;
-            }
-            if (p === 'thefork' && lien) {
-                extra = `<div style="margin-top:8px"><a href="${lien}" target="_blank" style="font-size:11px;color:#00b0ae;font-weight:600">Voir mes avis TheFork →</a></div>`;
-            }
-            if (p === 'facebook' && lien) {
-                extra = `<div style="margin-top:8px"><a href="${lien}" target="_blank" style="font-size:11px;color:#1877F2;font-weight:600">Voir ma page Facebook →</a></div>`;
-            }
-
-            const inner = `
-                <div class="platform-logo" style="background:${cfg.color}">${cfg.emoji}</div>
-                <div class="platform-info">
-                    <div class="platform-name">${cfg.label}</div>
-                    <div class="platform-note">${note}</div>
-                    ${stars ? `<div class="stars-mini">${stars}</div>` : ''}
-                    <div class="platform-count">${avisP.length} avis</div>
-                    ${extra}
-                </div>
-                <span class="platform-status ${connected ? 'status-connected' : 'status-pending'}">${connected ? t.connecte : t.configurer}</span>
-            `;
-            return lien
-                ? `<a href="${lien}" target="_blank" class="platform-card">${inner}</a>`
-                : `<div class="platform-card">${inner}</div>`;
-        }).join('');
-    }
-
-    // ── RÉSEAUX SOCIAUX (Instagram, TikTok, WhatsApp) ────
-    function renderSocial() {
-        const liens = getLiens();
-        const socials = [];
-
-        if (liens.instagram) socials.push({
-            label: 'Instagram',
-            sub: '@' + liens.instagram,
-            color: '#E1306C',
-            emoji: '📸',
-            url: `https://www.instagram.com/${liens.instagram}`,
-            btnLabel: 'Voir le profil',
-            btnColor: '#E1306C',
-        });
-        if (liens.tiktok) socials.push({
-            label: 'TikTok',
-            sub: '@' + liens.tiktok,
-            color: '#010101',
-            emoji: '🎵',
-            url: `https://www.tiktok.com/@${liens.tiktok}`,
-            btnLabel: 'Voir le profil',
-            btnColor: '#010101',
-        });
-        if (liens.whatsapp) socials.push({
-            label: 'WhatsApp Business',
-            sub: liens.whatsapp,
-            color: '#25D366',
-            emoji: '💬',
-            url: `https://wa.me/${liens.whatsapp.replace(/\D/g,'')}`,
-            btnLabel: 'Ouvrir WhatsApp',
-            btnColor: '#25D366',
-        });
-
-        const section = document.getElementById('social-section');
-        const grid = document.getElementById('social-grid');
-
-        if (!socials.length) { section.style.display = 'none'; return; }
-        section.style.display = 'block';
-
-        grid.innerHTML = socials.map(s => `
-            <div class="social-card">
-                <div class="social-icon" style="background:${s.color}">${s.emoji}</div>
-                <div class="social-info">
-                    <div class="social-name">${s.label}</div>
-                    <div class="social-sub">${s.sub}</div>
-                </div>
-                <a href="${s.url}" target="_blank" class="btn-social" style="background:${s.color};color:white">${s.btnLabel}</a>
+        return`<div class="pcard">
+            <div class="pcard-header">
+                <div class="pcard-logo" style="background:${p.color}">${p.emoji}</div>
+                <div class="pcard-name">${p.name}</div>
+                <span class="pcard-status ${statusClass}">${statusTxt}</span>
             </div>
-        `).join('');
-    }
+            <div class="pcard-count" style="color:var(--muted);font-size:13px">${connected?'Lien configuré — cliquez pour voir vos avis':'Ajoutez votre lien dans les Paramètres ⚙️'}</div>
+            ${widget}
+        </div>`;
+    }).join('');
+}
 
-    // ── AVIS ─────────────────────────────────────────────
-    function renderAvis() {
-        let filtered = [...allAvis];
-        if (filtrePlateformeActif) filtered = filtered.filter(a => a.plateforme === filtrePlateformeActif);
-        if (filtreActif === 'positif') filtered = filtered.filter(a => a.note === null || a.note >= 4);
-        if (filtreActif === 'negatif') filtered = filtered.filter(a => a.note !== null && a.note < 4);
+// ── RÉSEAUX SOCIAUX ──────────────────────────────────
+function renderSocial(){
+    const l=getLiens();
+    const socials=[];
+    if(l.instagram)socials.push({name:'Instagram',sub:'@'+l.instagram,color:'#E1306C',emoji:'📸',url:`https://www.instagram.com/${l.instagram}`,btn:t.voirProfil});
+    if(l.tiktok)socials.push({name:'TikTok',sub:'@'+l.tiktok,color:'#010101',emoji:'🎵',url:`https://www.tiktok.com/@${l.tiktok}`,btn:t.voirProfil});
+    if(l.whatsapp)socials.push({name:'WhatsApp',sub:l.whatsapp,color:'#25D366',emoji:'💬',url:`https://wa.me/${l.whatsapp.replace(/\D/g,'')}`,btn:t.ouvrirWA});
+    const sec=document.getElementById('social-section');
+    if(!socials.length){sec.style.display='none';return;}
+    sec.style.display='block';
+    document.getElementById('social-grid').innerHTML=socials.map(s=>`
+        <div class="scard">
+            <div class="scard-icon" style="background:${s.color}">${s.emoji}</div>
+            <div><div class="scard-name">${s.name}</div><div class="scard-sub">${s.sub}</div></div>
+            <a href="${s.url}" target="_blank" class="scard-btn" style="background:${s.color}">${s.btn}</a>
+        </div>`).join('');
+}
 
-        const container = document.getElementById('avis-list');
-        if (!filtered.length) { container.innerHTML = `<div class="empty">💬<br><br>${t.aucunAvis}</div>`; return; }
-
-        container.innerHTML = filtered.map(a => {
-            const cfg = platformConfig[a.plateforme] || platformConfig.interne;
-            const stars = a.note ? '★'.repeat(a.note)+'☆'.repeat(5-a.note) : '';
-            const dateStr = new Date(a.date).toLocaleDateString();
-            return `<div class="avis-item">
-                <div class="avis-dot" style="background:${cfg.color}">${cfg.emoji}</div>
-                <div class="avis-content">
-                    <div class="avis-top">
-                        <span class="avis-auteur">${a.auteur}</span>
-                        ${a.note ? `<span class="avis-note">${stars} ${a.note}/5</span>` : ''}
-                        <span class="avis-tag" style="${cfg.badge}">${cfg.label}</span>
-                        <span class="avis-date">${dateStr}</span>
-                    </div>
-                    <div class="avis-text">${a.texte || ''}</div>
-                    <div><button class="btn-rep" onclick="toggleRep('rep-${a.id}')">${t.repondre}</button></div>
-                    <div class="rep-area" id="rep-${a.id}">
-                        <textarea class="rep-input" rows="2" placeholder="${t.placeholder}" id="rep-txt-${a.id}"></textarea>
-                        <div class="rep-btns">
-                            <button class="btn-cancel" onclick="toggleRep('rep-${a.id}')">${t.annuler}</button>
-                            <button class="btn-send" onclick="envoyerRep('${a.id}')">${t.envoyer}</button>
-                        </div>
+// ── AVIS ─────────────────────────────────────────────
+function renderAvis(){
+    const cfg={interne:{emoji:'🔒',color:'#f59e0b',badge:'background:#fef3c7;color:#d97706'},google:{emoji:'G',color:'#4285F4',badge:'background:#dbeafe;color:#1d4ed8'}};
+    let fl=[...allAvis];
+    if(filtrePlat)fl=fl.filter(a=>a.plateforme===filtrePlat);
+    if(filtreActif==='positif')fl=fl.filter(a=>a.note===null||a.note>=4);
+    if(filtreActif==='negatif')fl=fl.filter(a=>a.note!==null&&a.note<4);
+    const el=document.getElementById('avis-list');
+    if(!fl.length){el.innerHTML=`<div class="empty">💬<br><br>${t.aucun}</div>`;return;}
+    el.innerHTML=fl.map(a=>{
+        const c=cfg[a.plateforme]||cfg.interne;
+        const stars=a.note?'★'.repeat(a.note)+'☆'.repeat(5-a.note):'';
+        const ds=new Date(a.date).toLocaleDateString();
+        return`<div class="avis-item">
+            <div class="avis-dot" style="background:${c.color}">${c.emoji}</div>
+            <div class="avis-content">
+                <div class="avis-top">
+                    <span class="avis-auteur">${a.auteur}</span>
+                    ${a.note?`<span class="avis-note">${stars} ${a.note}/5</span>`:''}
+                    <span class="avis-tag" style="${c.badge}">${a.plateforme}</span>
+                    <span class="avis-date">${ds}</span>
+                </div>
+                <div class="avis-text">${a.texte||''}</div>
+                <div><button class="btn-rep" onclick="toggleRep('r-${a.id}')">${t.rep}</button></div>
+                <div class="rep-area" id="r-${a.id}">
+                    <textarea class="rep-input" rows="2" placeholder="${t.ph}" id="rt-${a.id}"></textarea>
+                    <div class="rep-btns">
+                        <button class="btn-cancel" onclick="toggleRep('r-${a.id}')">${t.annuler}</button>
+                        <button class="btn-send" onclick="envoyerRep('${a.id}')">${t.envoyer}</button>
                     </div>
                 </div>
-            </div>`;
-        }).join('');
-    }
+            </div>
+        </div>`;
+    }).join('');
+}
 
-    function toggleRep(id) { document.getElementById(id).classList.toggle('open'); }
-    function envoyerRep(id) {
-        const txt = document.getElementById(`rep-txt-${id}`).value.trim();
-        if (!txt) return;
-        alert('✅ Réponse enregistrée !');
-        toggleRep(`rep-${id}`);
-    }
+function toggleRep(id){document.getElementById(id).classList.toggle('open');}
+function envoyerRep(id){const txt=document.getElementById(`rt-${id}`).value.trim();if(!txt)return;alert('✅ Réponse enregistrée !');toggleRep(`r-${id}`);}
 
-    function filtrerAvis(filtre, btn) {
-        filtreActif = filtre; filtrePlateformeActif = null;
-        document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
-        if (btn) btn.classList.add('active');
-        else document.getElementById('tab-tous').classList.add('active');
-        renderAvis();
-    }
-    function filtrerPlateforme(p) {
-        filtrePlateformeActif = filtrePlateformeActif === p ? null : p;
-        filtreActif = 'tous';
-        document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
-        document.getElementById('tab-tous').classList.add('active');
-        renderAvis();
-    }
+function filtrerAvis(f,btn){
+    filtreActif=f;filtrePlat=null;
+    document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('active'));
+    if(btn)btn.classList.add('active');else document.getElementById('t-tous').classList.add('active');
+    renderAvis();
+}
+function filtrerPlateforme(p){
+    filtrePlat=filtrePlat===p?null:p;filtreActif='tous';
+    document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('active'));
+    document.getElementById('t-tous').classList.add('active');
+    renderAvis();
+}
 
-    init();
+window.addEventListener('load',init);
 </script>
 </body>
 </html>
