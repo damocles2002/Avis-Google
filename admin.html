@@ -334,7 +334,7 @@
         const { data: restaurants, error } = await _supabase
             .from('restaurants')
             .select('*')
-            .order('created_at', { ascending: false });
+            .order('date_cree', { ascending: false });
 
         if (error || !restaurants) {
             document.getElementById('table-container').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div>Erreur de chargement</div>`;
@@ -455,7 +455,7 @@
             .from('avis_internes')
             .select('*')
             .eq('id_restaurant', id)
-            .order('created_at', { ascending: false })
+            .order('date_cree', { ascending: false })
             .limit(20);
 
         if (!avis || !avis.length) {
@@ -465,7 +465,7 @@
 
         const html = `<div class="avis-panel">${avis.map(a => {
             const stars = a.note ? '★'.repeat(Math.round(a.note)) : '';
-            const date = new Date(a.created_at).toLocaleDateString('fr-FR');
+            const date = new Date(a.date_cree).toLocaleDateString('fr-FR');
             return `<div class="avis-mini">
                 <div class="avis-mini-top">
                     <span class="avis-mini-note">${stars}</span>
