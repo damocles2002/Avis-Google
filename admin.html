@@ -334,7 +334,7 @@
         const { data: restaurants, error } = await _supabase
             .from('restaurants')
             .select('*')
-            .order('date_cree', { ascending: false });
+            .order('created_at', { ascending: false });
 
         if (error || !restaurants) {
             document.getElementById('table-container').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div>Erreur de chargement</div>`;
@@ -582,7 +582,7 @@
         // 2. Créer l'entrée dans la table restaurants
         const { error: dbError } = await _supabase.from('restaurants').insert([{
             nom,
-            email,
+            email_patron: email,
             google_maps_url: google,
             seuil_google: seuil,
             user_id: authData.user?.id || null
