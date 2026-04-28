@@ -394,7 +394,7 @@
                         <div class="client-avatar" style="background:${couleur}">${initiale}</div>
                         <div>
                             <div class="client-name">${c.nom || 'Sans nom'}</div>
-                            <div class="client-email">${c.email || '—'}</div>
+                            <div class="client-email">${c.email_patron || '—'}</div>
                         </div>
                     </div>
                 </td>
@@ -409,7 +409,7 @@
                     <div class="actions">
                         <button class="btn-action blue" onclick="voirDashboard('${c.id}')">📊 Dashboard</button>
                         <button class="btn-action green" onclick="voirAvis('${c.id}','${(c.nom||'').replace(/'/g,"\\'")}')">💬 Avis</button>
-                        <button class="btn-action yellow" onclick="resetMdp('${c.email||''}','${(c.nom||'').replace(/'/g,"\\'")}')">🔑 Reset MDP</button>
+                        <button class="btn-action yellow" onclick="resetMdp('${c.email_patron||''}','${(c.nom||'').replace(/'/g,"\\'")}')">🔑 Reset MDP</button>
                         <button class="btn-action red" onclick="desactiverCompte('${c.id}','${(c.nom||'').replace(/'/g,"\\'")}')">🚫 ${c.desactive ? 'Réactiver' : 'Désactiver'}</button>
                     </div>
                 </td>
@@ -436,7 +436,7 @@
     function filtrerClients(q) {
         const filtered = tousLesClients.filter(c =>
             (c.nom||'').toLowerCase().includes(q.toLowerCase()) ||
-            (c.email||'').toLowerCase().includes(q.toLowerCase())
+            (c.email_patron||'').toLowerCase().includes(q.toLowerCase())
         );
         renderTable(filtered);
     }
