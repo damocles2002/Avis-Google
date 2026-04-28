@@ -513,39 +513,49 @@
         appliquerCouleurSauvegardee();
         appliquerTraductions();
 
-        // 🔐 VÉRIFIER LA SESSION — rediriger si pas connecté
+        // 🔐 VÉRIFIER LA SESSION
         const { data: { session } } = await _supabase.auth.getSession();
-        if (!session) {
-            window.location.href = 'login.html';
-            return;
-        }
+        if (!session) { window.location.href = 'login.html'; return; }
 
         const user = session.user;
 
-        // Récupérer l'id resto depuis les métadonnées du compte
-        // ou depuis l'URL en fallback
-        const params = new URLSearchParams(window.location.search);
-        idResto = params.get('id') || user.user_metadata?.restaurant_id || user.id || 'demo';
-
-        // Nom : priorité localStorage → métadonnées Supabase → Supabase DB
-        const nomLocal = localStorage.getItem('damavis_nom_resto');
-        const nomMeta  = user.user_metadata?.restaurant_name || '';
-
-        if (idResto !== 'demo') {
-            const { data } = await _supabase.from('restaurants').select('nom').eq('id', idResto).single();
-            nomResto = nomLocal || nomMeta || data?.nom || 'Mon Restaurant';
-        } else {
-            nomResto = nomLocal || nomMeta || '🍽️ Demo Restaurant';
+        // 👑 SI ADMIN → rediriger vers admin.html
+        if (user.email === 'ngongangdjomo@gmail.com') {
+            window.location.href = 'admin.html';
+            return;
         }
 
-        // Email depuis Supabase Auth (toujours à jour)
+        // Récupérer l'id resto depuis l'URL ou depuis la table restaurants via email
+        const params = new URLSearchParams(window.location.search);
+        idResto = params.get('id') || '';
+
+        // Si pas d'id dans l'URL → chercher le resto lié à cet utilisateur
+        if (!idResto) {
+            const { data } = await _supabase
+                .from('restaurants')
+                .select('id, nom')
+                .eq('email_patron', user.email)
+                .single();
+            if (data) {
+                idResto = data.id;
+                nomResto = data.nom;
+            } else {
+                document.getElementById('resto-nom-header').innerText = 'Restaurant introuvable';
+                document.getElementById('sidebar-resto-name').innerText = 'Erreur';
+                return;
+            }
+        } else {
+            const { data } = await _supabase.from('restaurants').select('nom').eq('id', idResto).single();
+            nomResto = localStorage.getItem('damavis_nom_resto') || data?.nom || 'Mon Restaurant';
+        }
+
         if (!localStorage.getItem('damavis_email')) {
             localStorage.setItem('damavis_email', user.email || '');
         }
 
         document.getElementById('resto-nom-header').innerText = nomResto;
         document.getElementById('sidebar-resto-name').innerText = nomResto;
-        document.getElementById('resto-avatar').innerText = nomResto.replace('🍽️ ','').charAt(0).toUpperCase() || '🍽️';
+        document.getElementById('resto-avatar').innerText = nomResto.charAt(0).toUpperCase();
 
         await chargerDonnees();
     }
@@ -566,17 +576,7 @@
             if (data) avisInternes = data.map(a => ({ id: a.id, auteur: 'Client anonyme', note: a.note, texte: a.commentaire, date: a.created_at, plateforme: 'interne' }));
         }
 
-        const demoAvis = [
-            { id:'d1', auteur:'Marie L.', note:5, texte:'Excellent restaurant, cuisine raffinée et service impeccable !', date: new Date(Date.now()-86400000).toISOString(), plateforme:'google' },
-            { id:'d2', auteur:'Thomas B.', note:4, texte:'Très bonne expérience, je recommande vivement.', date: new Date(Date.now()-172800000).toISOString(), plateforme:'tripadvisor' },
-            { id:'d3', auteur:'Sophie M.', note:5, texte:'Parfait pour un dîner en amoureux !', date: new Date(Date.now()-259200000).toISOString(), plateforme:'thefork' },
-            { id:'d4', auteur:'Pierre D.', note:3, texte:'Service un peu lent mais la cuisine était bonne.', date: new Date(Date.now()-345600000).toISOString(), plateforme:'facebook' },
-            { id:'d5', auteur:'@foodie_paris', note:null, texte:'🔥 Incroyable ce restaurant ! #foodporn', date: new Date(Date.now()-432000000).toISOString(), plateforme:'instagram' },
-            { id:'d6', auteur:'@resto_lover', note:null, texte:'Le meilleur burger de Paris 🍔 #foodtok', date: new Date(Date.now()-518400000).toISOString(), plateforme:'tiktok' },
-            { id:'d7', auteur:'Julie R.', note:5, texte:'Une adresse à garder précieusement !', date: new Date(Date.now()-604800000).toISOString(), plateforme:'google' },
-        ];
-
-        allAvis = [...avisInternes, ...demoAvis].sort((a,b) => new Date(b.date) - new Date(a.date));
+        allAvis = avisInternes;
         calculerStats();
         renderPlatformes();
         renderAvis();
