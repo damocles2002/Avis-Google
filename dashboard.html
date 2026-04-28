@@ -572,8 +572,8 @@
 
         let avisInternes = [];
         if (idResto !== 'demo') {
-            const { data } = await _supabase.from('avis_internes').select('*').eq('id_restaurant', idResto).order('created_at', { ascending: false }).limit(50);
-            if (data) avisInternes = data.map(a => ({ id: a.id, auteur: 'Client anonyme', note: a.note, texte: a.commentaire, date: a.created_at, plateforme: 'interne' }));
+            const { data } = await _supabase.from('avis_internes').select('*').eq('id_restaurant', idResto).order('date_cree', { ascending: false }).limit(50);
+            if (data) avisInternes = data.map(a => ({ id: a.id, auteur: 'Client anonyme', note: a.note, texte: a.commentaire, date: a.date_cree, plateforme: 'interne' }));
         }
 
         allAvis = avisInternes;
