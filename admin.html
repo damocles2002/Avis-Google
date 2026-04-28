@@ -334,7 +334,7 @@
         const { data: restaurants, error } = await _supabase
             .from('restaurants')
             .select('*')
-            .order('created_at', { ascending: false });
+            .order('id', { ascending: false });
 
         if (error || !restaurants) {
             document.getElementById('table-container').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div>Erreur de chargement</div>`;
@@ -382,7 +382,7 @@
         const rows = clients.map(c => {
             const initiale = (c.nom || '?').charAt(0).toUpperCase();
             const couleur = stringToColor(c.nom || '');
-            const dateStr = c.created_at ? new Date(c.created_at).toLocaleDateString('fr-FR') : '—';
+            const dateStr = '—';
             const stars = c.note_moy !== '—' ? '★'.repeat(Math.round(c.note_moy)) : '';
             const statut = c.desactive
                 ? `<span class="badge badge-inactive">Désactivé</span>`
