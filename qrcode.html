@@ -31,7 +31,7 @@
         function genererQR() {
             const inputId = document.getElementById('id-resto').value.trim();
             if (!inputId) { alert("Veuillez coller l'ID du restaurant."); return; }
-            const lienFinal = "https://damocles2002.github.io/Avis-Google/avis.html?id=" + inputId;
+            const lienFinal = "https://damocles2002.github.io/Avis-Google/index.html?id=" + inputId;
             document.getElementById('qrcode').innerHTML = "";
             new QRCode(document.getElementById('qrcode'), {
                 text: lienFinal, width: 180, height: 180,

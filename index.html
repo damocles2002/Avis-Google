@@ -6,6 +6,8 @@
     <title>Donner un avis</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase.js"></script>
     <style>
         .star { cursor: pointer; transition: transform 0.15s, color 0.15s; color: #e5e7eb; font-size: 2rem; line-height: 1; }
         .star:hover { transform: scale(1.2); }
@@ -120,10 +122,6 @@
     </div>
 
     <script>
-        const SB_URL = "https://urpfgiaocxfnyfdoiapf.supabase.co";
-        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVycGZnaWFvY3hmbnlmZG9pYXBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NDQ3MzMsImV4cCI6MjA5MDUyMDczM30.8OkTr_1pXbPn73e64Vgg8ovLGnkNNGDdWvmrzVBmzwo";
-        const _supabase = window.supabase.createClient(SB_URL, SB_KEY);
-
         let idResto     = "";
         let googleUrl   = "";
         let seuilGoogle = 4;
@@ -144,7 +142,7 @@
             }
 
             const { data, error } = await _supabase
-                .from('restaurants')
+                .from('restaurants_public')
                 .select('nom, google_maps_url, seuil_google')
                 .eq('id', idResto)
                 .single();

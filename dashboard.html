@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DAMAVIS — Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root { --primary:#1a73e8; --primary-light:#e8f0fe; --bg:#f0f4f8; --card:#fff; --text:#1a202c; --muted:#718096; --border:#e2e8f0; --green:#22c55e; --red:#ef4444; }
@@ -98,6 +100,7 @@
         .avis-tag { font-size:10px; font-weight:600; padding:2px 7px; border-radius:20px; }
         .avis-date { font-size:11px; color:var(--muted); margin-left:auto; }
         .avis-text { font-size:13px; color:var(--muted); line-height:1.5; margin-bottom:8px; }
+        .avis-reponse { font-size:13px; background:rgba(26,115,232,0.06); border-left:3px solid var(--primary); padding:8px 12px; border-radius:0 8px 8px 0; margin-bottom:8px; color:var(--text); line-height:1.5; }
         .btn-rep { font-size:12px; padding:5px 12px; border-radius:8px; border:1px solid var(--border); background:white; cursor:pointer; font-family:'DM Sans',sans-serif; }
         .btn-rep:hover { background:var(--primary); color:white; }
         .rep-area { display:none; margin-top:10px; }
@@ -354,10 +357,6 @@
 </div>
 
 <script>
-const SB_URL="https://urpfgiaocxfnyfdoiapf.supabase.co";
-const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVycGZnaWFvY3hmbnlmZG9pYXBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NDQ3MzMsImV4cCI6MjA5MDUyMDczM30.8OkTr_1pXbPn73e64Vgg8ovLGnkNNGDdWvmrzVBmzwo";
-const sb=window.supabase.createClient(SB_URL,SB_KEY);
-
 let idResto="",nomResto="",allAvis=[],filtreActif="tous",filtrePlat=null;
 let langue=localStorage.getItem('dv_langue')||'fr';
 
@@ -504,7 +503,7 @@ async function deconnecter(){await sb.auth.signOut();localStorage.removeItem('dv
 async function chargerDonnees(){
     document.getElementById('avis-list').innerHTML='<div class="loading"><div class="spinner"></div>Chargement...</div>';
     const{data}=await sb.from('avis_internes').select('*').eq('id_restaurant',idResto).order('date_cree',{ascending:false}).limit(50);
-    allAvis=(data||[]).map(a=>({id:a.id,auteur:'Client anonyme',note:a.note,texte:a.commentaire,date:a.date_cree,plateforme:'interne'}));
+    allAvis=(data||[]).map(a=>({id:a.id,auteur:'Client anonyme',note:a.note,texte:a.commentaire,reponse:a.reponse||'',date:a.date_cree,plateforme:'interne'}));
     calculerStats();renderPlatformes();renderSocial();renderAvis();
 }
 
@@ -605,9 +604,10 @@ function renderAvis(){
                     <span class="avis-date">${ds}</span>
                 </div>
                 <div class="avis-text">${a.texte||''}</div>
-                <div><button class="btn-rep" onclick="toggleRep('r-${a.id}')">${t.rep}</button></div>
+                ${a.reponse?`<div class="avis-reponse"><strong>↩️ Votre réponse :</strong> ${a.reponse}</div>`:''}
+                <div><button class="btn-rep" onclick="toggleRep('r-${a.id}')">${a.reponse?'✏️ Modifier la réponse':t.rep}</button></div>
                 <div class="rep-area" id="r-${a.id}">
-                    <textarea class="rep-input" rows="2" placeholder="${t.ph}" id="rt-${a.id}"></textarea>
+                    <textarea class="rep-input" rows="2" placeholder="${t.ph}" id="rt-${a.id}">${a.reponse||''}</textarea>
                     <div class="rep-btns">
                         <button class="btn-cancel" onclick="toggleRep('r-${a.id}')">${t.annuler}</button>
                         <button class="btn-send" onclick="envoyerRep('${a.id}')">${t.envoyer}</button>
@@ -619,7 +619,14 @@ function renderAvis(){
 }
 
 function toggleRep(id){document.getElementById(id).classList.toggle('open');}
-function envoyerRep(id){const txt=document.getElementById(`rt-${id}`).value.trim();if(!txt)return;alert('✅ Réponse enregistrée !');toggleRep(`r-${id}`);}
+async function envoyerRep(id){
+    const txt=document.getElementById(`rt-${id}`).value.trim();
+    if(!txt)return;
+    const{error}=await sb.from('avis_internes').update({reponse:txt}).eq('id',id);
+    if(error){alert('❌ Erreur : '+error.message);return;}
+    toggleRep(`r-${id}`);
+    chargerDonnees();
+}
 
 function filtrerAvis(f,btn){
     filtreActif=f;filtrePlat=null;

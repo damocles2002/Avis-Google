@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DAMAVIS — Admin</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -312,12 +314,8 @@
 </div>
 
 <script>
-    const SB_URL = "https://urpfgiaocxfnyfdoiapf.supabase.co";
-    const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVycGZnaWFvY3hmbnlmZG9pYXBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NDQ3MzMsImV4cCI6MjA5MDUyMDczM30.8OkTr_1pXbPn73e64Vgg8ovLGnkNNGDdWvmrzVBmzwo";
-    const _supabase = window.supabase.createClient(SB_URL, SB_KEY);
-
-    // ⚠️ Email admin — seul cet email a accès à cette page
-    const ADMIN_EMAIL = "ngongangdjomo@gmail.com"; // ← CHANGE ICI ton email admin
+    // ⚠️ Email admin — seul cet email a accès à cette page (configuré dans js/config.js)
+    const ADMIN_EMAIL = CONFIG.ADMIN_EMAIL;
 
     let tousLesClients = [];
     let clientActif = null; // pour les modals
