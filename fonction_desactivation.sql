@@ -1,17 +1,27 @@
 -- ============================================================
--- 🚫 DÉSACTIVATION — Verrou serveur (référence)
--- Empêche le dépôt d'avis sur un restaurant désactivé,
--- même si quelqu'un contourne la page web (attaque directe par API).
+-- VERROU SERVEUR : blocage des avis (anti-contournement)
+-- 1. Restaurant désactivé par l'admin
+-- 2. Essai gratuit expiré (pas encore abonné)
 -- ============================================================
 
-create or replace function public.bloquer_avis_desactive() returns trigger as $$
+CREATE OR REPLACE FUNCTION bloquer_avis_desactive() RETURNS trigger AS $$
 begin
+  -- 1. Restaurant désactivé
   if exists (select 1 from public.restaurants r where r.id = new.id_restaurant and r.desactive = true) then
     raise exception 'Ce restaurant est desactive';
   end if;
+  -- 2. Essai gratuit expiré
+  if exists (select 1 from public.restaurants r where r.id = new.id_restaurant
+             and r.abonnement_statut = 'essai'
+             and r.abonnement_expire_le is not null
+             and r.abonnement_expire_le < now()) then
+    raise exception 'Essai expire : abonnez-vous pour continuer';
+  end if;
   return new;
-end; $$ language plpgsql security definer;
+end;
+$$ LANGUAGE plpgsql;
 
-drop trigger if exists bloquer_avis_desactive_trigger on public.avis_internes;
-create trigger bloquer_avis_desactive_trigger before insert on public.avis_internes
-for each row execute function public.bloquer_avis_desactive();
+DROP TRIGGER IF EXISTS bloquer_avis_desactive_trigger ON public.avis_internes;
+CREATE TRIGGER bloquer_avis_desactive_trigger
+BEFORE INSERT ON public.avis_internes
+FOR EACH ROW EXECUTE FUNCTION bloquer_avis_desactive();
