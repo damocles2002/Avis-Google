@@ -7,6 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/supabase.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root { --primary:#1a73e8; --primary-light:#e8f0fe; --bg:#f0f4f8; --card:#fff; --text:#1a202c; --muted:#718096; --border:#e2e8f0; --green:#22c55e; --red:#ef4444; }
@@ -222,6 +223,12 @@
         <div class="stat-card" style="--ac:#1a73e8"><div class="stat-icon">📈</div><div class="stat-label" id="l-taux">Taux satisfaction</div><div class="stat-value" id="s-taux">—</div></div>
     </div>
 
+    <!-- GRAPHIQUE 30 JOURS -->
+    <div style="background:var(--card);border-radius:16px;border:1px solid var(--border);padding:20px;margin-bottom:24px;">
+        <div style="font-size:15px;font-weight:700;margin-bottom:12px;">📈 Évolution de la note (30 derniers jours)</div>
+        <canvas id="chart-note" height="90"></canvas>
+    </div>
+
     <!-- PLATEFORMES AVEC AVIS -->
     <div class="section-title" id="l-plat">Plateformes</div>
     <div class="platforms-grid" id="platforms-grid"></div>
@@ -382,6 +389,7 @@ function setCouleur(hex,el){
     document.documentElement.style.setProperty('--primary',hex);
     document.documentElement.style.setProperty('--primary-light',hexLight(hex));
     localStorage.setItem('dv_couleur',hex);
+    syncSettings();
     document.getElementById('c-hex').value=hex;
     document.getElementById('c-picker').value=hex;
     document.querySelectorAll('.cswatch').forEach(s=>s.classList.remove('sel'));
@@ -404,8 +412,29 @@ function sauvegarderLiens(){
     };
     localStorage.setItem('dv_liens',JSON.stringify(l));
     showMsg('m-liens');
+    syncSettings();
     renderPlatformes();
     renderSocial();
+}
+
+// ── SAUVEGARDE EN LIGNE (Supabase) ─────────────────────
+async function syncSettings(){
+    if(!idResto)return;
+    const settings={
+        nom_display: localStorage.getItem('dv_nom')||'',
+        couleur: localStorage.getItem('dv_couleur')||'#1a73e8',
+        liens: getLiens()
+    };
+    await sb.from('restaurants').update({settings}).eq('id',idResto);
+}
+async function loadSettings(){
+    if(!idResto)return;
+    const{data}=await sb.from('restaurants').select('settings').eq('id',idResto).single();
+    if(data?.settings){
+        if(data.settings.nom_display)localStorage.setItem('dv_nom',data.settings.nom_display);
+        if(data.settings.couleur)localStorage.setItem('dv_couleur',data.settings.couleur);
+        if(data.settings.liens)localStorage.setItem('dv_liens',JSON.stringify(data.settings.liens));
+    }
 }
 
 // ── PARAMÈTRES ───────────────────────────────────────
@@ -441,6 +470,7 @@ function setLangue(lang){
 function sauvegarderNom(){
     const n=document.getElementById('i-nom').value.trim();if(!n)return;
     localStorage.setItem('dv_nom',n);nomResto=n;
+    syncSettings();
     document.getElementById('resto-nom').innerText=n;
     document.getElementById('resto-name').innerText=n;
     document.getElementById('resto-av').innerText=n.charAt(0).toUpperCase();
@@ -493,6 +523,10 @@ async function init(){
         nomResto=localStorage.getItem('dv_nom')||data?.nom||'Mon Restaurant';
     }
     if(!localStorage.getItem('dv_email'))localStorage.setItem('dv_email',user.email||'');
+    // Charger les réglages enregistrés en ligne (nom, couleur, liens)
+    await loadSettings();
+    applyCouleur();
+    if(localStorage.getItem('dv_nom'))nomResto=localStorage.getItem('dv_nom');
     document.getElementById('resto-nom').innerText=nomResto;
     document.getElementById('resto-name').innerText=nomResto;
     document.getElementById('resto-av').innerText=nomResto.charAt(0).toUpperCase();
@@ -505,7 +539,30 @@ async function chargerDonnees(){
     document.getElementById('avis-list').innerHTML='<div class="loading"><div class="spinner"></div>Chargement...</div>';
     const{data}=await sb.from('avis_internes').select('*').eq('id_restaurant',idResto).order('date_cree',{ascending:false}).limit(50);
     allAvis=(data||[]).map(a=>({id:a.id,auteur:'Client anonyme',note:a.note,texte:a.commentaire,reponse:a.reponse||'',photo:a.photo_url||'',date:a.date_cree,plateforme:'interne'}));
-    calculerStats();renderPlatformes();renderSocial();renderAvis();
+    calculerStats();renderChart();renderPlatformes();renderSocial();renderAvis();
+}
+
+// ── GRAPHIQUE 30 JOURS ─────────────────────────────────
+let chartInstance=null;
+function renderChart(){
+    const ctx=document.getElementById('chart-note');
+    if(!ctx||typeof Chart==='undefined')return;
+    const jours=[],moyennes=[];
+    const now=new Date();
+    for(let i=29;i>=0;i--){
+        const d=new Date(now);d.setDate(now.getDate()-i);
+        const key=d.toISOString().split('T')[0];
+        jours.push(d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'}));
+        const avisJour=allAvis.filter(a=>new Date(a.date).toISOString().split('T')[0]===key&&a.note!==null);
+        if(avisJour.length){moyennes.push(Math.round((avisJour.reduce((s,a)=>s+a.note,0)/avisJour.length)*10)/10);}
+        else{moyennes.push(null);}
+    }
+    if(chartInstance)chartInstance.destroy();
+    chartInstance=new Chart(ctx,{
+        type:'line',
+        data:{labels:jours,datasets:[{label:'Note moyenne',data:moyennes,borderColor:'#1a73e8',backgroundColor:'rgba(26,115,232,0.10)',fill:true,tension:0.3,spanGaps:true,pointRadius:3,pointBackgroundColor:'#1a73e8'}]},
+        options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:0,max:5,ticks:{stepSize:1}},x:{ticks:{maxTicksLimit:10}}}}
+    });
 }
 
 function calculerStats(){

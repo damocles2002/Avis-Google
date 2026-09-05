@@ -113,6 +113,10 @@
                     </label>
                     <img id="photo-preview" class="hidden mt-2 rounded-xl max-h-40 w-full object-cover">
                 </div>
+                <!-- Piège anti-robot (invisible pour les humains, rempli par les robots) -->
+                <div class="hidden" aria-hidden="true">
+                    <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+                </div>
                 <button onclick="envoyerAvisInterne()" class="w-full bg-[#1a73e8] text-white font-medium py-3 rounded-full hover:bg-blue-700 transition shadow-md">
                     Envoyer mon avis
                 </button>
@@ -163,6 +167,16 @@
             } else {
                 document.getElementById('nom-resto').innerText = "Restaurant introuvable";
                 console.error(error);
+            }
+
+            // ── ANTI DOUBLE AVIS : ce navigateur a-t-il déjà noté ce resto ? ──
+            if (localStorage.getItem('dv_avis_' + idResto)) {
+                document.getElementById('stars-section').innerHTML = `
+                    <div class="text-center py-8 animate-in">
+                        <div class="text-4xl mb-3">🙏</div>
+                        <p class="text-gray-700 font-semibold">Merci, vous avez déjà donné votre avis !</p>
+                        <p class="text-gray-400 text-sm mt-1">Votre retour a bien été enregistré.</p>
+                    </div>`;
             }
         }
 
@@ -240,6 +254,9 @@
 
         // ── ENVOYER AVIS INTERNE ──────────────────────────────
         async function envoyerAvisInterne() {
+            // Anti-robot : si le champ caché est rempli, c'est un robot → on rejette en silence
+            if (document.getElementById('website').value) return;
+
             const texte = document.getElementById('commentaire').value.trim();
             const moy   = parseFloat(((notes.cuisine + notes.ambiance + notes.service) / 3).toFixed(2));
 
@@ -274,6 +291,7 @@
             }]);
 
             if (!error) {
+                localStorage.setItem('dv_avis_' + idResto, '1');
                 document.getElementById('form-interne').classList.add('hidden');
                 document.getElementById('success-message').classList.remove('hidden');
             } else {
