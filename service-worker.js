@@ -1,25 +1,13 @@
 // ============================================================
-// 🔧 SERVICE WORKER — permet l'installation + le mode hors-ligne
+// 🔧 SERVICE WORKER — mode hors-ligne + TOUJOURS à jour
+// Stratégie : réseau d'abord (network-first), cache en secours.
+// Ainsi, quand le téléphone est en ligne, il récupère la DERNIÈRE
+// version du site (tous les boutons à jour). Hors-ligne → cache.
 // ============================================================
-const CACHE_NAME = 'damavis-v1';
-const ASSETS = [
-  './',
-  './index.html',
-  './avis.html',
-  './login.html',
-  './dashboard.html',
-  './admin.html',
-  './qrcode.html',
-  './js/config.js',
-  './js/supabase.js',
-  './manifest.json'
-];
+const CACHE_NAME = 'damavis-v2';
 
-// Installation : mettre en cache les fichiers principaux
+// Installation
 self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
-  );
   self.skipWaiting();
 });
 
@@ -33,11 +21,18 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
 });
 
-// Récupération : servir depuis le cache (hors-ligne), sinon réseau
+// Récupération : réseau d'abord, cache si hors-ligne
 self.addEventListener('fetch', (e) => {
-  // Ne pas mettre en cache les appels API Supabase
-  if (e.request.url.includes('supabase.co')) return;
+  // Ignorer les appels API (Supabase) et les méthodes non-GET
+  if (e.request.method !== 'GET' || e.request.url.includes('supabase.co')) return;
   e.respondWith(
-    caches.match(e.request).then((cached) => cached || fetch(e.request))
+    fetch(e.request)
+      .then((res) => {
+        // Mettre à jour le cache avec la version fraîche
+        const clone = res.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(e.request, clone));
+        return res;
+      })
+      .catch(() => caches.match(e.request)) // hors-ligne → cache
   );
 });

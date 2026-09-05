@@ -145,7 +145,8 @@
         .empty { text-align:center; padding:48px; color:var(--muted); font-size:14px; }
 
         @media(max-width:1100px) { .stats-grid{grid-template-columns:repeat(2,1fr);} .platforms-grid{grid-template-columns:1fr;} .social-grid{grid-template-columns:repeat(2,1fr);} }
-        @media(max-width:768px) { .sidebar{transform:translateX(-100%);} .main{margin-left:0;padding:16px;} .stats-grid{grid-template-columns:repeat(2,1fr);} .social-grid{grid-template-columns:1fr;} }
+        .btn-burger { display:none; background:none; border:none; font-size:26px; cursor:pointer; color:var(--text); padding:0 8px; }
+        @media(max-width:768px) { .btn-burger{display:block;} .sidebar{transform:translateX(-100%);z-index:200;} .sidebar.open{transform:translateX(0)!important;} .main{margin-left:0;padding:16px;} .stats-grid{grid-template-columns:repeat(2,1fr);} .social-grid{grid-template-columns:1fr;} }
     </style>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a73e8">
@@ -198,9 +199,12 @@
 <!-- MAIN -->
 <div class="main">
     <div class="topbar">
-        <div>
-            <div class="page-title" id="p-title">Dashboard</div>
-            <div class="page-sub" id="p-sub">Vue d'ensemble de votre réputation</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+            <button class="btn-burger" onclick="toggleSidebar()">☰</button>
+            <div>
+                <div class="page-title" id="p-title">Dashboard</div>
+                <div class="page-sub" id="p-sub">Vue d'ensemble de votre réputation</div>
+            </div>
         </div>
         <div class="topbar-right">
             <button class="btn-top" onclick="chargerDonnees()">🔄 <span id="b-refresh">Actualiser</span></button>
@@ -546,6 +550,11 @@ async function init(){
 }
 
 async function deconnecter(){await sb.auth.signOut();localStorage.removeItem('dv_email');window.location.href='login.html';}
+
+// ── MENU MOBILE : ouvrir/fermer la barre latérale ──────
+function toggleSidebar(){
+    document.querySelector('.sidebar').classList.toggle('open');
+}
 
 // ── ABONNEMENT : vérifier le statut et afficher le bandeau ──
 let lienPaiementGlobal='';
