@@ -221,9 +221,22 @@
         if (!name || !email || !password) { showMsg('Veuillez remplir tous les champs.', 'error'); return; }
         if (password.length < 8) { showMsg('Le mot de passe doit faire au moins 8 caractères.', 'error'); return; }
         setLoading('btn-signup', true); clearMsg();
-        const { error } = await _supabase.auth.signUp({ email, password, options: { data: { restaurant_name: name } } });
-        if (error) { showMsg(error.message, 'error'); setLoading('btn-signup', false); }
-        else { document.getElementById('main-content').style.display = 'none'; document.getElementById('success-state').style.display = 'block'; }
+        const { data, error } = await _supabase.auth.signUp({ email, password, options: { data: { restaurant_name: name } } });
+        if (error) { showMsg(error.message, 'error'); setLoading('btn-signup', false); return; }
+        // ── Enregistrer le restaurant dans la base (sinon pas de dashboard) ──
+        const userId = data?.user?.id;
+        if (userId) {
+            const { error: insErr } = await _supabase.from('restaurants').insert({
+                nom: name,
+                email: email,
+                email_patron: email,
+                user_id: userId,
+                google_maps_url: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(name)
+            });
+            if (insErr) { showMsg('Compte créé mais profil non enregistré : ' + insErr.message, 'error'); setLoading('btn-signup', false); return; }
+        }
+        document.getElementById('main-content').style.display = 'none';
+        document.getElementById('success-state').style.display = 'block';
     }
 
     async function forgotPassword() {
