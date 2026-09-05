@@ -156,11 +156,22 @@
 
             const { data, error } = await _supabase
                 .from('restaurants_public')
-                .select('nom, google_maps_url, seuil_google')
+                .select('nom, google_maps_url, seuil_google, desactive')
                 .eq('id', idResto)
                 .single();
 
             if (data) {
+                // Si le restaurant est désactivé, on bloque le dépôt d'avis
+                if (data.desactive) {
+                    document.getElementById('nom-resto').innerText = data.nom;
+                    document.getElementById('stars-section').innerHTML = `
+                        <div class="text-center py-8 animate-in">
+                            <div class="text-4xl mb-3">🚫</div>
+                            <p class="text-gray-700 font-semibold">Ce restaurant est momentanément indisponible.</p>
+                            <p class="text-gray-400 text-sm mt-1">Merci de revenir plus tard.</p>
+                        </div>`;
+                    return;
+                }
                 document.getElementById('nom-resto').innerText = data.nom;
                 googleUrl   = data.google_maps_url || "";
                 seuilGoogle = data.seuil_google ?? 4;
