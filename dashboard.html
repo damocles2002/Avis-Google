@@ -659,10 +659,12 @@ function renderPlatformes(){
             <a href="${p.lien}" target="_blank" class="pcard-link" style="background:#007a5c;color:white;margin-top:8px">✍️ Répondre sur TripAdvisor</a>`;
         }
         if(p.id==='thefork'&&p.lien){
-            widget=`<a href="${p.lien}" target="_blank" class="pcard-link" style="background:#00b0ae;color:white">🍴 ${t.voirAvis} TheFork</a>`;
+            widget=`<a href="${p.lien}" target="_blank" class="pcard-link" style="background:#00b0ae;color:white">🍴 ${t.voirAvis} TheFork</a>
+            <a href="${p.lien}" target="_blank" class="pcard-link" style="background:#00827f;color:white;margin-top:8px">✍️ Répondre sur TheFork</a>`;
         }
         if(p.id==='facebook'&&p.lien){
-            widget=`<a href="${p.lien}" target="_blank" class="pcard-link" style="background:#1877F2;color:white">f ${t.voirPage} Facebook</a>`;
+            widget=`<a href="${p.lien}" target="_blank" class="pcard-link" style="background:#1877F2;color:white">f ${t.voirPage} Facebook</a>
+            <a href="${p.lien}" target="_blank" class="pcard-link" style="background:#0d5cb0;color:white;margin-top:8px">✍️ Répondre sur Facebook</a>`;
         }
 
         return`<div class="pcard">
