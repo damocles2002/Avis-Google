@@ -417,8 +417,14 @@
         for (const [cle, valeur] of params) {
             await _supabase.from('parametres').upsert({ cle, valeur });
         }
+        // ── Recalculer la date d'expiration des essais en cours ──
+        const jours = parseInt(document.getElementById('p-essai').value) || 14;
+        const nouvelleDate = new Date(Date.now() + jours * 86400000).toISOString();
+        await _supabase.from('restaurants').update({
+            abonnement_expire_le: nouvelleDate
+        }).eq('abonnement_statut', 'essai');
         const msg = document.getElementById('p-msg');
-        msg.innerText = '✅ Réglages enregistrés !';
+        msg.innerText = '✅ Réglages enregistrés (dates d\'essai mises à jour) !';
         setTimeout(() => msg.innerText = '', 3000);
     }
 
