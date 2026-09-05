@@ -215,6 +215,12 @@
         </div>
     </div>
 
+    <!-- BANDEAU ABONNEMENT -->
+    <div id="bandeau-abonnement" class="hidden" style="display:flex;align-items:center;justify-content:space-between;gap:16px;background:#fef3c7;border:1px solid #fde68a;border-radius:12px;padding:14px 18px;margin-bottom:24px;flex-wrap:wrap;">
+        <div id="abonnement-texte" style="font-weight:600;color:#92400e;">🎉 Essai gratuit en cours</div>
+        <button id="abonnement-btn" onclick="ouvrirPaiement()" style="background:#1a73e8;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-weight:600;cursor:pointer;">S'abonner</button>
+    </div>
+
     <!-- STATS -->
     <div class="stats-grid">
         <div class="stat-card" style="--ac:#facc15"><div class="stat-icon">⭐</div><div class="stat-label" id="l-note">Note moyenne</div><div class="stat-value" id="s-note">—</div></div>
@@ -531,9 +537,54 @@ async function init(){
     document.getElementById('resto-name').innerText=nomResto;
     document.getElementById('resto-av').innerText=nomResto.charAt(0).toUpperCase();
     await chargerDonnees();
+    verifierAbonnement();
 }
 
 async function deconnecter(){await sb.auth.signOut();localStorage.removeItem('dv_email');window.location.href='login.html';}
+
+// ── ABONNEMENT : vérifier le statut et afficher le bandeau ──
+let lienPaiementGlobal='';
+async function verifierAbonnement(){
+    try{
+        const {data:resto}=await sb.from('restaurants').select('abonnement_statut,abonnement_expire_le').eq('id',idResto).single();
+        const {data:params}=await sb.from('parametres_public').select('*');
+        const map={};(params||[]).forEach(p=>map[p.cle]=p.valeur);
+        const essaiJours=parseInt(map.essai_jours||'14');
+        const prixEuro=map.prix_euro||'25';
+        const lienPaddle=map.lien_paddle||'';
+
+        let statut=resto?.abonnement_statut||'essai';
+        let expireLe=resto?.abonnement_expire_le?new Date(resto.abonnement_expire_le):null;
+
+        // Si jamais pas de date d'essai, on affiche un calcul local (le serveur l'a déjà initialisée normalement)
+        if(!expireLe&&statut==='essai'){
+            expireLe=new Date(Date.now()+essaiJours*86400000);
+        }
+
+        const bandeau=document.getElementById('bandeau-abonnement');
+        const texte=document.getElementById('abonnement-texte');
+        const btn=document.getElementById('abonnement-btn');
+
+        if(statut==='actif'){bandeau.style.display='none';return;}
+
+        const now=new Date();
+        if(expireLe&&expireLe<now){
+            texte.innerText='⛔ Votre abonnement a expiré. Réactivez-le pour continuer à recevoir vos avis.';
+            btn.innerText='Réactiver mon abonnement';
+            bandeau.style.background='#fee2e2';bandeau.style.borderColor='#fecaca';texte.style.color='#991b1b';
+        }else{
+            const jours=expireLe?Math.max(1,Math.ceil((expireLe-now)/86400000)):essaiJours;
+            texte.innerText=`🎉 Essai gratuit : ${jours} jour(s) restant(s) — puis ${prixEuro}€/mois`;
+            btn.innerText=`S'abonner (${prixEuro}€/mois)`;
+        }
+        lienPaiementGlobal=lienPaddle;
+        bandeau.style.display='flex';
+    }catch(e){/* silencieux */}
+}
+function ouvrirPaiement(){
+    if(lienPaiementGlobal){window.open(lienPaiementGlobal,'_blank');}
+    else{alert("Le paiement en ligne sera bientôt disponible. Merci de contacter l'administrateur.");}
+}
 
 async function chargerDonnees(){
     document.getElementById('avis-list').innerHTML='<div class="loading"><div class="spinner"></div>Chargement...</div>';

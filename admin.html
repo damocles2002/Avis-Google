@@ -236,6 +236,55 @@
         </div>
     </div>
 
+    <!-- SECTION PAIEMENT -->
+    <div class="section-header" style="margin-top:40px;">
+        <div class="section-title">💳 Paiement & Abonnements</div>
+    </div>
+    <div class="table-wrap" style="padding:20px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;">
+            <div class="field">
+                <label class="field-label">Prix France (€/mois)</label>
+                <input type="number" id="p-prix-euro" class="search-input" style="width:100%;">
+            </div>
+            <div class="field">
+                <label class="field-label">Prix Cameroun (FCFA/mois)</label>
+                <input type="number" id="p-prix-xaf" class="search-input" style="width:100%;">
+            </div>
+            <div class="field">
+                <label class="field-label">Essai gratuit (jours)</label>
+                <input type="number" id="p-essai" class="search-input" style="width:100%;">
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:16px;">
+            <div class="field">
+                <label class="field-label">🇫🇷 Paddle (France)</label>
+                <select id="p-paddle" class="search-input" style="width:100%;">
+                    <option value="true">Activé ✅</option>
+                    <option value="false">Désactivé ⏸️</option>
+                </select>
+            </div>
+            <div class="field">
+                <label class="field-label">🇨🇲 CinPay (Cameroun)</label>
+                <select id="p-cinpay" class="search-input" style="width:100%;">
+                    <option value="true">Activé ✅</option>
+                    <option value="false">Désactivé ⏸️</option>
+                </select>
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr;gap:16px;margin-top:16px;">
+            <div class="field">
+                <label class="field-label">Lien de paiement Paddle (colle-le ici quand tu auras créé ton compte Paddle)</label>
+                <input type="text" id="p-lien-paddle" class="search-input" style="width:100%;" placeholder="https://buy.paddle.com/...">
+            </div>
+            <div class="field">
+                <label class="field-label">Lien de paiement CinPay (colle-le ici quand tu l'auras activé)</label>
+                <input type="text" id="p-lien-cinpay" class="search-input" style="width:100%;" placeholder="https://...">
+            </div>
+        </div>
+        <button class="btn-add" onclick="sauvegarderPaiement()" style="margin-top:16px;">💾 Enregistrer les réglages</button>
+        <div id="p-msg" style="margin-top:12px;color:var(--green);font-weight:600;"></div>
+    </div>
+
 </div>
 
 <!-- MODAL AJOUTER CLIENT -->
@@ -336,6 +385,39 @@
         }
 
         await chargerClients();
+        await chargerPaiement();
+    }
+
+    // ── PAIEMENT : charger les réglages ───────────────────
+    async function chargerPaiement() {
+        const { data } = await _supabase.from('parametres').select('*');
+        const map = {};
+        (data || []).forEach(p => map[p.cle] = p.valeur);
+        document.getElementById('p-prix-euro').value = map.prix_euro || '25';
+        document.getElementById('p-prix-xaf').value = map.prix_xaf || '10000';
+        document.getElementById('p-essai').value = map.essai_jours || '14';
+        document.getElementById('p-paddle').value = map.paddle_actif || 'true';
+        document.getElementById('p-cinpay').value = map.cinpay_actif || 'false';
+        document.getElementById('p-lien-paddle').value = map.lien_paddle || '';
+        document.getElementById('p-lien-cinpay').value = map.lien_cinpay || '';
+    }
+
+    async function sauvegarderPaiement() {
+        const params = [
+            ['prix_euro', document.getElementById('p-prix-euro').value],
+            ['prix_xaf', document.getElementById('p-prix-xaf').value],
+            ['essai_jours', document.getElementById('p-essai').value],
+            ['paddle_actif', document.getElementById('p-paddle').value],
+            ['cinpay_actif', document.getElementById('p-cinpay').value],
+            ['lien_paddle', document.getElementById('p-lien-paddle').value.trim()],
+            ['lien_cinpay', document.getElementById('p-lien-cinpay').value.trim()],
+        ];
+        for (const [cle, valeur] of params) {
+            await _supabase.from('parametres').upsert({ cle, valeur });
+        }
+        const msg = document.getElementById('p-msg');
+        msg.innerText = '✅ Réglages enregistrés !';
+        setTimeout(() => msg.innerText = '', 3000);
     }
 
     // ── CHARGER CLIENTS ───────────────────────────────────
