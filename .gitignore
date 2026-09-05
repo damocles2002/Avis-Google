@@ -1,3 +1,7 @@
 
 # Supabase CLI temp
 supabase/.temp/
+
+# Fichiers temporaires et documents
+node_modules/
+gen_doc_technique.js

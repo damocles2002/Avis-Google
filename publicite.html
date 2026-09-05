@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DAMAVIS — Fiches publicitaires</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',sans-serif; background:#e8ecf1; color:#1a202c; }
+  .page { width:210mm; min-height:297mm; background:#fff; margin:20px auto; padding:0; box-shadow:0 4px 16px rgba(0,0,0,0.08); page-break-after:always; position:relative; }
+  @media print { body{background:#fff;} .page{box-shadow:none;margin:0;} }
+
+  /* AFFICHE */
+  .affiche { background:linear-gradient(135deg,#0d47a1 0%,#1a73e8 100%); color:#fff; display:flex; flex-direction:column; justify-content:center; padding:50px 55px; }
+  .affiche .logo { font-size:26px; font-weight:700; display:flex; align-items:center; gap:12px; }
+  .affiche h1 { font-size:58px; line-height:1.08; margin-top:40px; }
+  .affiche .accroche { font-size:22px; margin-top:20px; opacity:0.92; }
+  .affiche .stats { display:flex; gap:40px; margin-top:50px; }
+  .affiche .stat .n { font-size:40px; font-weight:700; }
+  .affiche .stat .l { font-size:15px; opacity:0.85; }
+  .affiche .bas { margin-top:60px; font-size:18px; }
+
+  /* FLYER (2 par page) */
+  .flyers { padding:20mm 20mm; display:flex; flex-direction:column; gap:20px; }
+  .flyer { flex:1; border:2px solid #e2e8f0; border-radius:16px; padding:30px; display:flex; gap:30px; align-items:center; }
+  .flyer .gauche { flex:1; }
+  .flyer h2 { font-size:30px; color:#1a73e8; }
+  .flyer ul { list-style:none; margin-top:14px; }
+  .flyer li { padding:6px 0; font-size:15px; }
+  .flyer .qr { width:120px; height:120px; border:6px solid #111; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:48px; }
+
+  /* CARTE DE TABLE */
+  .cartes { padding:20mm; display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+  .carte-table { border:2px solid #1a73e8; border-radius:16px; padding:22px; text-align:center; }
+  .carte-table h3 { font-size:20px; color:#1a73e8; }
+  .carte-table .qr { width:90px; height:90px; border:5px solid #111; border-radius:8px; margin:14px auto; display:flex; align-items:center; justify-content:center; font-size:36px; }
+  .carte-table p { font-size:13px; color:#64748b; }
+
+  .note-impression { text-align:center; color:#64748b; font-size:13px; padding:20px; background:#fff; }
+</style>
+</head>
+<body>
+
+<!-- ============ AFFICHE A4 (pour les restaurateurs) ============ -->
+<div class="page affiche">
+  <div class="logo"><span style="background:#fff;color:#1a73e8;width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;">★</span> DAMAVIS</div>
+  <h1>Votre réputation,<br>notre priorité.</h1>
+  <div class="accroche">La seule plateforme qui intercepte les mauvais avis<br>avant qu'ils n'apparaissent sur Google.</div>
+  <div class="stats">
+    <div class="stat"><div class="n">93%</div><div class="l">des clients lisent<br>les avis en ligne</div></div>
+    <div class="stat"><div class="n">-30%</div><div class="l">de clients perdus<br>avec une note < 3★</div></div>
+    <div class="stat"><div class="n">1 clic</div><div class="l">pour gérer tous<br>vos avis</div></div>
+  </div>
+  <div class="bas">📱 QR code sur table · 🛡️ Mauvais avis bloqués en privé · 📈 Note Google en hausse<br><br><strong>Essai gratuit 14 jours — damavis.fr</strong></div>
+</div>
+
+<!-- ============ FLYERS (2 par page) ============ -->
+<div class="page flyers">
+  <div class="flyer">
+    <div class="gauche">
+      <h2>Protégez vos avis ⭐</h2>
+      <ul>
+        <li>🛡️ Mauvais avis interceptés en privé</li>
+        <li>📈 Bons avis envoyés sur Google</li>
+        <li>📊 Dashboard + statistiques</li>
+        <li>📧 Notification instantanée</li>
+      </ul>
+      <p style="margin-top:14px;font-weight:600;color:#1a73e8;">Essai gratuit 14 jours</p>
+    </div>
+    <div class="qr">▣</div>
+  </div>
+  <div class="flyer">
+    <div class="gauche">
+      <h2>Votre QR code avis 📱</h2>
+      <ul>
+        <li>À placer sur les tables et l'addition</li>
+        <li>Le client note en 30 secondes</li>
+        <li>Vous êtes alerté immédiatement</li>
+        <li>Note Google en hausse garantie</li>
+      </ul>
+      <p style="margin-top:14px;font-weight:600;color:#1a73e8;">damavis.fr</p>
+    </div>
+    <div class="qr">▣</div>
+  </div>
+</div>
+
+<!-- ============ CARTES DE TABLE (4 par page) ============ -->
+<div class="page">
+  <div style="padding:20mm 20mm 0;">
+    <h2 style="font-size:22px;color:#1a73e8;margin-bottom:16px;">🃏 Cartes de table — à imprimer et découper</h2>
+  </div>
+  <div class="cartes">
+    <div class="carte-table">
+      <h3>Votre avis compte !</h3>
+      <div class="qr">▣</div>
+      <p>Scannez et notez votre expérience.<br>Merci pour votre visite !</p>
+    </div>
+    <div class="carte-table">
+      <h3>Votre avis compte !</h3>
+      <div class="qr">▣</div>
+      <p>Scannez et notez votre expérience.<br>Merci pour votre visite !</p>
+    </div>
+    <div class="carte-table">
+      <h3>Votre avis compte !</h3>
+      <div class="qr">▣</div>
+      <p>Scannez et notez votre expérience.<br>Merci pour votre visite !</p>
+    </div>
+    <div class="carte-table">
+      <h3>Votre avis compte !</h3>
+      <div class="qr">▣</div>
+      <p>Scannez et notez votre expérience.<br>Merci pour votre visite !</p>
+    </div>
+  </div>
+  <div class="note-impression">💡 Remplacez les carrés ▣ par le vrai QR code du restaurant (généré sur qrcode.html).</div>
+</div>
+
+</body>
+</html>

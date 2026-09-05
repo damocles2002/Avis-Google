@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DAMAVIS — Présentation</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bleu: #1a73e8;
+    --bleu-fonce: #0d47a1;
+    --vert: #22c55e;
+    --rouge: #ef4444;
+    --jaune: #facc15;
+    --fond: #f6f8fb;
+    --texte: #1a202c;
+    --muted: #64748b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; color: var(--texte); background: #e8ecf1; }
+
+  .slide {
+    width: 100%; min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 60px 80px;
+    background: #fff;
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;
+  }
+  .slide--dark { background: linear-gradient(135deg, #0d47a1 0%, #1a73e8 100%); color: #fff; }
+  .slide--fond { background: var(--fond); }
+
+  h1 { font-size: 56px; font-weight: 700; line-height: 1.1; }
+  h2 { font-size: 40px; font-weight: 700; margin-bottom: 24px; }
+  h3 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+  .sous-titre { font-size: 20px; color: var(--muted); margin-top: 12px; }
+  .slide--dark .sous-titre { color: rgba(255,255,255,0.8); }
+
+  .logo { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 700; }
+  .logo .etoile { background: var(--bleu); color: #fff; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+
+  .grille { display: grid; gap: 24px; }
+  .grille-3 { grid-template-columns: repeat(3, 1fr); }
+  .grille-2 { grid-template-columns: repeat(2, 1fr); }
+
+  .carte { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; }
+  .slide--fond .carte { box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .carte .icone { font-size: 32px; margin-bottom: 12px; }
+  .carte .chiffre { font-size: 44px; font-weight: 700; color: var(--bleu); }
+  .carte .libelle { color: var(--muted); font-size: 15px; }
+
+  .etapes { display: flex; gap: 16px; align-items: stretch; }
+  .etape { flex: 1; background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; position: relative; }
+  .etape .num { background: var(--bleu); color: #fff; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-bottom: 10px; }
+
+  .tag { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+  .tag-vert { background: #dcfce7; color: #15803d; }
+  .tag-rouge { background: #fee2e2; color: #b91c1c; }
+
+  .prix-table { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .offre { border: 2px solid #e2e8f0; border-radius: 16px; padding: 28px; text-align: center; position: relative; }
+  .offre.vedette { border-color: var(--bleu); box-shadow: 0 8px 24px rgba(26,115,232,0.15); }
+  .offre .prix { font-size: 44px; font-weight: 700; color: var(--bleu); }
+  .offre .periode { color: var(--muted); }
+  .offre ul { list-style: none; margin: 20px 0; text-align: left; }
+  .offre li { padding: 6px 0; font-size: 14px; }
+  .badge-pop { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: var(--bleu); color: #fff; padding: 4px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+
+  .temoignage { background: #f0f6ff; border-left: 4px solid var(--bleu); border-radius: 12px; padding: 28px; font-size: 20px; font-style: italic; }
+  .temoignage .auteur { font-style: normal; font-weight: 600; color: var(--muted); margin-top: 12px; font-size: 15px; }
+
+  .qr-block { display: flex; gap: 24px; align-items: center; }
+  .qr-fake { width: 140px; height: 140px; background: #fff; border: 8px solid #111; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 56px; }
+
+  .footer-num { position: absolute; bottom: 24px; right: 40px; color: var(--muted); font-size: 13px; }
+  .slide--dark .footer-num { color: rgba(255,255,255,0.5); }
+
+  @media print {
+    body { background: #fff; }
+    .slide { min-height: 100vh; page-break-after: always; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1 : Garde -->
+<div class="slide slide--dark">
+  <div class="logo" style="color:#fff"><div class="etoile" style="background:#fff;color:#1a73e8">★</div> DAMAVIS</div>
+  <div style="margin-top:60px;">
+    <h1 style="font-size:64px;">Votre réputation,<br>notre priorité.</h1>
+    <p class="sous-titre" style="font-size:22px;">La seule plateforme qui intercepte les mauvais avis<br>avant qu'ils n'apparaissent sur Google.</p>
+  </div>
+  <div style="margin-top:60px; display:flex; gap:12px;">
+    <span class="tag" style="background:rgba(255,255,255,0.15);color:#fff">🍽️ Restaurants</span>
+    <span class="tag" style="background:rgba(255,255,255,0.15);color:#fff">🏨 Hôtels</span>
+    <span class="tag" style="background:rgba(255,255,255,0.15);color:#fff">🍔 Fast-foods</span>
+  </div>
+  <div class="footer-num">DAMAVIS — Présentation</div>
+</div>
+
+<!-- SLIDE 2 : Le problème -->
+<div class="slide">
+  <h2>😰 Le problème : les mauvais avis</h2>
+  <p class="sous-titre" style="margin-bottom:40px;">Un seul mauvais avis peut vous faire perdre des dizaines de clients.</p>
+  <div class="grille grille-3">
+    <div class="carte">
+      <div class="icone">🔍</div>
+      <div class="chiffre">93%</div>
+      <div class="libelle">des clients lisent les avis en ligne avant de choisir un restaurant</div>
+    </div>
+    <div class="carte">
+      <div class="icone">📉</div>
+      <div class="chiffre">-30%</div>
+      <div class="libelle">de clients perdus en moyenne pour un restaurant noté moins de 3 étoiles</div>
+    </div>
+    <div class="carte">
+      <div class="icone">💬</div>
+      <div class="chiffre">1 avis</div>
+      <div class="libelle">négatif non géré = l'image du restaurant dégradée pendant des mois</div>
+    </div>
+  </div>
+  <div style="margin-top:40px; padding:24px; background:#fef2f2; border-radius:12px; border-left:4px solid var(--rouge);">
+    <strong>Le problème :</strong> un client mécontent publie directement son avis sur Google. Vous le découvrez trop tard, et tout le monde le voit.
+  </div>
+  <div class="footer-num">2</div>
+</div>
+
+<!-- SLIDE 3 : La solution -->
+<div class="slide slide--fond">
+  <h2>💡 La solution : DAMAVIS</h2>
+  <p class="sous-titre" style="margin-bottom:40px;">On intercepte les mauvais avis AVANT qu'ils n'atteignent Google.</p>
+  <div class="grille grille-2">
+    <div class="carte">
+      <div class="icone">😊</div>
+      <h3>Client satisfait → avis publié</h3>
+      <p style="color:var(--muted);">Le bon avis est redirigé vers Google : votre réputation publique s'améliore.</p>
+      <div style="margin-top:12px;"><span class="tag tag-vert">✅ Publié sur Google</span></div>
+    </div>
+    <div class="carte">
+      <div class="icone">🛡️</div>
+      <h3>Client mécontent → avis intercepté</h3>
+      <p style="color:var(--muted);">Le mauvais avis est bloqué en privé. Vous êtes alerté et pouvez résoudre le problème.</p>
+      <div style="margin-top:12px;"><span class="tag tag-rouge">🛡️ Bloqué en privé</span></div>
+    </div>
+  </div>
+  <div style="margin-top:40px; text-align:center; font-size:20px; font-weight:600;">
+    Résultat : votre note Google monte, les mauvais avis restent confidentiels.
+  </div>
+  <div class="footer-num">3</div>
+</div>
+
+<!-- SLIDE 4 : Comment ça marche -->
+<div class="slide">
+  <h2>⚙️ Comment ça marche</h2>
+  <p class="sous-titre" style="margin-bottom:40px;">Simple pour le client, puissant pour vous.</p>
+  <div class="etapes">
+    <div class="etape"><div class="num">1</div><h3>📱 Le client scanne</h3><p style="color:var(--muted);font-size:14px;">Un QR code sur la table ou sur l'addition.</p></div>
+    <div class="etape"><div class="num">2</div><h3>⭐ Il note</h3><p style="color:var(--muted);font-size:14px;">3 critères : cuisine, ambiance, service.</p></div>
+    <div class="etape"><div class="num">3</div><h3>🔀 Filtrage auto</h3><p style="color:var(--muted);font-size:14px;">Bon avis → Google. Mauvais → privé.</p></div>
+    <div class="etape"><div class="num">4</div><h3>📊 Vous suivez</h3><p style="color:var(--muted);font-size:14px;">Dashboard + notification instantanée.</p></div>
+  </div>
+  <div style="margin-top:48px; display:flex; justify-content:center;">
+    <div class="qr-block">
+      <div class="qr-fake">▣</div>
+      <div style="font-size:18px;">
+        <strong>Votre QR code personnalisé</strong>
+        <p style="color:var(--muted);margin-top:8px;">À imprimer et placer sur les tables,<br>les menus et les additions.</p>
+      </div>
+    </div>
+  </div>
+  <div class="footer-num">4</div>
+</div>
+
+<!-- SLIDE 5 : Dashboard -->
+<div class="slide slide--fond">
+  <h2>📊 Votre tableau de bord</h2>
+  <p class="sous-titre" style="margin-bottom:40px;">Tout votre e-réputation en un seul écran.</p>
+  <div class="grille grille-3">
+    <div class="carte"><div class="chiffre" style="color:var(--jaune)">4.8★</div><div class="libelle">Note Google moyenne</div></div>
+    <div class="carte"><div class="chiffre" style="color:var(--vert)">243</div><div class="libelle">Bons avis publiés</div></div>
+    <div class="carte"><div class="chiffre" style="color:var(--rouge)">47</div><div class="libelle">Mauvais avis bloqués</div></div>
+    <div class="carte"><div class="chiffre">96%</div><div class="libelle">Clients satisfaits</div></div>
+    <div class="carte"><div class="chiffre">📈</div><div class="libelle">Évolution sur 30 jours</div></div>
+    <div class="carte"><div class="chiffre">📷</div><div class="libelle">Photos des clients</div></div>
+  </div>
+  <div style="margin-top:32px;">
+    <div class="temoignage">« Depuis DAMAVIS, notre note Google est passée de 3.8 à 4.8. Les mauvais avis sont gérés en privé avant de devenir publics. »
+      <div class="auteur">— Restaurant Le Coq Noir</div>
+    </div>
+  </div>
+  <div class="footer-num">5</div>
+</div>
+
+<!-- SLIDE 6 : Fonctionnalités -->
+<div class="slide">
+  <h2>✨ Tout ce que DAMAVIS fait pour vous</h2>
+  <div class="grille grille-3" style="margin-top:24px;">
+    <div class="carte"><div class="icone">🎯</div><h3>QR code personnalisé</h3><p style="color:var(--muted);font-size:14px;">Par restaurant, à imprimer partout.</p></div>
+    <div class="carte"><div class="icone">🔀</div><h3>Filtrage intelligent</h3><p style="color:var(--muted);font-size:14px;">Sépare automatiquement bons et mauvais avis.</p></div>
+    <div class="carte"><div class="icone">📧</div><h3>Notification instantanée</h3><p style="color:var(--muted);font-size:14px;">Email dès qu'un avis est déposé.</p></div>
+    <div class="carte"><div class="icone">📷</div><h3>Photos des clients</h3><p style="color:var(--muted);font-size:14px;">Les clients joignent une photo de leur plat.</p></div>
+    <div class="carte"><div class="icone">✍️</div><h3>Réponse aux avis</h3><p style="color:var(--muted);font-size:14px;">Répondez en 1 clic (Google, TripAdvisor...).</p></div>
+    <div class="carte"><div class="icone">📊</div><h3>Statistiques 30 jours</h3><p style="color:var(--muted);font-size:14px;">Suivez l'évolution de votre note.</p></div>
+    <div class="carte"><div class="icone">🌍</div><h3>Multi-plateformes</h3><p style="color:var(--muted);font-size:14px;">Google, TripAdvisor, TheFork, Facebook.</p></div>
+    <div class="carte"><div class="icone">🔒</div><h3>Sécurité renforcée</h3><p style="color:var(--muted);font-size:14px;">Données protégées, surveillance automatique.</p></div>
+    <div class="carte"><div class="icone">📱</div><h3>App installable</h3><p style="color:var(--muted);font-size:14px;">Ajoutez DAMAVIS sur l'écran du téléphone.</p></div>
+  </div>
+  <div class="footer-num">6</div>
+</div>
+
+<!-- SLIDE 7 : Tarifs -->
+<div class="slide slide--fond">
+  <h2>💳 Nos offres</h2>
+  <p class="sous-titre" style="margin-bottom:40px;">Sans engagement, 14 jours d'essai gratuit.</p>
+  <div class="prix-table">
+    <div class="offre">
+      <h3>Starter</h3>
+      <div class="prix">19€</div>
+      <div class="periode">/ mois</div>
+      <ul>
+        <li>✅ QR code personnalisé</li>
+        <li>✅ Filtrage des avis</li>
+        <li>✅ Dashboard simple</li>
+        <li>❌ Photos</li>
+        <li>❌ Statistiques avancées</li>
+      </ul>
+    </div>
+    <div class="offre vedette">
+      <div class="badge-pop">⭐ Recommandé</div>
+      <h3>Pro</h3>
+      <div class="prix">25€</div>
+      <div class="periode">/ mois</div>
+      <ul>
+        <li>✅ Tout Starter</li>
+        <li>✅ Photos des clients</li>
+        <li>✅ Statistiques 30 jours</li>
+        <li>✅ Notifications email</li>
+        <li>✅ Réponse aux avis</li>
+      </ul>
+    </div>
+    <div class="offre">
+      <h3>Business</h3>
+      <div class="prix">49€</div>
+      <div class="periode">/ mois</div>
+      <ul>
+        <li>✅ Tout Pro</li>
+        <li>✅ Multi-restaurants</li>
+        <li>✅ Multi-utilisateurs</li>
+        <li>✅ Accompagnement</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-num">7</div>
+</div>
+
+<!-- SLIDE 8 : Appel à l'action -->
+<div class="slide slide--dark">
+  <div style="text-align:center;">
+    <div class="logo" style="color:#fff; justify-content:center; margin-bottom:40px;"><div class="etoile" style="background:#fff;color:#1a73e8">★</div> DAMAVIS</div>
+    <h1 style="font-size:52px;">Prêt à protéger<br>votre réputation ?</h1>
+    <p class="sous-titre" style="font-size:20px; margin-top:20px;">14 jours d'essai gratuit · Sans engagement · Sans carte bancaire</p>
+    <div style="margin-top:50px; display:flex; justify-content:center; gap:20px;">
+      <div class="qr-fake" style="width:120px;height:120px;font-size:44px;">▣</div>
+      <div style="text-align:left; display:flex; flex-direction:column; justify-content:center;">
+        <strong style="font-size:20px;">📱 Scannez pour essayer</strong>
+        <span style="color:rgba(255,255,255,0.8);margin-top:8px;">damavis.fr</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-num">DAMAVIS — damavis.fr</div>
+</div>
+
+</body>
+</html>
