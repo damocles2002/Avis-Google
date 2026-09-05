@@ -529,6 +529,9 @@ async function init(){
         nomResto=localStorage.getItem('dv_nom')||data?.nom||'Mon Restaurant';
     }
     if(!localStorage.getItem('dv_email'))localStorage.setItem('dv_email',user.email||'');
+    // Vérifier si le compte a été désactivé par l'admin
+    const{data:chk}=await sb.from('restaurants').select('desactive').eq('id',idResto).single();
+    if(chk?.desactive){alert('⚠️ Votre compte a été désactivé. Contactez l\'administrateur.');await deconnecter();return;}
     // Charger les réglages enregistrés en ligne (nom, couleur, liens)
     await loadSettings();
     applyCouleur();
