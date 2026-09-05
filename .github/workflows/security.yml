@@ -1,0 +1,35 @@
+name: Sécurité DAMAVIS
+
+on:
+  schedule:
+    - cron: '0 * * * *'   # toutes les heures
+  workflow_dispatch:       # lancement manuel possible
+
+jobs:
+  security-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Vérification sécurité
+        env:
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+        run: |
+          SB_URL="https://urpfgiaocxfnyfdoiapf.supabase.co"
+          SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVycGZnaWFvY3hmbnlmZG9pYXBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NDQ3MzMsImV4cCI6MjA5MDUyMDczM30.8OkTr_1pXbPn73e64Vgg8ovLGnkNNGDdWvmrzVBmzwo"
+          TG_CHAT_ID="6460865101"
+
+          # Test 1 : table restaurants lisible sans connexion ?
+          R=$(curl -s --max-time 15 "$SB_URL/rest/v1/restaurants?select=*" -H "apikey: $SB_KEY" -H "Authorization: Bearer $SB_KEY")
+          # Test 2 : table avis_internes lisible sans connexion ?
+          A=$(curl -s --max-time 15 "$SB_URL/rest/v1/avis_internes?select=*" -H "apikey: $SB_KEY" -H "Authorization: Bearer $SB_KEY")
+
+          ALERTES=""
+          if echo "$R" | grep -qF '[{'; then
+            ALERTES="${ALERTES}🔴 La table 'restaurants' est LISIBLE sans connexion (emails exposés) !\n"
+          fi
+          if echo "$A" | grep -qF '[{'; then
+            ALERTES="${ALERTES}🔴 La table 'avis_internes' est LISIBLE sans connexion (avis exposés) !\n"
+          fi
+
+          if [ -n "$ALERTES" ]; then
+            curl -s -X POST "https://api.telegram.org/bot$TG_TOKEN/sendMessage"               -H "Content-Type: application/json"               -d "{\"chat_id\":\"$TG_CHAT_ID\",\"text\":\"🚨 ALERTE SÉCURITÉ DAMAVIS\n\n$ALERTES\nRéactivez les RLS dans Supabase.\"}"
+          fi
