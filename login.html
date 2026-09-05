@@ -235,6 +235,14 @@
             });
             if (insErr) { showMsg('Compte créé mais profil non enregistré : ' + insErr.message, 'error'); setLoading('btn-signup', false); return; }
         }
+        // ── Envoyer le mail de bienvenue (appel direct, fiable) ──
+        try {
+            await fetch(CONFIG.SB_URL + '/functions/v1/notifier', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + CONFIG.SB_KEY },
+                body: JSON.stringify({ type: 'bienvenue', record: { nom: name, email_patron: email } })
+            });
+        } catch (e) { /* silencieux : le mail n'est pas bloquant */ }
         document.getElementById('main-content').style.display = 'none';
         document.getElementById('success-state').style.display = 'block';
     }
