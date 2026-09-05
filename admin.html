@@ -420,6 +420,17 @@
         setTimeout(() => msg.innerText = '', 3000);
     }
 
+    // ── ACTIVER UN ABONNEMENT (après paiement) ─────────────
+    async function activerAbonnement(id) {
+        const expire = new Date(Date.now() + 30 * 86400000).toISOString();
+        const { error } = await _supabase.from('restaurants').update({
+            abonnement_statut: 'actif',
+            abonnement_expire_le: expire
+        }).eq('id', id);
+        if (error) { alert('Erreur : ' + error.message); return; }
+        chargerClients();
+    }
+
     // ── CHARGER CLIENTS ───────────────────────────────────
     async function chargerClients() {
         document.getElementById('table-container').innerHTML = `<div class="loading"><div class="spinner"></div>Chargement...</div>`;
@@ -481,6 +492,14 @@
                 ? `<span class="badge badge-inactive">Désactivé</span>`
                 : `<span class="badge badge-active">Actif</span>`;
 
+            // Badge abonnement
+            const aboStatut = c.abonnement_statut || 'essai';
+            let aboBadge;
+            if (aboStatut === 'actif') aboBadge = `<span class="badge badge-active">Abonné ✅</span>`;
+            else if (aboStatut === 'expire') aboBadge = `<span class="badge badge-inactive">Expiré ⛔</span>`;
+            else aboBadge = `<span class="badge badge-active">Essai</span>`;
+            const aboDate = c.abonnement_expire_le ? new Date(c.abonnement_expire_le).toLocaleDateString('fr-FR') : '—';
+
             return `<tr>
                 <td>
                     <div class="client-cell">
@@ -497,9 +516,15 @@
                     <span class="note-val">${c.note_moy !== '—' ? c.note_moy + '/5' : '—'}</span>
                 </td>
                 <td><strong>${c.nb_avis}</strong> <span style="color:var(--muted);font-size:12px">avis</span></td>
-                <td style="color:var(--muted);font-size:13px">${dateStr}</td>
+                <td>
+                    <div style="display:flex;flex-direction:column;gap:4px;">
+                        ${aboBadge}
+                        <span style="color:var(--muted);font-size:12px;">expire le ${aboDate}</span>
+                    </div>
+                </td>
                 <td>
                     <div class="actions">
+                        <button class="btn-action green" onclick="activerAbonnement('${c.id}')">✅ Activer 30j</button>
                         <button class="btn-action blue" onclick="voirDashboard('${c.id}')">📊 Dashboard</button>
                         <button class="btn-action green" onclick="voirAvis('${c.id}','${(c.nom||'').replace(/'/g,"\\'")}')">💬 Avis</button>
                         <button class="btn-action yellow" onclick="resetMdp('${c.email_patron||''}','${(c.nom||'').replace(/'/g,"\\'")}')">🔑 Reset MDP</button>
@@ -517,7 +542,7 @@
                         <th>Statut</th>
                         <th>Note</th>
                         <th>Avis</th>
-                        <th>Inscription</th>
+                        <th>Abonnement</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
