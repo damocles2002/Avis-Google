@@ -480,7 +480,7 @@ async function init(){
     const{data:{session}}=await sb.auth.getSession();
     if(!session){window.location.href='login.html';return;}
     const user=session.user;
-    if(user.email==='ngongangdjomo@gmail.com'){window.location.href='admin.html';return;}
+    if((user.email||'').toLowerCase()===(CONFIG.ADMIN_EMAIL||'').toLowerCase()){window.location.href='admin.html';return;}
     const params=new URLSearchParams(window.location.search);
     idResto=params.get('id')||'';
     if(!idResto){

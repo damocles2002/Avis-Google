@@ -328,8 +328,8 @@
         const email = session.user.email;
         document.getElementById('admin-email').innerText = email;
 
-        // Vérifier que c'est bien l'admin
-        if (email !== ADMIN_EMAIL) {
+        // Vérifier que c'est bien l'admin (comparaison insensible à la casse)
+        if ((email || '').toLowerCase() !== (ADMIN_EMAIL || '').toLowerCase()) {
             alert('⛔ Accès refusé. Cette page est réservée à l\'administrateur DAMAVIS.');
             window.location.href = 'dashboard.html';
             return;
