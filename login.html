@@ -11,7 +11,7 @@
     <style>
         :root { --bg: #0a0a0f; --surface: #12121a; --border: #2a2a3d; --accent: #6c63ff; --text: #f0f0f8; --muted: #7070a0; --green: #00d4aa; --red: #ff6584; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow-y: auto; padding: 16px; }
         .bg-orbs { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
         .orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.15; animation: float 8s ease-in-out infinite; }
         .orb1 { width: 400px; height: 400px; background: var(--accent); top: -100px; left: -100px; }
