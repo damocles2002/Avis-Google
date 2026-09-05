@@ -652,9 +652,11 @@ function renderPlatformes(){
                 widget=`<iframe class="maps-embed" loading="lazy" src="https://www.google.com/maps/embed/v1/place?key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY&q=place_id:${p.placeId}&language=fr"></iframe>`;
             }
             widget+=`<a href="${p.lien}" target="_blank" class="pcard-link" style="background:#4285F4;color:white;margin-top:8px">⭐ ${t.voirAvis} Google</a>`;
+            widget+=`<a href="https://business.google.com/reviews" target="_blank" class="pcard-link" style="background:#1a73e8;color:white;margin-top:8px">✍️ Répondre aux avis Google</a>`;
         }
         if(p.id==='tripadvisor'&&p.lien){
-            widget=`<a href="${p.lien}" target="_blank" class="pcard-link" style="background:#00af87;color:white">🦉 ${t.voirAvis} TripAdvisor</a>`;
+            widget=`<a href="${p.lien}" target="_blank" class="pcard-link" style="background:#00af87;color:white">🦉 ${t.voirAvis} TripAdvisor</a>
+            <a href="${p.lien}" target="_blank" class="pcard-link" style="background:#007a5c;color:white;margin-top:8px">✍️ Répondre sur TripAdvisor</a>`;
         }
         if(p.id==='thefork'&&p.lien){
             widget=`<a href="${p.lien}" target="_blank" class="pcard-link" style="background:#00b0ae;color:white">🍴 ${t.voirAvis} TheFork</a>`;
