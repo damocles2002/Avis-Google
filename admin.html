@@ -484,6 +484,7 @@
                     <span class="avis-mini-date">${date}</span>
                 </div>
                 <div class="avis-mini-text">${a.commentaire || 'Aucun commentaire'}</div>
+                ${a.photo_url ? `<img src="${a.photo_url}" style="max-width:100%;max-height:180px;border-radius:8px;margin-top:8px;object-fit:cover;display:block">` : ''}
             </div>`;
         }).join('')}</div>`;
 

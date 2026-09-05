@@ -100,6 +100,7 @@
         .avis-tag { font-size:10px; font-weight:600; padding:2px 7px; border-radius:20px; }
         .avis-date { font-size:11px; color:var(--muted); margin-left:auto; }
         .avis-text { font-size:13px; color:var(--muted); line-height:1.5; margin-bottom:8px; }
+        .avis-photo { max-width:100%; max-height:220px; border-radius:12px; margin-bottom:8px; object-fit:cover; display:block; }
         .avis-reponse { font-size:13px; background:rgba(26,115,232,0.06); border-left:3px solid var(--primary); padding:8px 12px; border-radius:0 8px 8px 0; margin-bottom:8px; color:var(--text); line-height:1.5; }
         .btn-rep { font-size:12px; padding:5px 12px; border-radius:8px; border:1px solid var(--border); background:white; cursor:pointer; font-family:'DM Sans',sans-serif; }
         .btn-rep:hover { background:var(--primary); color:white; }
@@ -503,7 +504,7 @@ async function deconnecter(){await sb.auth.signOut();localStorage.removeItem('dv
 async function chargerDonnees(){
     document.getElementById('avis-list').innerHTML='<div class="loading"><div class="spinner"></div>Chargement...</div>';
     const{data}=await sb.from('avis_internes').select('*').eq('id_restaurant',idResto).order('date_cree',{ascending:false}).limit(50);
-    allAvis=(data||[]).map(a=>({id:a.id,auteur:'Client anonyme',note:a.note,texte:a.commentaire,reponse:a.reponse||'',date:a.date_cree,plateforme:'interne'}));
+    allAvis=(data||[]).map(a=>({id:a.id,auteur:'Client anonyme',note:a.note,texte:a.commentaire,reponse:a.reponse||'',photo:a.photo_url||'',date:a.date_cree,plateforme:'interne'}));
     calculerStats();renderPlatformes();renderSocial();renderAvis();
 }
 
@@ -604,6 +605,7 @@ function renderAvis(){
                     <span class="avis-date">${ds}</span>
                 </div>
                 <div class="avis-text">${a.texte||''}</div>
+                ${a.photo?`<img src="${a.photo}" class="avis-photo" onclick="window.open('${a.photo}','_blank')" alt="Photo du client" style="cursor:zoom-in">`:''}
                 ${a.reponse?`<div class="avis-reponse"><strong>↩️ Votre réponse :</strong> ${a.reponse}</div>`:''}
                 <div><button class="btn-rep" onclick="toggleRep('r-${a.id}')">${a.reponse?'✏️ Modifier la réponse':t.rep}</button></div>
                 <div class="rep-area" id="r-${a.id}">

@@ -104,6 +104,15 @@
                     <p class="font-medium text-sm mb-2">Votre message (optionnel)</p>
                     <textarea id="commentaire" class="w-full border border-gray-300 rounded-xl p-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all" rows="3" placeholder="Dites-nous ce qui pourrait être amélioré..."></textarea>
                 </div>
+                <div>
+                    <p class="font-medium text-sm mb-2">Une photo ? (optionnel)</p>
+                    <label class="flex items-center gap-3 border border-dashed border-gray-300 rounded-xl p-3 cursor-pointer hover:border-blue-500 transition-all">
+                        <span class="text-2xl">📷</span>
+                        <span id="photo-label" class="text-sm text-gray-500">Ajouter une photo (plat, ticket...)</span>
+                        <input type="file" id="photo" accept="image/*" class="hidden" onchange="previewPhoto(this)">
+                    </label>
+                    <img id="photo-preview" class="hidden mt-2 rounded-xl max-h-40 w-full object-cover">
+                </div>
                 <button onclick="envoyerAvisInterne()" class="w-full bg-[#1a73e8] text-white font-medium py-3 rounded-full hover:bg-blue-700 transition shadow-md">
                     Envoyer mon avis
                 </button>
@@ -209,6 +218,26 @@
             tags[categorie] = btn.innerText;
         }
 
+        // ── APERÇU PHOTO ─────────────────────────────────────
+        function previewPhoto(input) {
+            const file = input.files[0];
+            const label = document.getElementById('photo-label');
+            const preview = document.getElementById('photo-preview');
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) { // 5 Mo max
+                alert("Photo trop lourde (max 5 Mo).");
+                input.value = '';
+                return;
+            }
+            label.innerText = file.name;
+            const reader = new FileReader();
+            reader.onload = e => {
+                preview.src = e.target.result;
+                preview.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
         // ── ENVOYER AVIS INTERNE ──────────────────────────────
         async function envoyerAvisInterne() {
             const texte = document.getElementById('commentaire').value.trim();
@@ -222,10 +251,26 @@
                 `MESSAGE: ${texte || 'Aucun'}`
             ].join(' | ');
 
+            // ── Upload de la photo (si présente) ──
+            let photoUrl = null;
+            const fileInput = document.getElementById('photo');
+            const file = fileInput.files[0];
+            if (file) {
+                const path = `${idResto}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+                const { data, error: upErr } = await _supabase.storage
+                    .from('avis-photos')
+                    .upload(path, file, { upsert: false });
+                if (!upErr) {
+                    const { data: pub } = _supabase.storage.from('avis-photos').getPublicUrl(path);
+                    photoUrl = pub.publicUrl;
+                }
+            }
+
             const { error } = await _supabase.from('avis_internes').insert([{
                 id_restaurant : idResto,
                 note          : moy,
-                commentaire   : messageFinal
+                commentaire   : messageFinal,
+                photo_url     : photoUrl
             }]);
 
             if (!error) {
