@@ -160,6 +160,7 @@
         let redirectionLancee = false; // ← empêche de lancer 2 fois
         let rouletteConfig  = { actif: false, produits: [] };
         let rouletteTournee = false;   // ← empêche de tourner 2 fois
+        let modeTest = false;          // ← mode test (?test=1) : ignore l'anti double-avis
 
         const labels = ["", "Mauvais 😞", "Passable 😐", "Bien 🙂", "Très bien 😊", "Excellent 🤩"];
 
@@ -200,8 +201,9 @@
                 console.error(error);
             }
 
-            // ── ANTI DOUBLE AVIS : ce navigateur a-t-il déjà noté ce resto ? ──
-            if (localStorage.getItem('dv_avis_' + idResto)) {
+            // ── ANTI DOUBLE AVIS (ignoré en mode test ?test=1) ──
+            modeTest = params.get('test') === '1';
+            if (!modeTest && localStorage.getItem('dv_avis_' + idResto)) {
                 document.getElementById('stars-section').innerHTML = `
                     <div class="text-center py-8 animate-in">
                         <div class="text-4xl mb-3">🙏</div>
@@ -322,7 +324,7 @@
             }]);
 
             if (!error) {
-                localStorage.setItem('dv_avis_' + idResto, '1');
+                if (!modeTest) localStorage.setItem('dv_avis_' + idResto, '1');
                 document.getElementById('form-interne').classList.add('hidden');
                 document.getElementById('success-message').classList.remove('hidden');
                 afficherRoulette();
