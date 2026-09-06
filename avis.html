@@ -18,6 +18,9 @@
         .animate-in { animation: fadeIn 0.4s ease-out; }
         .row-label { font-size: 13px; color: #70757a; width: 90px; text-align: right; padding-right: 12px; flex-shrink: 0; }
         .star-row { display: flex; align-items: center; margin-bottom: 16px; }
+        .roulette-wrap { position: relative; width: 280px; height: 280px; margin: 20px auto; }
+        #roulette-canvas { transition: transform 4s cubic-bezier(0.15, 0.85, 0.15, 0.85); border-radius: 50%; }
+        .roulette-pointer { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); font-size: 28px; z-index: 2; }
     </style>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a73e8">
@@ -134,6 +137,18 @@
             <p class="text-gray-500 text-sm mt-2">Vos remarques ont été transmises à la direction pour nous aider à nous améliorer.</p>
         </div>
 
+        <!-- ROULETTE DE FIDÉLITÉ -->
+        <div id="roulette-section" class="hidden py-6 text-center animate-in">
+            <p class="text-gray-900 font-bold text-lg">🎡 Tentez votre chance !</p>
+            <p class="text-gray-500 text-sm mt-1">Tournez la roulette et gagnez un cadeau.</p>
+            <div class="roulette-wrap">
+                <div class="roulette-pointer">▼</div>
+                <canvas id="roulette-canvas" width="280" height="280"></canvas>
+            </div>
+            <button onclick="tournerRoulette()" class="bg-[#1a73e8] text-white font-medium py-3 px-8 rounded-full hover:bg-blue-700 transition shadow-md">🎡 Tourner la roulette</button>
+            <div id="roulette-resultat" class="mt-4 text-green-600 font-bold text-lg"></div>
+        </div>
+
     </div>
 
     <script>
@@ -143,6 +158,8 @@
         let notes       = { cuisine: 0, ambiance: 0, service: 0 };
         let tags        = { probleme: "Non précisé" };
         let redirectionLancee = false; // ← empêche de lancer 2 fois
+        let rouletteConfig  = { actif: false, produits: [] };
+        let rouletteTournee = false;   // ← empêche de tourner 2 fois
 
         const labels = ["", "Mauvais 😞", "Passable 😐", "Bien 🙂", "Très bien 😊", "Excellent 🤩"];
 
@@ -158,7 +175,7 @@
 
             const { data, error } = await _supabase
                 .from('restaurants_public')
-                .select('nom, google_maps_url, seuil_google, desactive')
+                .select('nom, google_maps_url, seuil_google, desactive, roulette')
                 .eq('id', idResto)
                 .single();
 
@@ -177,6 +194,7 @@
                 document.getElementById('nom-resto').innerText = data.nom;
                 googleUrl   = data.google_maps_url || "";
                 seuilGoogle = data.seuil_google ?? 4;
+                rouletteConfig = data.roulette || { actif: false, produits: [] };
             } else {
                 document.getElementById('nom-resto').innerText = "Restaurant introuvable";
                 console.error(error);
@@ -214,14 +232,19 @@
                 document.getElementById('moyenne-block').classList.remove('hidden');
 
                 if (moy >= seuilGoogle) {
-                    // ✅ Bonne note → Google automatique
-                    document.getElementById('stars-section').innerHTML = `
-                        <div class="text-center py-6 animate-in">
-                            <div class="text-4xl mb-3">🎉</div>
-                            <p class="text-green-600 font-semibold text-base">Merci ! Redirection vers Google...</p>
-                            <p class="text-gray-400 text-sm mt-1">Votre avis positif nous aide beaucoup !</p>
-                        </div>`;
-                    setTimeout(() => { window.location.href = googleUrl; }, 1500);
+                    // ✅ Bonne note → roulette (si activée) puis Google
+                    if (rouletteActive()) {
+                        afficherRoulette();
+                        setTimeout(() => { window.location.href = googleUrl; }, 9000);
+                    } else {
+                        document.getElementById('stars-section').innerHTML = `
+                            <div class="text-center py-6 animate-in">
+                                <div class="text-4xl mb-3">🎉</div>
+                                <p class="text-green-600 font-semibold text-base">Merci ! Redirection vers Google...</p>
+                                <p class="text-gray-400 text-sm mt-1">Votre avis positif nous aide beaucoup !</p>
+                            </div>`;
+                        setTimeout(() => { window.location.href = googleUrl; }, 1500);
+                    }
                 } else {
                     // ❌ Mauvaise note → formulaire interne automatique
                     document.getElementById('stars-section').innerHTML = `
@@ -307,10 +330,63 @@
                 localStorage.setItem('dv_avis_' + idResto, '1');
                 document.getElementById('form-interne').classList.add('hidden');
                 document.getElementById('success-message').classList.remove('hidden');
+                afficherRoulette();
             } else {
                 alert("Une erreur est survenue lors de l'envoi.");
                 console.error(error);
             }
+        }
+
+        // ── ROULETTE DE FIDÉLITÉ ──────────────────────────────
+        function rouletteActive(){ return rouletteConfig.actif && (rouletteConfig.produits||[]).length >= 2; }
+        function dessinerRoulette(){
+            const canvas = document.getElementById('roulette-canvas');
+            const ctx = canvas.getContext('2d');
+            const produits = rouletteConfig.produits || [];
+            const n = produits.length;
+            if (!n) return;
+            const cx = 140, cy = 140, r = 135;
+            const couleurs = ['#f87171','#fbbf24','#34d399','#60a5fa','#a78bfa','#f472b6','#4ade80','#fb923c','#22d3ee','#e879f9'];
+            const angle = (2 * Math.PI) / n;
+            produits.forEach((p, i) => {
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.arc(cx, cy, r, i * angle, (i + 1) * angle);
+                ctx.closePath();
+                ctx.fillStyle = couleurs[i % couleurs.length];
+                ctx.fill();
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(i * angle + angle / 2);
+                ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#1f2937'; ctx.font = 'bold 13px sans-serif';
+                const txt = String(p);
+                ctx.fillText(txt.length > 14 ? txt.slice(0,14)+'…' : txt, r - 12, 0);
+                ctx.restore();
+            });
+            ctx.beginPath(); ctx.arc(cx, cy, 22, 0, 2 * Math.PI); ctx.fillStyle = '#1f2937'; ctx.fill();
+        }
+        function afficherRoulette(){
+            if (!rouletteActive()) return;
+            dessinerRoulette();
+            document.getElementById('roulette-section').classList.remove('hidden');
+        }
+        function tournerRoulette(){
+            if (rouletteTournee) return;
+            rouletteTournee = true;
+            const produits = rouletteConfig.produits || [];
+            const n = produits.length;
+            const indexGagnant = Math.floor(Math.random() * n);
+            const angleSegment = 360 / n;
+            const centre = indexGagnant * angleSegment + angleSegment / 2;
+            const tours = 5 + Math.floor(Math.random() * 3);
+            let rotation = (270 - centre + 360) % 360 + 360 * tours;
+            rotation += (Math.random() - 0.5) * angleSegment * 0.6;
+            document.getElementById('roulette-canvas').style.transform = 'rotate(' + rotation + 'deg)';
+            setTimeout(() => {
+                document.getElementById('roulette-resultat').innerHTML = '🎉 Vous avez gagné : <strong>' + produits[indexGagnant] + '</strong> !';
+            }, 4200);
         }
 
         init();

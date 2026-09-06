@@ -333,6 +333,24 @@
             <div class="msg-ok" id="m-liens">✅ Liens mis à jour !</div>
         </div>
 
+        <!-- ROULETTE DE FIDÉLITÉ -->
+        <div class="msection">
+            <div class="msection-title">🎡 Roulette de fidélité</div>
+            <p class="finput-hint" style="margin-bottom:12px">Après un avis, le client pourra tourner la roulette et gagner un cadeau.</p>
+            <div class="fgroup">
+                <label class="flabel" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                    <input type="checkbox" id="r-actif" style="width:18px;height:18px"> Activer la roulette
+                </label>
+            </div>
+            <div class="fgroup">
+                <label class="flabel">🎁 Les cadeaux (1 par ligne, minimum 2)</label>
+                <div id="r-produits"></div>
+                <button class="btn-save" onclick="ajouterProduitRoulette()" style="background:var(--bg);border:1px dashed var(--border);color:var(--text)">+ Ajouter un cadeau</button>
+            </div>
+            <button class="btn-save" onclick="sauvegarderRoulette()">💾 Sauvegarder la roulette</button>
+            <div class="msg-ok" id="m-roulette">✅ Roulette enregistrée !</div>
+        </div>
+
         <!-- LANGUE -->
         <div class="msection">
             <div class="msection-title">🌐 Langue</div>
@@ -429,13 +447,44 @@ function sauvegarderLiens(){
     renderSocial();
 }
 
+// ── ROULETTE DE FIDÉLITÉ ───────────────────────────────
+function getRoulette(){try{return JSON.parse(localStorage.getItem('dv_roulette')||'{"actif":false,"produits":[]}');}catch{return{actif:false,produits:[]};}}
+function ajouterProduitRoulette(){
+    const div=document.createElement('div');
+    div.style.cssText='display:flex;gap:8px;margin-bottom:6px';
+    div.innerHTML='<input type="text" class="finput" placeholder="Ex: Café offert" style="flex:1"><button onclick="this.parentElement.remove()" style="background:#fee2e2;border:none;border-radius:8px;padding:0 12px;cursor:pointer;color:#991b1b">✕</button>';
+    document.getElementById('r-produits').appendChild(div);
+}
+function chargerRouletteUI(){
+    const r=getRoulette();
+    document.getElementById('r-actif').checked=!!r.actif;
+    const cont=document.getElementById('r-produits');cont.innerHTML='';
+    (r.produits||[]).forEach(p=>{
+        const div=document.createElement('div');
+        div.style.cssText='display:flex;gap:8px;margin-bottom:6px';
+        div.innerHTML='<input type="text" class="finput" value="'+String(p).replace(/"/g,'&quot;')+'" style="flex:1"><button onclick="this.parentElement.remove()" style="background:#fee2e2;border:none;border-radius:8px;padding:0 12px;cursor:pointer;color:#991b1b">✕</button>';
+        cont.appendChild(div);
+    });
+    if(!(r.produits||[]).length)ajouterProduitRoulette();
+}
+function sauvegarderRoulette(){
+    const produits=[];
+    document.querySelectorAll('#r-produits input').forEach(i=>{const v=i.value.trim();if(v)produits.push(v);});
+    if(document.getElementById('r-actif').checked && produits.length<2){alert('Ajoutez au moins 2 cadeaux pour activer la roulette.');return;}
+    const r={actif:document.getElementById('r-actif').checked,produits};
+    localStorage.setItem('dv_roulette',JSON.stringify(r));
+    showMsg('m-roulette');
+    syncSettings();
+}
+
 // ── SAUVEGARDE EN LIGNE (Supabase) ─────────────────────
 async function syncSettings(){
     if(!idResto)return;
     const settings={
         nom_display: localStorage.getItem('dv_nom')||'',
         couleur: localStorage.getItem('dv_couleur')||'#1a73e8',
-        liens: getLiens()
+        liens: getLiens(),
+        roulette: getRoulette()
     };
     await sb.from('restaurants').update({settings}).eq('id',idResto);
 }
@@ -446,6 +495,7 @@ async function loadSettings(){
         if(data.settings.nom_display)localStorage.setItem('dv_nom',data.settings.nom_display);
         if(data.settings.couleur)localStorage.setItem('dv_couleur',data.settings.couleur);
         if(data.settings.liens)localStorage.setItem('dv_liens',JSON.stringify(data.settings.liens));
+        if(data.settings.roulette)localStorage.setItem('dv_roulette',JSON.stringify(data.settings.roulette));
     }
 }
 
@@ -467,6 +517,7 @@ function ouvrirParams(){
     document.getElementById('l-instagram').value=l.instagram||'';
     document.getElementById('l-tiktok').value=l.tiktok||'';
     document.getElementById('l-whatsapp').value=l.whatsapp||'';
+    chargerRouletteUI();
     document.getElementById('modal').classList.add('open');
 }
 function fermerParams(){document.getElementById('modal').classList.remove('open');}
