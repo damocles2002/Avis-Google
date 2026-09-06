@@ -93,6 +93,7 @@
         const idResto = params.get('id');
         let modeJukebox = 'auto';
         let preliste = [];
+        let youtubeApiKey = CONFIG.YOUTUBE_API_KEY || '';
 
         async function init() {
             if (!idResto) { document.getElementById('nom-resto').innerText = "Lien invalide"; return; }
@@ -123,10 +124,19 @@
             } else {
                 // MODE AUTO : recherche libre + musiques déjà proposées
                 document.getElementById('bloc-auto').classList.remove('hidden');
-                // Si pas de clé API YouTube, afficher le champ "coller un lien"
-                if (!CONFIG.YOUTUBE_API_KEY) document.getElementById('bloc-lien').classList.remove('hidden');
+                // Charger la clé API YouTube (modifiable par l'admin, fallback config.js)
+                await chargerCleApi();
+                if (!youtubeApiKey) document.getElementById('bloc-lien').classList.remove('hidden');
                 chargerProposees();
             }
+        }
+
+        // Lire la clé API YouTube depuis la base (modifiable par l'admin sans toucher au code)
+        async function chargerCleApi() {
+            try {
+                const { data } = await _supabase.from('parametres').select('valeur').eq('cle', 'youtube_api_key').single();
+                if (data && data.valeur) youtubeApiKey = data.valeur;
+            } catch(e) { /* garde la clé de config.js */ }
         }
 
         // ── MODE AUTO : recherche musicale (API YouTube) ──
@@ -137,10 +147,12 @@
             window._debounce = setTimeout(() => rechercherMusique(q), 350);
         }
         async function rechercherMusique(q) {
-            if (!CONFIG.YOUTUBE_API_KEY) return;
-            const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=8&q=${encodeURIComponent(q)}&key=${CONFIG.YOUTUBE_API_KEY}`);
+            if (!youtubeApiKey) return;
+            const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=8&q=${encodeURIComponent(q)}&key=${youtubeApiKey}`);
             const data = await res.json();
-            const items = (data.items || []).map(i => ({ titre: i.snippet.title, artiste: i.snippet.channelTitle, youtube_id: i.id.videoId }));
+            const items = (data.items || [])
+                .filter(i => i.id && i.id.videoId)
+                .map(i => ({ titre: i.snippet.title, artiste: i.snippet.channelTitle, youtube_id: i.id.videoId }));
             afficherSuggestions(items);
         }
         function afficherSuggestions(items) {

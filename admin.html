@@ -282,6 +282,10 @@
                 <label class="field-label">Lien de paiement CinPay (colle-le ici quand tu l'auras activé)</label>
                 <input type="text" id="p-lien-cinpay" class="search-input" style="width:100%;" placeholder="https://...">
             </div>
+            <div class="field">
+                <label class="field-label">🎵 Clé API YouTube (recherche musicale du jukebox)</label>
+                <input type="text" id="p-cle-youtube" class="search-input" style="width:100%;" placeholder="AIzaSy...">
+            </div>
         </div>
         <button class="btn-add" onclick="sauvegarderPaiement()" style="margin-top:16px;">💾 Enregistrer les réglages</button>
         <div id="p-msg" style="margin-top:12px;color:var(--green);font-weight:600;"></div>
@@ -402,6 +406,7 @@
         document.getElementById('p-cinpay').value = map.cinpay_actif || 'false';
         document.getElementById('p-lien-paddle').value = map.lien_paddle || '';
         document.getElementById('p-lien-cinpay').value = map.lien_cinpay || '';
+        document.getElementById('p-cle-youtube').value = map.youtube_api_key || '';
     }
 
     async function sauvegarderPaiement() {
@@ -413,6 +418,7 @@
             ['cinpay_actif', document.getElementById('p-cinpay').value],
             ['lien_paddle', document.getElementById('p-lien-paddle').value.trim()],
             ['lien_cinpay', document.getElementById('p-lien-cinpay').value.trim()],
+            ['youtube_api_key', document.getElementById('p-cle-youtube').value.trim()],
         ];
         for (const [cle, valeur] of params) {
             await _supabase.from('parametres').upsert({ cle, valeur });
