@@ -36,18 +36,38 @@
 
         <!-- Contenu principal -->
         <div id="contenu">
-            <p class="text-base text-gray-700 text-center mb-4">🎵 Quelle musique voulez-vous entendre ?</p>
 
-            <!-- Liste des musiques (préliste du restaurant) -->
-            <div id="liste-musiques" class="space-y-2 mb-5 hidden"></div>
+            <!-- MODE AUTO : recherche libre + musiques proposées -->
+            <div id="bloc-auto" class="hidden">
+                <p class="text-base text-gray-700 text-center mb-4">🎵 Quelle musique voulez-vous entendre ?</p>
 
-            <!-- Recherche libre (si pas de préliste) -->
-            <div id="recherche-libre" class="border-t border-gray-100 pt-4 hidden">
-                <p class="text-sm text-gray-500 mb-2">Cherchez votre chanson sur YouTube, puis collez le lien :</p>
-                <div class="flex gap-2">
-                    <input id="lien-youtube" type="text" placeholder="Collez un lien YouTube" class="flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm outline-none focus:border-blue-500">
-                    <button onclick="ajouterLien()" class="bg-[#1a73e8] text-white text-sm font-medium px-5 rounded-full hover:bg-blue-700 transition">Ajouter</button>
+                <!-- Barre de recherche (comme YouTube) -->
+                <input id="recherche" type="text" placeholder="Cherchez une musique ou un artiste..." oninput="surRecherche()"
+                    class="w-full border border-gray-300 rounded-full px-4 py-2.5 text-sm outline-none focus:border-blue-500 mb-2">
+                <div id="suggestions" class="space-y-1 mb-4"></div>
+
+                <!-- Fallback : coller un lien YouTube (si pas de recherche) -->
+                <div id="bloc-lien" class="hidden border-t border-gray-100 pt-3 mb-4">
+                    <p class="text-sm text-gray-500 mb-2">Ou collez un lien YouTube :</p>
+                    <div class="flex gap-2">
+                        <input id="lien-youtube" type="text" placeholder="Collez un lien YouTube" class="flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm outline-none focus:border-blue-500">
+                        <button onclick="ajouterLien()" class="bg-[#1a73e8] text-white text-sm font-medium px-5 rounded-full hover:bg-blue-700 transition">Ajouter</button>
+                    </div>
                 </div>
+
+                <!-- Musiques déjà proposées -->
+                <div class="border-t border-gray-100 pt-4">
+                    <p class="text-sm font-semibold text-gray-600 mb-2">🔥 Déjà proposées (les plus demandées en tête)</p>
+                    <div id="musiques-proposees" class="space-y-1"></div>
+                </div>
+            </div>
+
+            <!-- MODE PLAYLIST : choisir uniquement dans la playlist du resto -->
+            <div id="bloc-playlist" class="hidden">
+                <p class="text-base text-gray-700 text-center mb-4">📋 Choisissez dans la playlist</p>
+                <input id="filtre-playlist" type="text" placeholder="Rechercher dans la playlist..." oninput="filtrerPlaylist()"
+                    class="w-full border border-gray-300 rounded-full px-4 py-2.5 text-sm outline-none focus:border-blue-500 mb-3">
+                <div id="liste-playlist" class="space-y-2"></div>
             </div>
         </div>
 
@@ -71,27 +91,21 @@
     <script>
         const params = new URLSearchParams(location.search);
         const idResto = params.get('id');
-        let googleUrl = "";
+        let modeJukebox = 'auto';
+        let preliste = [];
 
         async function init() {
-            if (!idResto) {
-                document.getElementById('nom-resto').innerText = "Lien invalide";
-                return;
-            }
+            if (!idResto) { document.getElementById('nom-resto').innerText = "Lien invalide"; return; }
             const { data, error } = await _supabase
                 .from('restaurants_public')
-                .select('nom, google_maps_url, jukebox, desactive')
+                .select('nom, jukebox, desactive')
                 .eq('id', idResto)
                 .single();
 
-            if (error || !data) {
-                document.getElementById('nom-resto').innerText = "Restaurant introuvable";
-                return;
-            }
+            if (error || !data) { document.getElementById('nom-resto').innerText = "Restaurant introuvable"; return; }
             document.getElementById('nom-resto').innerText = data.nom;
-            googleUrl = data.google_maps_url || "";
 
-            // Vérifier si le jukebox est activé (par l'admin)
+            // Jukebox activé (par l'admin) ?
             const jukeboxActif = data.jukebox && data.jukebox.actif === true;
             if (!jukeboxActif || data.desactive) {
                 document.getElementById('contenu').classList.add('hidden');
@@ -99,33 +113,95 @@
                 return;
             }
 
-            // Préliste définie par le restaurateur (obligatoire si elle existe)
-            const preliste = (data.jukebox && data.jukebox.preliste) || [];
-            if (preliste.length > 0) {
-                afficherPreliste(preliste);
+            modeJukebox = (data.jukebox && data.jukebox.mode) || 'auto';
+            preliste = (data.jukebox && data.jukebox.preliste) || [];
+
+            if (modeJukebox === 'playlist') {
+                // MODE PLAYLIST : le client choisit uniquement dans la liste du resto
+                document.getElementById('bloc-playlist').classList.remove('hidden');
+                afficherPlaylist(preliste);
             } else {
-                document.getElementById('recherche-libre').classList.remove('hidden');
+                // MODE AUTO : recherche libre + musiques déjà proposées
+                document.getElementById('bloc-auto').classList.remove('hidden');
+                // Si pas de clé API YouTube, afficher le champ "coller un lien"
+                if (!CONFIG.YOUTUBE_API_KEY) document.getElementById('bloc-lien').classList.remove('hidden');
+                chargerProposees();
             }
         }
 
-        function afficherPreliste(preliste) {
-            const conteneur = document.getElementById('liste-musiques');
-            conteneur.classList.remove('hidden');
-            conteneur.innerHTML = preliste.map(m => `
+        // ── MODE AUTO : recherche musicale (API YouTube) ──
+        function surRecherche() {
+            const q = document.getElementById('recherche').value.trim();
+            if (q.length < 2) { document.getElementById('suggestions').innerHTML = ''; return; }
+            clearTimeout(window._debounce);
+            window._debounce = setTimeout(() => rechercherMusique(q), 350);
+        }
+        async function rechercherMusique(q) {
+            if (!CONFIG.YOUTUBE_API_KEY) return;
+            const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=8&q=${encodeURIComponent(q)}&key=${CONFIG.YOUTUBE_API_KEY}`);
+            const data = await res.json();
+            const items = (data.items || []).map(i => ({ titre: i.snippet.title, artiste: i.snippet.channelTitle, youtube_id: i.id.videoId }));
+            afficherSuggestions(items);
+        }
+        function afficherSuggestions(items) {
+            const el = document.getElementById('suggestions');
+            if (!items.length) { el.innerHTML = '<p class="text-sm text-gray-400 text-center">Aucun résultat.</p>'; return; }
+            el.innerHTML = items.map(m => `
                 <button class="btn-musique" onclick="voter('${(m.titre||'').replace(/'/g, "\\'")}', '${(m.artiste||'').replace(/'/g, "\\'")}', '${m.youtube_id}')">
                     <span class="text-xl">🎵</span>
                     <span class="flex-1">
-                        <span class="block text-sm font-medium">${m.titre || 'Musique'}</span>
-                        ${m.artiste ? `<span class="block text-xs text-gray-400">${m.artiste}</span>` : ''}
+                        <span class="block text-sm font-medium truncate">${m.titre}</span>
+                        <span class="block text-xs text-gray-400 truncate">${m.artiste}</span>
                     </span>
                     <span class="text-[#1a73e8]">+</span>
                 </button>
             `).join('');
         }
 
-        // Voter pour une musique : si elle existe déjà, on incrémente son compteur
+        // ── MODE AUTO : musiques déjà proposées (la file) ──
+        async function chargerProposees() {
+            const { data } = await _supabase.from('musique_queue')
+                .select('*')
+                .eq('id_restaurant', idResto)
+                .in('statut', ['en_attente', 'joue'])
+                .order('votes', { ascending: false });
+            const file = data || [];
+            const el = document.getElementById('musiques-proposees');
+            if (!file.length) { el.innerHTML = '<p class="text-sm text-gray-400">Aucune proposition pour le moment. Soyez le premier !</p>'; return; }
+            const totalVotes = file.reduce((s, m) => s + (m.votes || 0), 0);
+            el.innerHTML = file.map((m, i) => {
+                const pct = totalVotes > 0 ? Math.round((m.votes || 0) / totalVotes * 100) : 0;
+                return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f1f3f4;">
+                    <span style="font-size:12px;color:#70757a;width:18px;">${i + 1}.</span>
+                    <span style="flex:1;font-size:14px;"><strong>${m.titre}</strong> <span class="text-xs text-gray-400">${m.artiste || ''}</span></span>
+                    <span style="font-size:11px;color:#70757a;">🔥 ${m.votes || 0} (${pct}%)</span>
+                </div>`;
+            }).join('');
+        }
+
+        // ── MODE PLAYLIST : la liste du resto + filtre ──
+        function afficherPlaylist(liste) {
+            const el = document.getElementById('liste-playlist');
+            if (!liste.length) { el.innerHTML = '<p class="text-sm text-gray-400 text-center">Playlist vide.</p>'; return; }
+            el.innerHTML = liste.map(m => `
+                <button class="btn-musique" onclick="voter('${(m.titre||'').replace(/'/g, "\\'")}', '${(m.artiste||'').replace(/'/g, "\\'")}', '${m.youtube_id}')">
+                    <span class="text-xl">🎵</span>
+                    <span class="flex-1">
+                        <span class="block text-sm font-medium truncate">${m.titre}</span>
+                        ${m.artiste ? `<span class="block text-xs text-gray-400 truncate">${m.artiste}</span>` : ''}
+                    </span>
+                    <span class="text-[#1a73e8]">+</span>
+                </button>
+            `).join('');
+        }
+        function filtrerPlaylist() {
+            const q = document.getElementById('filtre-playlist').value.trim().toLowerCase();
+            const listeFiltree = q ? preliste.filter(m => (m.titre || '').toLowerCase().includes(q) || (m.artiste || '').toLowerCase().includes(q)) : preliste;
+            afficherPlaylist(listeFiltree);
+        }
+
+        // ── VOTER (anti double-vote : 1 client = 1 vote par musique) ──
         async function voter(titre, artiste, youtubeId) {
-            // Anti-double vote : ce client ne peut proposer la même musique qu'une fois
             const cle = 'dv_vote_' + idResto + '_' + youtubeId;
             if (localStorage.getItem(cle)) {
                 alert("Vous avez déjà demandé cette musique. Merci !");
@@ -141,36 +217,26 @@
                 .maybeSingle();
 
             if (existante) {
-                await _supabase.from('musique_queue')
-                    .update({ votes: (existante.votes || 0) + 1 })
-                    .eq('id', existante.id);
+                await _supabase.from('musique_queue').update({ votes: (existante.votes || 0) + 1 }).eq('id', existante.id);
             } else {
                 await _supabase.from('musique_queue').insert({
-                    id_restaurant: idResto,
-                    titre: titre,
-                    artiste: artiste,
-                    youtube_id: youtubeId,
-                    votes: 1
+                    id_restaurant: idResto, titre, artiste, youtube_id: youtubeId, votes: 1
                 });
             }
             afficherConfirmation(`« ${titre} » ajouté !`);
         }
 
+        // ── Coller un lien YouTube (fallback si pas de clé API) ──
         function extraireIdYouTube(url) {
             const reg = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
             const m = url.match(reg);
             return m ? m[1] : null;
         }
-
-        // Recherche libre : le client colle un lien YouTube
         async function ajouterLien() {
             const lien = document.getElementById('lien-youtube').value.trim();
             if (!lien) return;
             const id = extraireIdYouTube(lien);
-            if (!id) {
-                alert("Lien YouTube invalide. Collez un lien du type youtube.com/watch?v=...");
-                return;
-            }
+            if (!id) { alert("Lien YouTube invalide."); return; }
             await voter("Musique (lien)", "", id);
             document.getElementById('lien-youtube').value = '';
         }

@@ -281,7 +281,14 @@
 
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
             <input type="checkbox" id="jk-auto" onchange="basculerModeAuto()" style="width:18px;height:18px;">
-            <label for="jk-auto" style="font-size:13px;font-weight:600;">🤖 Mode automatique — les musiques s'enchaînent seules selon le classement</label>
+            <label for="jk-auto" style="font-size:13px;font-weight:600;">🤖 Lecture automatique (les musiques s'enchaînent seules)</label>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+            <label style="font-size:13px;font-weight:600;">Mode du jukebox :</label>
+            <select id="jk-mode" onchange="changerModeClient()" style="border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:13px;background:#fff;">
+                <option value="auto">🤖 Automatique (le client cherche et propose)</option>
+                <option value="playlist">📋 Playlist (le client choisit dans votre liste)</option>
+            </select>
         </div>
         <div id="jukebox-player" style="margin-bottom:14px;"></div>
         <div id="jukebox-file" style="font-size:13px;color:var(--muted);">Chargement...</div>
@@ -541,6 +548,7 @@ async function chargerJukebox(){
     afficherPlayerJukebox();
     afficherPrelisteJukebox();
     chargerMusiqueUI();
+    chargerModeUI();
     // Restaurer le mode automatique (si le resto l'avait activé)
     modeAuto = localStorage.getItem('dv_jukebox_auto') === '1';
     const cb = document.getElementById('jk-auto');
@@ -635,6 +643,19 @@ async function sauvegarderMusique(){
     localStorage.setItem('dv_jukebox_musique', JSON.stringify({ service, lien }));
     syncSettings();
     alert('✅ Musique connectée ! Votre playlist est enregistrée.');
+}
+// ── MODE DU JUKEBOX (auto / playlist) ──
+function getMode(){
+    return localStorage.getItem('dv_jukebox_mode') || 'auto';
+}
+function chargerModeUI(){
+    const sel = document.getElementById('jk-mode');
+    if (sel) sel.value = getMode();
+}
+async function changerModeClient(){
+    const mode = document.getElementById('jk-mode').value;
+    localStorage.setItem('dv_jukebox_mode', mode);
+    syncSettings();
 }
 function afficherPlayerJukebox(){
     if (modeAuto) return; // en mode auto, l'API YouTube gère le player
@@ -791,7 +812,7 @@ async function syncSettings(){
         couleur: localStorage.getItem('dv_couleur')||'#1a73e8',
         liens: getLiens(),
         roulette: getRoulette(),
-        jukebox: { actif: jukeboxActif, preliste: getPreliste(), musique: getMusique() }
+        jukebox: { actif: jukeboxActif, preliste: getPreliste(), musique: getMusique(), mode: getMode() }
     };
     await sb.from('restaurants').update({settings}).eq('id',idResto);
 }
@@ -807,6 +828,7 @@ async function loadSettings(){
             jukeboxActif = data.settings.jukebox.actif === true;
             if(data.settings.jukebox.preliste)localStorage.setItem('dv_jukebox_preliste',JSON.stringify(data.settings.jukebox.preliste));
             if(data.settings.jukebox.musique)localStorage.setItem('dv_jukebox_musique',JSON.stringify(data.settings.jukebox.musique));
+            if(data.settings.jukebox.mode)localStorage.setItem('dv_jukebox_mode',data.settings.jukebox.mode);
             if(jukeboxActif){
                 document.getElementById('section-jukebox').classList.remove('hidden');
                 chargerJukebox();
