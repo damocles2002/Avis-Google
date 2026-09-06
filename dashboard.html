@@ -698,28 +698,50 @@ function onEtatChange(event){
     if (event.data === 0 && modeAuto) jouerSuivanteAutomatique();
 }
 async function jouerSuivanteAutomatique(){
-    // Effacer la musique en cours (elle est lue → on la retire de la file)
+    // La musique en cours passe dans l'historique (elle est lue)
     const enCours = fileJukebox.find(m => m.statut === 'joue');
     if (enCours) {
-        await sb.from('musique_queue').delete().eq('id', enCours.id);
+        await sb.from('musique_queue').update({ statut: 'termine' }).eq('id', enCours.id);
     }
-    // Recharger la file (triée par nombre de votes)
-    const { data } = await sb.from('musique_queue')
+
+    // 1. PRIORITÉ : les demandes des clients (en attente)
+    const { data: demandes } = await sb.from('musique_queue')
         .select('*')
         .eq('id_restaurant', idResto)
-        .in('statut', ['en_attente', 'joue'])
+        .eq('statut', 'en_attente')
         .order('votes', { ascending: false });
-    fileJukebox = data || [];
-    afficherFileJukebox();
 
-    if (fileJukebox.length) {
-        const suivante = fileJukebox[0];
+    if (demandes && demandes.length) {
+        const suivante = demandes[0];
         await sb.from('musique_queue').update({ statut: 'joue' }).eq('id', suivante.id);
+        fileJukebox = demandes;
+        afficherFileJukebox();
         creerPlayer(suivante.youtube_id);
-    } else {
-        document.getElementById('jukebox-player').innerHTML = '<p style="text-align:center;color:var(--muted);padding:24px;">🎵 En attente de demandes de musique...</p>';
-        setTimeout(() => { if (modeAuto) chargerJukebox(); }, 10000);
+        return;
     }
+
+    // 2. FALLBACK : plus de demandes → rejouer les anciennes musiques en boucle
+    const { data: historique } = await sb.from('musique_queue')
+        .select('*')
+        .eq('id_restaurant', idResto)
+        .eq('statut', 'termine')
+        .order('date_ajout', { ascending: true });
+
+    if (historique && historique.length) {
+        const ancienne = historique[0];
+        // Rejouer : repasse en "joue" + date remise à maintenant (pour boucler dans l'ordre)
+        await sb.from('musique_queue').update({ statut: 'joue', date_ajout: new Date().toISOString() }).eq('id', ancienne.id);
+        fileJukebox = [ancienne];
+        afficherFileJukebox();
+        creerPlayer(ancienne.youtube_id);
+        return;
+    }
+
+    // 3. Rien du tout : attendre
+    fileJukebox = [];
+    afficherFileJukebox();
+    document.getElementById('jukebox-player').innerHTML = '<p style="text-align:center;color:var(--muted);padding:24px;">🎵 En attente de demandes de musique...</p>';
+    setTimeout(() => { if (modeAuto) chargerJukebox(); }, 10000);
 }
 // ── TEMPS RÉEL (la file se met à jour sans actualiser) ──
 function abonnerRealtime(){
@@ -750,8 +772,8 @@ async function rafraichirFileRealtime(){
     }
 }
 async function jouerMusique(id){
-    // Effacer l'ancienne musique en cours (elle est lue)
-    await sb.from('musique_queue').delete().eq('id_restaurant', idResto).eq('statut', 'joue');
+    // L'ancienne musique en cours passe dans l'historique
+    await sb.from('musique_queue').update({ statut: 'termine' }).eq('id_restaurant', idResto).eq('statut', 'joue');
     // Marquer la nouvelle comme "joue"
     await sb.from('musique_queue').update({ statut: 'joue' }).eq('id', id);
     chargerJukebox();
