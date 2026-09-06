@@ -254,6 +254,11 @@
             <div style="font-size:13px;font-weight:700;margin-bottom:6px;">📝 Votre préliste (optionnelle)</div>
             <p style="font-size:12px;color:var(--muted);margin-bottom:8px;">Si vous la remplissez, les clients choisiront <strong>uniquement</strong> dans cette liste. Sinon, ils ajoutent n'importe quelle musique.</p>
             <div id="jukebox-preliste" style="margin-bottom:8px;"></div>
+            <!-- Recherche musicale : écrire un nom → suggestions (comme YouTube) -->
+            <div style="margin-bottom:8px;">
+                <input id="jk-recherche" placeholder="🔍 Cherchez une musique (ex: Gims, Burna Boy...) puis cliquez pour l'ajouter" oninput="rechercherPrelisteMusique()" style="width:100%;border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:13px;">
+                <div id="jk-suggestions" style="margin-top:4px;"></div>
+            </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
                 <input id="jk-titre" placeholder="Titre" style="flex:1;min-width:100px;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:13px;">
                 <input id="jk-lien" placeholder="Lien YouTube" style="flex:2;min-width:150px;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:13px;">
@@ -549,6 +554,7 @@ async function chargerJukebox(){
     afficherPrelisteJukebox();
     chargerMusiqueUI();
     chargerModeUI();
+    chargerCleApi();
     // Restaurer le mode automatique (si le resto l'avait activé)
     modeAuto = localStorage.getItem('dv_jukebox_auto') === '1';
     const cb = document.getElementById('jk-auto');
@@ -582,7 +588,46 @@ function afficherFileJukebox(){
 // ── PRÉLISTE (musiques choisies par le restaurateur) ──
 function getPreliste(){
     try { return JSON.parse(localStorage.getItem('dv_jukebox_preliste') || '[]'); }
-    catch { return []; }
+    catch(e) { return []; }
+}
+// ── Recherche musicale pour la préliste (comme YouTube) ──
+let youtubeApiKey = CONFIG.YOUTUBE_API_KEY || '';
+async function chargerCleApi(){
+    try {
+        const { data } = await sb.from('parametres').select('valeur').eq('cle', 'youtube_api_key').single();
+        if (data && data.valeur) youtubeApiKey = data.valeur;
+    } catch(e) {}
+}
+function rechercherPrelisteMusique(){
+    const q = document.getElementById('jk-recherche').value.trim();
+    if (q.length < 2) { document.getElementById('jk-suggestions').innerHTML = ''; return; }
+    clearTimeout(window._debouncePre);
+    window._debouncePre = setTimeout(async () => {
+        if (!youtubeApiKey) return;
+        const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=8&q=${encodeURIComponent(q)}&key=${youtubeApiKey}`);
+        const data = await res.json();
+        const items = (data.items || []).filter(i => i.id && i.id.videoId).map(i => ({ titre: i.snippet.title, artiste: i.snippet.channelTitle, youtube_id: i.id.videoId }));
+        afficherSuggestionsPreliste(items);
+    }, 350);
+}
+function afficherSuggestionsPreliste(items){
+    const el = document.getElementById('jk-suggestions');
+    if (!items.length) { el.innerHTML = ''; return; }
+    el.innerHTML = items.map(m => `
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-bottom:1px solid var(--border);font-size:13px;">
+            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>${m.titre}</strong> <span style="color:var(--muted);">— ${m.artiste}</span></span>
+            <button onclick="ajouterSuggestionPreliste('${(m.titre||'').replace(/'/g,"\\'")}', '${(m.artiste||'').replace(/'/g,"\\'")}', '${m.youtube_id}')" style="background:#16a34a;color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;">+ Ajouter</button>
+        </div>
+    `).join('');
+}
+function ajouterSuggestionPreliste(titre, artiste, youtube_id){
+    const preliste = getPreliste();
+    preliste.push({ titre, artiste, youtube_id });
+    localStorage.setItem('dv_jukebox_preliste', JSON.stringify(preliste));
+    afficherPrelisteJukebox();
+    syncSettings();
+    document.getElementById('jk-recherche').value = '';
+    document.getElementById('jk-suggestions').innerHTML = '';
 }
 function afficherPrelisteJukebox(){
     const preliste = getPreliste();
@@ -705,18 +750,31 @@ async function demarrerLectureAuto(){
 }
 function creerPlayer(videoId){
     if (!window.YT || !YT.Player) return;
-    if (ytPlayer) { try { ytPlayer.destroy(); } catch(e){} }
+    // Si le player existe déjà → charger la nouvelle vidéo SANS le recréer.
+    // (Recréer le player coupe l'autorisation autoplay du navigateur,
+    //  c'est ça qui bloquait l'enchaînement automatique des musiques.)
+    if (ytPlayer && ytPlayer.loadVideoById) {
+        ytPlayer.loadVideoById(videoId);
+        return;
+    }
     ytPlayer = new YT.Player('jukebox-player', {
         height: '160',
         width: '100%',
         videoId: videoId,
-        playerVars: { autoplay: 1, controls: 1 },
-        events: { onStateChange: onEtatChange }
+        playerVars: { autoplay: 1, controls: 1, playsinline: 1 },
+        events: {
+            onReady: (e) => { try { e.target.playVideo(); } catch(err){} },
+            onStateChange: onEtatChange
+        }
     });
 }
+let passageEnCours = false;
 function onEtatChange(event){
-    // 0 = vidéo terminée → on passe à la suivante automatiquement
-    if (event.data === 0 && modeAuto) jouerSuivanteAutomatique();
+    // 0 = YT.PlayerState.ENDED → enchaîner automatiquement la suivante
+    if (event.data === 0 && modeAuto && !passageEnCours) {
+        passageEnCours = true;
+        jouerSuivanteAutomatique().finally(() => { passageEnCours = false; });
+    }
 }
 async function jouerSuivanteAutomatique(){
     // La musique en cours passe dans l'historique (elle est lue)
