@@ -189,6 +189,7 @@
         <div class="nav-item" onclick="filtrerPlateforme('facebook')"><span class="dot" style="background:#1877F2"></span> Facebook</div>
         <div class="nav-item" onclick="filtrerPlateforme('instagram')"><span class="sq" style="background:linear-gradient(45deg,#f09433,#dc2743,#bc1888)"></span> Instagram</div>
         <div class="nav-item" onclick="filtrerPlateforme('tiktok')"><span class="sq" style="background:#010101"></span> TikTok</div>
+        <div class="nav-item" onclick="defilerVersJukebox()"><span>🎵</span> Jukebox</div>
     </div>
     <div class="sidebar-footer">
         <div class="resto-badge"><div class="rdot"></div><span id="resto-name">Chargement...</span></div>
@@ -239,6 +240,29 @@
     <div style="background:var(--card);border-radius:16px;border:1px solid var(--border);padding:20px;margin-bottom:24px;">
         <div style="font-size:15px;font-weight:700;margin-bottom:12px;">📈 Évolution de la note (30 derniers jours)</div>
         <canvas id="chart-note" height="90"></canvas>
+    </div>
+
+    <!-- JUKEBOX -->
+    <div id="section-jukebox" class="hidden" style="background:var(--card);border-radius:16px;border:1px solid var(--border);padding:20px;margin-bottom:24px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div style="font-size:15px;font-weight:700;">🎵 Jukebox — musique demandée par vos clients</div>
+            <button onclick="chargerJukebox()" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;">🔄 Actualiser</button>
+        </div>
+
+        <!-- Préliste (musiques que le client peut choisir) -->
+        <div style="margin-bottom:16px;padding:14px;background:var(--bg);border-radius:10px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:6px;">📝 Votre préliste (optionnelle)</div>
+            <p style="font-size:12px;color:var(--muted);margin-bottom:8px;">Si vous la remplissez, les clients choisiront <strong>uniquement</strong> dans cette liste. Sinon, ils ajoutent n'importe quelle musique.</p>
+            <div id="jukebox-preliste" style="margin-bottom:8px;"></div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <input id="jk-titre" placeholder="Titre" style="flex:1;min-width:100px;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:13px;">
+                <input id="jk-lien" placeholder="Lien YouTube" style="flex:2;min-width:150px;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:13px;">
+                <button onclick="ajouterPreliste()" style="background:#1a73e8;color:#fff;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px;">+ Ajouter</button>
+            </div>
+        </div>
+
+        <div id="jukebox-player" style="margin-bottom:14px;"></div>
+        <div id="jukebox-file" style="font-size:13px;color:var(--muted);">Chargement...</div>
     </div>
 
     <!-- PLATEFORMES AVEC AVIS -->
@@ -477,6 +501,103 @@ function sauvegarderRoulette(){
     syncSettings();
 }
 
+// ── JUKEBOX ────────────────────────────────────────────
+let fileJukebox = [];
+let jukeboxActif = false;
+function defilerVersJukebox(){
+    const el = document.getElementById('section-jukebox');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+}
+async function chargerJukebox(){
+    const { data } = await sb.from('musique_queue')
+        .select('*')
+        .eq('id_restaurant', idResto)
+        .in('statut', ['en_attente', 'joue'])
+        .order('votes', { ascending: false });
+    fileJukebox = data || [];
+    afficherFileJukebox();
+    afficherPlayerJukebox();
+    afficherPrelisteJukebox();
+}
+function afficherFileJukebox(){
+    const el = document.getElementById('jukebox-file');
+    if (!fileJukebox.length) {
+        el.innerHTML = '<i>Aucune musique pour le moment. Les clients peuvent en ajouter via le QR code « Musique ».</i>';
+        return;
+    }
+    const totalVotes = fileJukebox.reduce((s, m) => s + (m.votes || 0), 0);
+    el.innerHTML = fileJukebox.map((m, i) => {
+        const pct = totalVotes > 0 ? Math.round((m.votes || 0) / totalVotes * 100) : 0;
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+            <span style="width:24px;text-align:center;font-weight:700;color:var(--muted);">${i + 1}.</span>
+            <span style="flex:1;"><strong>${m.titre}</strong> ${m.artiste ? '<span style="color:var(--muted)">— '+m.artiste+'</span>' : ''}</span>
+            <span style="font-size:11px;color:var(--muted);white-space:nowrap;">🔥 ${m.votes || 0} vote${(m.votes||0)>1?'s':''} (${pct}%)</span>
+            <button onclick="jouerMusique('${m.id}')" style="background:var(--primary-light);border:none;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px;">▶</button>
+            <button onclick="supprimerMusique('${m.id}')" style="background:#fee2e2;border:none;border-radius:6px;padding:4px 8px;cursor:pointer;color:#991b1b;">✕</button>
+        </div>`;
+    }).join('');
+}
+// ── PRÉLISTE (musiques choisies par le restaurateur) ──
+function getPreliste(){
+    try { return JSON.parse(localStorage.getItem('dv_jukebox_preliste') || '[]'); }
+    catch { return []; }
+}
+function afficherPrelisteJukebox(){
+    const preliste = getPreliste();
+    const el = document.getElementById('jukebox-preliste');
+    if (!preliste.length) {
+        el.innerHTML = '<i style="font-size:12px;">Préliste vide — les clients peuvent ajouter n\'importe quelle musique.</i>';
+        return;
+    }
+    el.innerHTML = preliste.map((p, i) => `
+        <div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px;">
+            <span style="flex:1;">🎵 <strong>${p.titre}</strong> ${p.artiste ? '<span style="color:var(--muted)">— '+p.artiste+'</span>' : ''}</span>
+            <button onclick="supprimerPreliste(${i})" style="background:#fee2e2;border:none;border-radius:6px;padding:3px 8px;cursor:pointer;color:#991b1b;font-size:12px;">✕</button>
+        </div>
+    `).join('');
+}
+function extraireIdYt(url){
+    const reg = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    const m = (url || '').match(reg);
+    return m ? m[1] : null;
+}
+async function ajouterPreliste(){
+    const titre = document.getElementById('jk-titre').value.trim();
+    const lien = document.getElementById('jk-lien').value.trim();
+    if (!titre || !lien) { alert('Renseignez le titre ET le lien YouTube.'); return; }
+    const id = extraireIdYt(lien);
+    if (!id) { alert('Lien YouTube invalide.'); return; }
+    const preliste = getPreliste();
+    preliste.push({ titre, artiste: '', youtube_id: id });
+    localStorage.setItem('dv_jukebox_preliste', JSON.stringify(preliste));
+    document.getElementById('jk-titre').value = '';
+    document.getElementById('jk-lien').value = '';
+    afficherPrelisteJukebox();
+    syncSettings();
+}
+async function supprimerPreliste(index){
+    const preliste = getPreliste();
+    preliste.splice(index, 1);
+    localStorage.setItem('dv_jukebox_preliste', JSON.stringify(preliste));
+    afficherPrelisteJukebox();
+    syncSettings();
+}
+function afficherPlayerJukebox(){
+    const el = document.getElementById('jukebox-player');
+    const enCours = fileJukebox.find(m => m.statut === 'joue') || fileJukebox[0];
+    if (!enCours) { el.innerHTML = ''; return; }
+    el.innerHTML = '<iframe width="100%" height="160" src="https://www.youtube.com/embed/' + enCours.youtube_id + '?autoplay=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="border-radius:12px;"></iframe>';
+}
+async function jouerMusique(id){
+    await sb.from('musique_queue').update({ statut: 'en_attente' }).eq('id_restaurant', idResto);
+    await sb.from('musique_queue').update({ statut: 'joue' }).eq('id', id);
+    chargerJukebox();
+}
+async function supprimerMusique(id){
+    await sb.from('musique_queue').delete().eq('id', id);
+    chargerJukebox();
+}
+
 // ── SAUVEGARDE EN LIGNE (Supabase) ─────────────────────
 async function syncSettings(){
     if(!idResto)return;
@@ -484,7 +605,8 @@ async function syncSettings(){
         nom_display: localStorage.getItem('dv_nom')||'',
         couleur: localStorage.getItem('dv_couleur')||'#1a73e8',
         liens: getLiens(),
-        roulette: getRoulette()
+        roulette: getRoulette(),
+        jukebox: { actif: jukeboxActif, preliste: getPreliste() }
     };
     await sb.from('restaurants').update({settings}).eq('id',idResto);
 }
@@ -496,6 +618,14 @@ async function loadSettings(){
         if(data.settings.couleur)localStorage.setItem('dv_couleur',data.settings.couleur);
         if(data.settings.liens)localStorage.setItem('dv_liens',JSON.stringify(data.settings.liens));
         if(data.settings.roulette)localStorage.setItem('dv_roulette',JSON.stringify(data.settings.roulette));
+        if(data.settings.jukebox){
+            jukeboxActif = data.settings.jukebox.actif === true;
+            if(data.settings.jukebox.preliste)localStorage.setItem('dv_jukebox_preliste',JSON.stringify(data.settings.jukebox.preliste));
+            if(jukeboxActif){
+                document.getElementById('section-jukebox').classList.remove('hidden');
+                chargerJukebox();
+            }
+        }
     }
 }
 

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choisir la musique</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a73e8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase.js"></script>
+    <style>
+        body { font-family: 'Roboto', sans-serif !important; }
+        .btn-musique { display:flex; align-items:center; gap:10px; width:100%; text-align:left; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; transition:0.2s; cursor:pointer; background:#fff; }
+        .btn-musique:hover { border-color:#1a73e8; background:#f8fbff; }
+        .btn-musique:active { transform: scale(0.98); }
+        .animate-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(6px);} to { opacity:1; transform:translateY(0);} }
+    </style>
+</head>
+<body class="bg-[#f8f9fa] min-h-screen flex items-center justify-center p-4 font-sans text-[#202124]">
+
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 max-w-md w-full">
+
+        <!-- Header -->
+        <div class="flex items-center gap-4 mb-6">
+            <div class="w-9 h-9 shrink-0"><svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg></div>
+            <div>
+                <h1 id="nom-resto" class="font-medium text-[16px] leading-tight">Chargement...</h1>
+                <p class="text-[12px] text-[#70757a]">Choisissez la musique du moment</p>
+            </div>
+        </div>
+
+        <!-- Contenu principal -->
+        <div id="contenu">
+            <p class="text-base text-gray-700 text-center mb-4">🎵 Quelle musique voulez-vous entendre ?</p>
+
+            <!-- Liste des musiques (préliste du restaurant) -->
+            <div id="liste-musiques" class="space-y-2 mb-5 hidden"></div>
+
+            <!-- Recherche libre (si pas de préliste) -->
+            <div id="recherche-libre" class="border-t border-gray-100 pt-4 hidden">
+                <p class="text-sm text-gray-500 mb-2">Cherchez votre chanson sur YouTube, puis collez le lien :</p>
+                <div class="flex gap-2">
+                    <input id="lien-youtube" type="text" placeholder="Collez un lien YouTube" class="flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm outline-none focus:border-blue-500">
+                    <button onclick="ajouterLien()" class="bg-[#1a73e8] text-white text-sm font-medium px-5 rounded-full hover:bg-blue-700 transition">Ajouter</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirmation -->
+        <div id="confirmation" class="hidden text-center py-6 animate-in">
+            <div class="text-4xl mb-3">🎉</div>
+            <p class="text-green-600 font-semibold text-base" id="confirmation-texte">Musique ajoutée !</p>
+            <p class="text-gray-400 text-sm mt-1">Les musiques les plus demandées passent en premier.</p>
+            <button id="btn-avis" onclick="allerGoogle()" class="hidden mt-5 w-full bg-[#1a73e8] text-white font-medium py-3 rounded-full hover:bg-blue-700 transition shadow-md">
+                ⭐ Laisser un avis Google
+            </button>
+        </div>
+
+        <!-- Non disponible -->
+        <div id="indisponible" class="hidden text-center py-8 animate-in">
+            <div class="text-4xl mb-3">🔇</div>
+            <p class="text-gray-700 font-semibold">Le jukebox n'est pas disponible pour le moment.</p>
+        </div>
+    </div>
+
+    <script>
+        const _supabase = window._supabase || window.supabase;
+        const params = new URLSearchParams(location.search);
+        const idResto = params.get('id');
+        let googleUrl = "";
+
+        async function init() {
+            if (!idResto) {
+                document.getElementById('nom-resto').innerText = "Lien invalide";
+                return;
+            }
+            const { data, error } = await _supabase
+                .from('restaurants_public')
+                .select('nom, google_maps_url, jukebox, desactive')
+                .eq('id', idResto)
+                .single();
+
+            if (error || !data) {
+                document.getElementById('nom-resto').innerText = "Restaurant introuvable";
+                return;
+            }
+            document.getElementById('nom-resto').innerText = data.nom;
+            googleUrl = data.google_maps_url || "";
+
+            // Vérifier si le jukebox est activé (par l'admin)
+            const jukeboxActif = data.jukebox && data.jukebox.actif === true;
+            if (!jukeboxActif || data.desactive) {
+                document.getElementById('contenu').classList.add('hidden');
+                document.getElementById('indisponible').classList.remove('hidden');
+                return;
+            }
+
+            // Préliste définie par le restaurateur (obligatoire si elle existe)
+            const preliste = (data.jukebox && data.jukebox.preliste) || [];
+            if (preliste.length > 0) {
+                afficherPreliste(preliste);
+            } else {
+                document.getElementById('recherche-libre').classList.remove('hidden');
+            }
+        }
+
+        function afficherPreliste(preliste) {
+            const conteneur = document.getElementById('liste-musiques');
+            conteneur.classList.remove('hidden');
+            conteneur.innerHTML = preliste.map(m => `
+                <button class="btn-musique" onclick="voter('${(m.titre||'').replace(/'/g, "\\'")}', '${(m.artiste||'').replace(/'/g, "\\'")}', '${m.youtube_id}')">
+                    <span class="text-xl">🎵</span>
+                    <span class="flex-1">
+                        <span class="block text-sm font-medium">${m.titre || 'Musique'}</span>
+                        ${m.artiste ? `<span class="block text-xs text-gray-400">${m.artiste}</span>` : ''}
+                    </span>
+                    <span class="text-[#1a73e8]">+</span>
+                </button>
+            `).join('');
+        }
+
+        // Voter pour une musique : si elle existe déjà, on incrémente son compteur
+        async function voter(titre, artiste, youtubeId) {
+            const { data: existante } = await _supabase.from('musique_queue')
+                .select('id, votes')
+                .eq('id_restaurant', idResto)
+                .eq('youtube_id', youtubeId)
+                .eq('statut', 'en_attente')
+                .maybeSingle();
+
+            if (existante) {
+                await _supabase.from('musique_queue')
+                    .update({ votes: (existante.votes || 0) + 1 })
+                    .eq('id', existante.id);
+            } else {
+                await _supabase.from('musique_queue').insert({
+                    id_restaurant: idResto,
+                    titre: titre,
+                    artiste: artiste,
+                    youtube_id: youtubeId,
+                    votes: 1
+                });
+            }
+            afficherConfirmation(`« ${titre} » ajouté !`);
+        }
+
+        function extraireIdYouTube(url) {
+            const reg = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+            const m = url.match(reg);
+            return m ? m[1] : null;
+        }
+
+        // Recherche libre : le client colle un lien YouTube
+        async function ajouterLien() {
+            const lien = document.getElementById('lien-youtube').value.trim();
+            if (!lien) return;
+            const id = extraireIdYouTube(lien);
+            if (!id) {
+                alert("Lien YouTube invalide. Collez un lien du type youtube.com/watch?v=...");
+                return;
+            }
+            await voter("Musique (lien)", "", id);
+            document.getElementById('lien-youtube').value = '';
+        }
+
+        function afficherConfirmation(texte) {
+            document.getElementById('contenu').classList.add('hidden');
+            document.getElementById('confirmation').classList.remove('hidden');
+            document.getElementById('confirmation-texte').innerText = texte;
+            if (googleUrl) document.getElementById('btn-avis').classList.remove('hidden');
+        }
+
+        function allerGoogle() {
+            if (googleUrl) window.location.href = googleUrl;
+        }
+
+        init();
+    </script>
+</body>
+</html>

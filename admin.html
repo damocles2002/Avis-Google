@@ -440,6 +440,16 @@
     }
 
     // ── CHARGER CLIENTS ───────────────────────────────────
+    async function toggleJukebox(id) {
+        const { data } = await _supabase.from('restaurants').select('settings').eq('id', id).single();
+        const settings = data?.settings || {};
+        const jukebox = settings.jukebox || { actif: false, preliste: [] };
+        jukebox.actif = !jukebox.actif;
+        settings.jukebox = jukebox;
+        await _supabase.from('restaurants').update({ settings }).eq('id', id);
+        chargerClients();
+    }
+
     async function chargerClients() {
         document.getElementById('table-container').innerHTML = `<div class="loading"><div class="spinner"></div>Chargement...</div>`;
 
@@ -536,6 +546,7 @@
                         <button class="btn-action blue" onclick="voirDashboard('${c.id}')">📊 Dashboard</button>
                         <button class="btn-action green" onclick="voirAvis('${c.id}','${(c.nom||'').replace(/'/g,"\\'")}')">💬 Avis</button>
                         <button class="btn-action yellow" onclick="resetMdp('${c.email_patron||''}','${(c.nom||'').replace(/'/g,"\\'")}')">🔑 Reset MDP</button>
+                        <button class="btn-action blue" onclick="toggleJukebox('${c.id}')">🎵 ${(c.settings && c.settings.jukebox && c.settings.jukebox.actif) ? 'Jukebox ON' : 'Jukebox OFF'}</button>
                         <button class="btn-action red" onclick="desactiverCompte('${c.id}','${(c.nom||'').replace(/'/g,"\\'")}')">🚫 ${c.desactive ? 'Réactiver' : 'Désactiver'}</button>
                     </div>
                 </td>
