@@ -232,19 +232,14 @@
                 document.getElementById('moyenne-block').classList.remove('hidden');
 
                 if (moy >= seuilGoogle) {
-                    // ✅ Bonne note → roulette (si activée) puis Google
-                    if (rouletteActive()) {
-                        afficherRoulette();
-                        setTimeout(() => { window.location.href = googleUrl; }, 9000);
-                    } else {
-                        document.getElementById('stars-section').innerHTML = `
-                            <div class="text-center py-6 animate-in">
-                                <div class="text-4xl mb-3">🎉</div>
-                                <p class="text-green-600 font-semibold text-base">Merci ! Redirection vers Google...</p>
-                                <p class="text-gray-400 text-sm mt-1">Votre avis positif nous aide beaucoup !</p>
-                            </div>`;
-                        setTimeout(() => { window.location.href = googleUrl; }, 1500);
-                    }
+                    // ✅ Bonne note → champ commentaire (copié dans le presse-papier) puis Google
+                    document.getElementById('stars-section').innerHTML = `
+                        <div class="text-center py-6 animate-in">
+                            <div class="text-4xl mb-3">🎉</div>
+                            <p class="text-green-600 font-semibold text-base">Merci ! Votre avis compte beaucoup.</p>
+                            <textarea id="avis-google" rows="3" class="w-full border border-gray-200 rounded-lg p-3 mt-4 text-sm" placeholder="Votre commentaire (il sera copié pour Google)"></textarea>
+                            <button onclick="continuerVersGoogle()" class="mt-4 bg-[#1a73e8] text-white font-medium py-3 px-8 rounded-full hover:bg-blue-700 transition shadow-md">Continuer vers Google →</button>
+                        </div>`;
                 } else {
                     // ❌ Mauvaise note → formulaire interne automatique
                     document.getElementById('stars-section').innerHTML = `
@@ -387,6 +382,35 @@
             setTimeout(() => {
                 document.getElementById('roulette-resultat').innerHTML = '🎉 Vous avez gagné : <strong>' + produits[indexGagnant] + '</strong> !';
             }, 4200);
+        }
+        // ── COPIER LE COMMENTAIRE + REDIRIGER VERS GOOGLE ──────
+        async function continuerVersGoogle(){
+            const commentaire = document.getElementById('avis-google').value.trim();
+            // Copier le commentaire dans le presse-papier (pour le coller sur Google)
+            if (commentaire) {
+                try {
+                    await navigator.clipboard.writeText(commentaire);
+                } catch(e) {
+                    const ta = document.createElement('textarea');
+                    ta.value = commentaire;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    try { document.execCommand('copy'); } catch(_) {}
+                    document.body.removeChild(ta);
+                }
+                document.getElementById('stars-section').innerHTML = `
+                    <div class="text-center py-6 animate-in">
+                        <div class="text-4xl mb-3">📋</div>
+                        <p class="text-green-600 font-semibold text-base">Commentaire copié ! Collez-le sur Google (appui long + Coller).</p>
+                    </div>`;
+            }
+            // Roulette si activée, sinon redirection directe
+            if (rouletteActive()) {
+                afficherRoulette();
+                setTimeout(() => { window.location.href = googleUrl; }, 9000);
+            } else {
+                setTimeout(() => { window.location.href = googleUrl; }, 1500);
+            }
         }
 
         init();
