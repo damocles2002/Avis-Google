@@ -546,7 +546,7 @@
                         <button class="btn-action blue" onclick="voirDashboard('${c.id}')">📊 Dashboard</button>
                         <button class="btn-action green" onclick="voirAvis('${c.id}','${(c.nom||'').replace(/'/g,"\\'")}')">💬 Avis</button>
                         <button class="btn-action yellow" onclick="resetMdp('${c.email_patron||''}','${(c.nom||'').replace(/'/g,"\\'")}')">🔑 Reset MDP</button>
-                        <button class="btn-action blue" onclick="toggleJukebox('${c.id}')">🎵 ${(c.settings && c.settings.jukebox && c.settings.jukebox.actif) ? 'Jukebox ON' : 'Jukebox OFF'}</button>
+                        <button class="btn-action blue" onclick="toggleJukebox('${c.id}')">🎵 ${(c.settings && c.settings.jukebox && c.settings.jukebox.actif) ? 'Jukebox ON' : 'Jukebox OFF'}${(c.settings && c.settings.jukebox && c.settings.jukebox.musique && c.settings.jukebox.musique.service) ? ' · ' + c.settings.jukebox.musique.service : ''}</button>
                         <button class="btn-action red" onclick="desactiverCompte('${c.id}','${(c.nom||'').replace(/'/g,"\\'")}')">🚫 ${c.desactive ? 'Réactiver' : 'Désactiver'}</button>
                     </div>
                 </td>
