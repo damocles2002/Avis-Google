@@ -546,8 +546,11 @@ async function chargerJukebox(){
     const cb = document.getElementById('jk-auto');
     if (cb) cb.checked = modeAuto;
     if (modeAuto && fileJukebox.length) {
+        // Reprendre la musique en cours si elle existe, sinon démarrer
+        const enCours = fileJukebox.find(m => m.statut === 'joue');
+        videoAReprendre = enCours ? enCours.youtube_id : null;
         chargerApiYoutube();
-        demarrerLectureAuto();
+        if (window.YT && YT.Player) onYoutubePret();
     }
 }
 function afficherFileJukebox(){
@@ -643,6 +646,7 @@ function afficherPlayerJukebox(){
 // ── MODE AUTOMATIQUE (les musiques s'enchaînent seules) ──
 let ytPlayer = null;
 let modeAuto = false;
+let videoAReprendre = null;
 function chargerApiYoutube(){
     if (window.YT && YT.Player) return;
     window.onYouTubeIframeAPIReady = onYoutubePret;
@@ -651,22 +655,31 @@ function chargerApiYoutube(){
     document.head.appendChild(tag);
 }
 function onYoutubePret(){
-    if (modeAuto) demarrerLectureAuto();
+    if (!modeAuto) return;
+    if (videoAReprendre) {
+        // Reprendre la musique en cours (sans la supprimer, sans interrompre)
+        creerPlayer(videoAReprendre);
+        videoAReprendre = null;
+    } else {
+        demarrerLectureAuto();
+    }
 }
 function basculerModeAuto(){
     modeAuto = document.getElementById('jk-auto').checked;
     localStorage.setItem('dv_jukebox_auto', modeAuto ? '1' : '0');
     if (modeAuto) {
-        chargerApiYoutube();
-        demarrerLectureAuto();
+        // Activation manuelle : réinitialiser proprement puis démarrer
+        videoAReprendre = null;
+        sb.from('musique_queue').update({ statut: 'en_attente' }).eq('id_restaurant', idResto).eq('statut', 'joue').then(() => {
+            chargerApiYoutube();
+            if (window.YT && YT.Player) demarrerLectureAuto();
+        });
     } else {
         if (ytPlayer) { try { ytPlayer.destroy(); } catch(e){} ytPlayer = null; }
         chargerJukebox();
     }
 }
 async function demarrerLectureAuto(){
-    // Remettre les éventuelles musiques "joue" en "en_attente" pour repartir propre
-    await sb.from('musique_queue').update({ statut: 'en_attente' }).eq('id_restaurant', idResto).eq('statut', 'joue');
     await jouerSuivanteAutomatique();
 }
 function creerPlayer(videoId){
