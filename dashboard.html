@@ -708,6 +708,34 @@ async function jouerSuivanteAutomatique(){
         setTimeout(() => { if (modeAuto) chargerJukebox(); }, 10000);
     }
 }
+// ── TEMPS RÉEL (la file se met à jour sans actualiser) ──
+function abonnerRealtime(){
+    try {
+        if (window._jkChannel) sb.removeChannel(window._jkChannel);
+    } catch(e) {}
+    window._jkChannel = sb.channel('jukebox-' + idResto)
+        .on('postgres_changes', {
+            event: '*', schema: 'public', table: 'musique_queue',
+            filter: 'id_restaurant=eq.' + idResto
+        }, () => {
+            rafraichirFileRealtime();
+        })
+        .subscribe();
+}
+async function rafraichirFileRealtime(){
+    // Recharger la file SANS toucher au player (la musique en cours continue)
+    const { data } = await sb.from('musique_queue')
+        .select('*')
+        .eq('id_restaurant', idResto)
+        .in('statut', ['en_attente', 'joue'])
+        .order('votes', { ascending: false });
+    fileJukebox = data || [];
+    afficherFileJukebox();
+    // Si mode auto ET aucune musique en cours → démarrer la lecture
+    if (modeAuto && fileJukebox.length && !fileJukebox.find(m => m.statut === 'joue')) {
+        jouerSuivanteAutomatique();
+    }
+}
 async function jouerMusique(id){
     await sb.from('musique_queue').update({ statut: 'en_attente' }).eq('id_restaurant', idResto);
     await sb.from('musique_queue').update({ statut: 'joue' }).eq('id', id);
@@ -745,6 +773,7 @@ async function loadSettings(){
             if(jukeboxActif){
                 document.getElementById('section-jukebox').classList.remove('hidden');
                 chargerJukebox();
+                abonnerRealtime();
             }
         }
     }
