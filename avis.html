@@ -381,21 +381,8 @@
             let rotation = (270 - centre + 360) % 360 + 360 * tours;
             rotation += (Math.random() - 0.5) * angleSegment * 0.6;
             document.getElementById('roulette-canvas').style.transform = 'rotate(' + rotation + 'deg)';
-            setTimeout(async () => {
-                const produitGagne = produits[indexGagnant];
-                // Code unique de preuve (montré au restaurant)
-                const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-                try {
-                    await _supabase.from('gains').insert({
-                        id_restaurant: idResto,
-                        produit: produitGagne,
-                        code: code
-                    });
-                } catch(e) { /* silencieux */ }
-                document.getElementById('roulette-resultat').innerHTML =
-                    '🎉 Vous avez gagné : <strong>' + produitGagne + '</strong> !<br>' +
-                    '<span style="font-size:22px;letter-spacing:2px;background:#f0fdf4;padding:6px 14px;border-radius:8px;border:1px dashed #22c55e">Code : ' + code + '</span><br>' +
-                    '<span style="font-size:13px;color:#6b7280">Montrez ce code au comptoir pour récupérer votre cadeau.</span>';
+            setTimeout(() => {
+                document.getElementById('roulette-resultat').innerHTML = '🎉 J\'ai gagné : <strong>' + produits[indexGagnant] + '</strong> !';
             }, 4200);
         }
         // ── COPIER LE COMMENTAIRE + REDIRIGER VERS GOOGLE ──────

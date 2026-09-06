@@ -349,10 +349,6 @@
             </div>
             <button class="btn-save" onclick="sauvegarderRoulette()">💾 Sauvegarder la roulette</button>
             <div class="msg-ok" id="m-roulette">✅ Roulette enregistrée !</div>
-            <div class="fgroup" style="margin-top:16px">
-                <label class="flabel">🎟️ Gains récents (codes à vérifier au comptoir)</label>
-                <div id="r-gains" style="font-size:13px;color:var(--muted)">Chargement...</div>
-            </div>
         </div>
 
         <!-- LANGUE -->
@@ -480,22 +476,6 @@ function sauvegarderRoulette(){
     showMsg('m-roulette');
     syncSettings();
 }
-async function chargerGains(){
-    if(!idResto)return;
-    const el=document.getElementById('r-gains');
-    const{data}=await sb.from('gains').select('id,produit,code,utilise').eq('id_restaurant',idResto).order('date_cree',{ascending:false}).limit(20);
-    if(!data||!data.length){el.innerHTML='<i>Aucun gain pour le moment.</i>';return;}
-    el.innerHTML=data.map(g=>
-        '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">'+
-            '<span>'+(g.utilise?'<s>':'')+g.produit+' — <code>'+g.code+'</code>'+(g.utilise?'</s>':'')+'</span>'+
-            (g.utilise?'<span style="color:#22c55e;font-size:12px">✓ utilisé</span>':'<button class="btn-save" style="padding:4px 10px;font-size:12px" onclick="marquerGainUtilise(\''+g.id+'\')">Valider</button>')+
-        '</div>'
-    ).join('');
-}
-async function marquerGainUtilise(id){
-    await sb.from('gains').update({utilise:true}).eq('id',id);
-    chargerGains();
-}
 
 // ── SAUVEGARDE EN LIGNE (Supabase) ─────────────────────
 async function syncSettings(){
@@ -538,7 +518,6 @@ function ouvrirParams(){
     document.getElementById('l-tiktok').value=l.tiktok||'';
     document.getElementById('l-whatsapp').value=l.whatsapp||'';
     chargerRouletteUI();
-    chargerGains();
     document.getElementById('modal').classList.add('open');
 }
 function fermerParams(){document.getElementById('modal').classList.remove('open');}
