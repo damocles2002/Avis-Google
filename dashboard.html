@@ -559,16 +559,41 @@ async function chargerJukebox(){
     modeAuto = localStorage.getItem('dv_jukebox_auto') === '1';
     const cb = document.getElementById('jk-auto');
     if (cb) cb.checked = modeAuto;
-    if (modeAuto && fileJukebox.length) {
-        // Reprendre la musique en cours si elle existe, sinon démarrer
-        const enCours = fileJukebox.find(m => m.statut === 'joue');
-        videoAReprendre = enCours ? enCours.youtube_id : null;
-        chargerApiYoutube();
-        if (window.YT && YT.Player) onYoutubePret();
+    if (modeAuto) {
+        if (getMode() === 'playlist') {
+            // Mode playlist : démarrer/relancer la lecture de la playlist
+            chargerApiYoutube();
+            if (window.YT && YT.Player) demarrerLectureAuto();
+        } else if (fileJukebox.length) {
+            // Mode auto : reprendre la musique en cours si elle existe, sinon démarrer
+            const enCours = fileJukebox.find(m => m.statut === 'joue');
+            videoAReprendre = enCours ? enCours.youtube_id : null;
+            chargerApiYoutube();
+            if (window.YT && YT.Player) onYoutubePret();
+        }
     }
 }
 function afficherFileJukebox(){
     const el = document.getElementById('jukebox-file');
+    // MODE PLAYLIST : afficher la playlist du resto (pas les propositions clients)
+    if (getMode() === 'playlist') {
+        const preliste = getPreliste();
+        if (!preliste.length) {
+            el.innerHTML = '<i>Playlist vide. Ajoutez des musiques dans « Votre préliste » ci-dessous.</i>';
+            return;
+        }
+        const idxCourant = (parseInt(localStorage.getItem('dv_jukebox_playlist_index') || '0') || 0) % preliste.length;
+        el.innerHTML = preliste.map((m, i) => {
+            const enCours = (i === ((idxCourant - 1 + preliste.length) % preliste.length));
+            return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+                <span style="width:24px;text-align:center;font-weight:700;color:var(--muted);">${i + 1}.</span>
+                <span style="flex:1;"><strong>${m.titre}</strong> ${m.artiste ? '<span style="color:var(--muted)">— '+m.artiste+'</span>' : ''}</span>
+                ${enCours ? '<span style="font-size:11px;color:#16a34a;font-weight:600;">▶ en cours</span>' : ''}
+            </div>`;
+        }).join('');
+        return;
+    }
+    // MODE AUTO : afficher les propositions clients
     if (!fileJukebox.length) {
         el.innerHTML = '<i>Aucune musique pour le moment. Les clients peuvent en ajouter via le QR code « Musique ».</i>';
         return;
@@ -777,7 +802,23 @@ function onEtatChange(event){
     }
 }
 async function jouerSuivanteAutomatique(){
-    // La musique en cours passe dans l'historique (elle est lue)
+    // MODE PLAYLIST : lire la playlist du resto en boucle (PAS les propositions clients)
+    if (getMode() === 'playlist') {
+        const preliste = getPreliste();
+        if (!preliste.length) {
+            fileJukebox = [];
+            afficherFileJukebox();
+            document.getElementById('jukebox-player').innerHTML = '<p style="text-align:center;color:var(--muted);padding:24px;">🎵 Playlist vide — ajoutez des musiques dans « Votre préliste ».</p>';
+            return;
+        }
+        let idx = (parseInt(localStorage.getItem('dv_jukebox_playlist_index') || '0') || 0) % preliste.length;
+        const m = preliste[idx];
+        localStorage.setItem('dv_jukebox_playlist_index', String((idx + 1) % preliste.length));
+        creerPlayer(m.youtube_id);
+        return;
+    }
+
+    // MODE AUTO : la musique en cours passe dans l'historique (elle est lue)
     const enCours = fileJukebox.find(m => m.statut === 'joue');
     if (enCours) {
         await sb.from('musique_queue').update({ statut: 'termine' }).eq('id', enCours.id);
