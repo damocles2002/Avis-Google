@@ -56,8 +56,8 @@
             <div class="text-4xl mb-3">🎉</div>
             <p class="text-green-600 font-semibold text-base" id="confirmation-texte">Musique ajoutée !</p>
             <p class="text-gray-400 text-sm mt-1">Les musiques les plus demandées passent en premier.</p>
-            <button id="btn-avis" onclick="allerGoogle()" class="hidden mt-5 w-full bg-[#1a73e8] text-white font-medium py-3 rounded-full hover:bg-blue-700 transition shadow-md">
-                ⭐ Laisser un avis Google
+            <button onclick="location.reload()" class="mt-5 w-full bg-[#1a73e8] text-white font-medium py-3 rounded-full hover:bg-blue-700 transition shadow-md">
+                🎵 Ajouter une autre musique
             </button>
         </div>
 
@@ -125,6 +125,14 @@
 
         // Voter pour une musique : si elle existe déjà, on incrémente son compteur
         async function voter(titre, artiste, youtubeId) {
+            // Anti-double vote : ce client ne peut proposer la même musique qu'une fois
+            const cle = 'dv_vote_' + idResto + '_' + youtubeId;
+            if (localStorage.getItem(cle)) {
+                alert("Vous avez déjà demandé cette musique. Merci !");
+                return;
+            }
+            localStorage.setItem(cle, '1');
+
             const { data: existante } = await _supabase.from('musique_queue')
                 .select('id, votes')
                 .eq('id_restaurant', idResto)
@@ -171,11 +179,6 @@
             document.getElementById('contenu').classList.add('hidden');
             document.getElementById('confirmation').classList.remove('hidden');
             document.getElementById('confirmation-texte').innerText = texte;
-            if (googleUrl) document.getElementById('btn-avis').classList.remove('hidden');
-        }
-
-        function allerGoogle() {
-            if (googleUrl) window.location.href = googleUrl;
         }
 
         init();

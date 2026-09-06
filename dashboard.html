@@ -685,10 +685,10 @@ function onEtatChange(event){
     if (event.data === 0 && modeAuto) jouerSuivanteAutomatique();
 }
 async function jouerSuivanteAutomatique(){
-    // Marquer la musique en cours comme terminée
+    // Effacer la musique en cours (elle est lue → on la retire de la file)
     const enCours = fileJukebox.find(m => m.statut === 'joue');
     if (enCours) {
-        await sb.from('musique_queue').update({ statut: 'termine' }).eq('id', enCours.id);
+        await sb.from('musique_queue').delete().eq('id', enCours.id);
     }
     // Recharger la file (triée par nombre de votes)
     const { data } = await sb.from('musique_queue')
@@ -737,7 +737,9 @@ async function rafraichirFileRealtime(){
     }
 }
 async function jouerMusique(id){
-    await sb.from('musique_queue').update({ statut: 'en_attente' }).eq('id_restaurant', idResto);
+    // Effacer l'ancienne musique en cours (elle est lue)
+    await sb.from('musique_queue').delete().eq('id_restaurant', idResto).eq('statut', 'joue');
+    // Marquer la nouvelle comme "joue"
     await sb.from('musique_queue').update({ statut: 'joue' }).eq('id', id);
     chargerJukebox();
 }
