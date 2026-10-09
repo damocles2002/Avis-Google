@@ -215,7 +215,10 @@
 
     <!-- RESTO -->
     <div class="resto-header">
-        <div class="resto-av" id="resto-av">🍽️</div>
+        <div class="resto-av" id="resto-av" style="overflow:hidden;position:relative;">
+            <img id="resto-logo" src="" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;">
+            <span id="resto-initiale">🍽️</span>
+        </div>
         <div>
             <div class="resto-nom" id="resto-nom">Chargement...</div>
             <div class="resto-sub" id="resto-sub">Tableau de bord de réputation</div>
@@ -1143,12 +1146,27 @@ function sauvegarderNom(){
     syncSettings();
     document.getElementById('resto-nom').innerText=n;
     document.getElementById('resto-name').innerText=n;
-    document.getElementById('resto-av').innerText=n.charAt(0).toUpperCase();
+    document.getElementById('resto-initiale').innerText=n.charAt(0).toUpperCase();
+    appliquerLogoDashboard();
     showMsg('m-nom');
 }
 // ── LOGO DU RESTAURANT ──
 function getLogo(){
     return localStorage.getItem('dv_logo') || '';
+}
+function appliquerLogoDashboard(){
+    const logo = getLogo();
+    const img = document.getElementById('resto-logo');
+    const init = document.getElementById('resto-initiale');
+    if (!img || !init) return;
+    if (logo) {
+        img.src = logo;
+        img.style.display = 'block';
+        init.style.display = 'none';
+    } else {
+        img.style.display = 'none';
+        init.style.display = '';
+    }
 }
 function uploaderLogo(input){
     const file = input.files[0];
@@ -1169,6 +1187,7 @@ function uploaderLogo(input){
             const base64 = canvas.toDataURL('image/png');
             localStorage.setItem('dv_logo', base64);
             document.getElementById('logo-preview').src = base64;
+            appliquerLogoDashboard();
             syncSettings();
             showMsg('m-logo');
         };
@@ -1179,6 +1198,7 @@ function uploaderLogo(input){
 function supprimerLogo(){
     localStorage.removeItem('dv_logo');
     document.getElementById('logo-preview').src = '';
+    appliquerLogoDashboard();
     syncSettings();
     showMsg('m-logo');
 }
@@ -1282,7 +1302,8 @@ async function init(){
     if(localStorage.getItem('dv_nom'))nomResto=localStorage.getItem('dv_nom');
     document.getElementById('resto-nom').innerText=nomResto;
     document.getElementById('resto-name').innerText=nomResto;
-    document.getElementById('resto-av').innerText=nomResto.charAt(0).toUpperCase();
+    document.getElementById('resto-initiale').innerText=nomResto.charAt(0).toUpperCase();
+    appliquerLogoDashboard();
     await chargerDonnees();
     verifierAbonnement();
 }
