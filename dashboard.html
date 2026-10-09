@@ -359,6 +359,19 @@
             <div class="fgroup"><label class="flabel">Nom</label><input type="text" class="finput" id="i-nom" placeholder="Mon Restaurant"></div>
             <button class="btn-save" onclick="sauvegarderNom()">💾 Sauvegarder</button>
             <div class="msg-ok" id="m-nom">✅ Nom mis à jour !</div>
+
+            <div class="fgroup" style="margin-top:14px;">
+                <label class="flabel">Logo de mon restaurant</label>
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <img id="logo-preview" src="" alt="Logo" style="width:64px;height:64px;border-radius:12px;object-fit:cover;background:var(--bg);border:1px solid var(--border);">
+                    <div style="flex:1;">
+                        <input type="file" id="logo-file" accept="image/*" style="display:none;" onchange="uploaderLogo(this)">
+                        <button class="btn-save" onclick="document.getElementById('logo-file').click()">📁 Choisir un logo</button>
+                        <button class="btn-save" onclick="supprimerLogo()" style="background:#fee2e2;color:#991b1b;margin-top:6px;">🗑 Retirer</button>
+                    </div>
+                </div>
+            </div>
+            <div class="msg-ok" id="m-logo">✅ Logo mis à jour !</div>
         </div>
 
         <!-- COMPTE -->
@@ -1035,6 +1048,7 @@ async function syncSettings(){
     if(!idResto)return;
     const settings={
         nom_display: localStorage.getItem('dv_nom')||'',
+        logo: getLogo(),
         couleur: localStorage.getItem('dv_couleur')||'#1a73e8',
         liens: getLiens(),
         roulette: getRoulette(),
@@ -1047,6 +1061,7 @@ async function loadSettings(){
     const{data}=await sb.from('restaurants').select('settings').eq('id',idResto).single();
     if(data?.settings){
         if(data.settings.nom_display)localStorage.setItem('dv_nom',data.settings.nom_display);
+        if(data.settings.logo)localStorage.setItem('dv_logo',data.settings.logo);
         if(data.settings.couleur)localStorage.setItem('dv_couleur',data.settings.couleur);
         if(data.settings.liens)localStorage.setItem('dv_liens',JSON.stringify(data.settings.liens));
         if(data.settings.roulette)localStorage.setItem('dv_roulette',JSON.stringify(data.settings.roulette));
@@ -1075,6 +1090,7 @@ function ouvrirParams(){
     document.querySelectorAll('.lbtn').forEach(b=>{const l=b.getAttribute('onclick').match(/'(\w+)'/)[1];b.classList.toggle('sel',l===langue);});
     document.getElementById('i-nom').value=localStorage.getItem('dv_nom')||nomResto||'';
     document.getElementById('i-email').value=localStorage.getItem('dv_email')||'';
+    document.getElementById('logo-preview').src=getLogo();
     const l=getLiens();
     document.getElementById('l-google').value=l.google||'';
     document.getElementById('l-google-placeid').value=l.googlePlaceId||'';
@@ -1105,6 +1121,42 @@ function sauvegarderNom(){
     document.getElementById('resto-name').innerText=n;
     document.getElementById('resto-av').innerText=n.charAt(0).toUpperCase();
     showMsg('m-nom');
+}
+// ── LOGO DU RESTAURANT ──
+function getLogo(){
+    return localStorage.getItem('dv_logo') || '';
+}
+function uploaderLogo(input){
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert('Image trop lourde (max 5 Mo).'); return; }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+            // Redimensionner à 256px max (pour ne pas alourdir la base)
+            const max = 256;
+            let w = img.width, h = img.height;
+            if (w > h) { if (w > max) { h = Math.round(h * max / w); w = max; } }
+            else { if (h > max) { w = Math.round(w * max / h); h = max; } }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            const base64 = canvas.toDataURL('image/png');
+            localStorage.setItem('dv_logo', base64);
+            document.getElementById('logo-preview').src = base64;
+            syncSettings();
+            showMsg('m-logo');
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+function supprimerLogo(){
+    localStorage.removeItem('dv_logo');
+    document.getElementById('logo-preview').src = '';
+    syncSettings();
+    showMsg('m-logo');
 }
 async function sauvegarderEmail(){
     const e=document.getElementById('i-email').value.trim();
