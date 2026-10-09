@@ -115,7 +115,16 @@
             }
 
             modeJukebox = (data.jukebox && data.jukebox.mode) || 'auto';
-            preliste = (data.jukebox && data.jukebox.preliste) || [];
+            // Plusieurs playlists : lire la playlist active
+            const playlists = (data.jukebox && data.jukebox.playlists) || [];
+            if (playlists.length) {
+                const active = (data.jukebox && data.jukebox.playlist_active) || playlists[0].nom;
+                const p = playlists.find(x => x.nom === active) || playlists[0];
+                preliste = p ? (p.musiques || []) : [];
+            } else {
+                // Compatibilité : ancienne préliste unique
+                preliste = (data.jukebox && data.jukebox.preliste) || [];
+            }
 
             if (modeJukebox === 'playlist') {
                 // MODE PLAYLIST : le client choisit uniquement dans la liste du resto

@@ -257,9 +257,21 @@
             <p style="font-size:11px;color:var(--muted);margin-top:4px;">Clic droit sur le QR code → enregistrer l'image.</p>
         </div>
 
-        <!-- Préliste (musiques que le client peut choisir) -->
+        <!-- Playlists multiples -->
         <div style="margin-bottom:16px;padding:14px;background:var(--bg);border-radius:10px;">
-            <div style="font-size:13px;font-weight:700;margin-bottom:6px;">📝 Votre préliste (optionnelle)</div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px;">📚 Vos playlists</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+                <select id="jk-playlist-active" onchange="changerPlaylistActive()" style="flex:1;min-width:140px;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:13px;background:#fff;"></select>
+                <input id="jk-new-playlist" placeholder="Nom de la nouvelle playlist" style="flex:1;min-width:120px;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:13px;">
+                <button onclick="creerPlaylist()" style="background:#16a34a;color:#fff;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:13px;">+ Créer</button>
+                <button onclick="supprimerPlaylistActive()" title="Supprimer la playlist active" style="background:#fee2e2;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;color:#991b1b;font-size:13px;">🗑</button>
+            </div>
+            <p style="font-size:12px;color:var(--muted);">La playlist <strong>active</strong> est celle que vos clients voient et que le jukebox joue.</p>
+        </div>
+
+        <!-- Préliste (musiques de la playlist active) -->
+        <div style="margin-bottom:16px;padding:14px;background:var(--bg);border-radius:10px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:6px;">📝 Musiques de la playlist active</div>
             <p style="font-size:12px;color:var(--muted);margin-bottom:8px;">Si vous la remplissez, les clients choisiront <strong>uniquement</strong> dans cette liste. Sinon, ils ajoutent n'importe quelle musique.</p>
             <div id="jukebox-preliste" style="margin-bottom:8px;"></div>
             <!-- Recherche musicale : écrire un nom → suggestions (comme YouTube) -->
@@ -563,6 +575,7 @@ async function chargerJukebox(){
     fileJukebox = data || [];
     afficherFileJukebox();
     afficherPlayerJukebox();
+    afficherPlaylistsUI();
     afficherPrelisteJukebox();
     chargerMusiqueUI();
     chargerModeUI();
@@ -624,9 +637,70 @@ function afficherFileJukebox(){
     }).join('');
 }
 // ── PRÉLISTE (musiques choisies par le restaurateur) ──
+// ── PLAYLISTS MULTIPLES ──
+function getPlaylists(){
+    try {
+        let pls = JSON.parse(localStorage.getItem('dv_jukebox_playlists') || '[]');
+        // Migration : ancienne préliste → première playlist
+        if (!pls.length) {
+            const ancienne = JSON.parse(localStorage.getItem('dv_jukebox_preliste') || '[]');
+            if (ancienne.length) {
+                pls = [{ nom: 'Ma playlist', musiques: ancienne }];
+                localStorage.setItem('dv_jukebox_playlists', JSON.stringify(pls));
+                localStorage.setItem('dv_jukebox_playlist_active', 'Ma playlist');
+            }
+        }
+        return pls;
+    } catch(e) { return []; }
+}
+function getPlaylistActive(){
+    const pls = getPlaylists();
+    return localStorage.getItem('dv_jukebox_playlist_active') || (pls[0] ? pls[0].nom : '');
+}
+// La préliste = les musiques de la playlist active (compatibilité avec la lecture)
 function getPreliste(){
-    try { return JSON.parse(localStorage.getItem('dv_jukebox_preliste') || '[]'); }
-    catch(e) { return []; }
+    const pls = getPlaylists();
+    const active = getPlaylistActive();
+    const p = pls.find(x => x.nom === active) || pls[0];
+    return p ? (p.musiques || []) : [];
+}
+function sauverPlaylists(pls){
+    localStorage.setItem('dv_jukebox_playlists', JSON.stringify(pls));
+    afficherPlaylistsUI();
+    afficherPrelisteJukebox();
+    syncSettings();
+}
+function afficherPlaylistsUI(){
+    const pls = getPlaylists();
+    const active = getPlaylistActive();
+    const sel = document.getElementById('jk-playlist-active');
+    if (!sel) return;
+    sel.innerHTML = pls.map(p => `<option value="${p.nom}" ${p.nom === active ? 'selected' : ''}>${p.nom} (${(p.musiques||[]).length})</option>`).join('');
+}
+function changerPlaylistActive(){
+    const nom = document.getElementById('jk-playlist-active').value;
+    localStorage.setItem('dv_jukebox_playlist_active', nom);
+    localStorage.setItem('dv_jukebox_playlist_index', '-1'); // reprendre au début
+    afficherPrelisteJukebox();
+    syncSettings();
+}
+function creerPlaylist(){
+    const nom = document.getElementById('jk-new-playlist').value.trim();
+    if (!nom) { alert('Donnez un nom à la playlist.'); return; }
+    const pls = getPlaylists();
+    if (pls.find(p => p.nom === nom)) { alert('Ce nom existe déjà.'); return; }
+    pls.push({ nom, musiques: [] });
+    localStorage.setItem('dv_jukebox_playlist_active', nom);
+    sauverPlaylists(pls);
+    document.getElementById('jk-new-playlist').value = '';
+}
+function supprimerPlaylistActive(){
+    const pls = getPlaylists();
+    if (pls.length <= 1) { alert('Il faut garder au moins une playlist.'); return; }
+    const active = getPlaylistActive();
+    const reste = pls.filter(p => p.nom !== active);
+    localStorage.setItem('dv_jukebox_playlist_active', reste[0].nom);
+    sauverPlaylists(reste);
 }
 // ── Recherche musicale pour la préliste (comme YouTube) ──
 let youtubeApiKey = CONFIG.YOUTUBE_API_KEY || '';
@@ -658,12 +732,27 @@ function afficherSuggestionsPreliste(items){
         </div>
     `).join('');
 }
+// Ajouter une musique à la playlist active
+function ajouterMusiquePlaylist(titre, artiste, youtube_id){
+    const pls = getPlaylists();
+    const active = getPlaylistActive();
+    const p = pls.find(x => x.nom === active) || pls[0];
+    if (!p) return;
+    p.musiques = p.musiques || [];
+    p.musiques.push({ titre, artiste, youtube_id });
+    sauverPlaylists(pls);
+}
+function supprimerMusiquePlaylist(index){
+    const pls = getPlaylists();
+    const active = getPlaylistActive();
+    const p = pls.find(x => x.nom === active) || pls[0];
+    if (!p) return;
+    p.musiques = p.musiques || [];
+    p.musiques.splice(index, 1);
+    sauverPlaylists(pls);
+}
 function ajouterSuggestionPreliste(titre, artiste, youtube_id){
-    const preliste = getPreliste();
-    preliste.push({ titre, artiste, youtube_id });
-    localStorage.setItem('dv_jukebox_preliste', JSON.stringify(preliste));
-    afficherPrelisteJukebox();
-    syncSettings();
+    ajouterMusiquePlaylist(titre, artiste, youtube_id);
     document.getElementById('jk-recherche').value = '';
     document.getElementById('jk-suggestions').innerHTML = '';
 }
@@ -671,7 +760,7 @@ function afficherPrelisteJukebox(){
     const preliste = getPreliste();
     const el = document.getElementById('jukebox-preliste');
     if (!preliste.length) {
-        el.innerHTML = '<i style="font-size:12px;">Préliste vide — les clients peuvent ajouter n\'importe quelle musique.</i>';
+        el.innerHTML = '<i style="font-size:12px;">Playlist vide — les clients peuvent ajouter n\'importe quelle musique.</i>';
         return;
     }
     el.innerHTML = preliste.map((p, i) => `
@@ -692,20 +781,12 @@ async function ajouterPreliste(){
     if (!titre || !lien) { alert('Renseignez le titre ET le lien YouTube.'); return; }
     const id = extraireIdYt(lien);
     if (!id) { alert('Lien YouTube invalide.'); return; }
-    const preliste = getPreliste();
-    preliste.push({ titre, artiste: '', youtube_id: id });
-    localStorage.setItem('dv_jukebox_preliste', JSON.stringify(preliste));
+    ajouterMusiquePlaylist(titre, '', id);
     document.getElementById('jk-titre').value = '';
     document.getElementById('jk-lien').value = '';
-    afficherPrelisteJukebox();
-    syncSettings();
 }
 async function supprimerPreliste(index){
-    const preliste = getPreliste();
-    preliste.splice(index, 1);
-    localStorage.setItem('dv_jukebox_preliste', JSON.stringify(preliste));
-    afficherPrelisteJukebox();
-    syncSettings();
+    supprimerMusiquePlaylist(index);
 }
 // ── CONNEXION MUSIQUE (Spotify, Deezer...) ──
 function getMusique(){
@@ -957,7 +1038,7 @@ async function syncSettings(){
         couleur: localStorage.getItem('dv_couleur')||'#1a73e8',
         liens: getLiens(),
         roulette: getRoulette(),
-        jukebox: { actif: jukeboxActif, preliste: getPreliste(), musique: getMusique(), mode: getMode() }
+        jukebox: { actif: jukeboxActif, preliste: getPreliste(), playlists: getPlaylists(), playlist_active: getPlaylistActive(), musique: getMusique(), mode: getMode() }
     };
     await sb.from('restaurants').update({settings}).eq('id',idResto);
 }
@@ -971,7 +1052,9 @@ async function loadSettings(){
         if(data.settings.roulette)localStorage.setItem('dv_roulette',JSON.stringify(data.settings.roulette));
         if(data.settings.jukebox){
             jukeboxActif = data.settings.jukebox.actif === true;
-            if(data.settings.jukebox.preliste)localStorage.setItem('dv_jukebox_preliste',JSON.stringify(data.settings.jukebox.preliste));
+            if(data.settings.jukebox.playlists)localStorage.setItem('dv_jukebox_playlists',JSON.stringify(data.settings.jukebox.playlists));
+            if(data.settings.jukebox.playlist_active)localStorage.setItem('dv_jukebox_playlist_active',data.settings.jukebox.playlist_active);
+            if(data.settings.jukebox.preliste && !data.settings.jukebox.playlists)localStorage.setItem('dv_jukebox_preliste',JSON.stringify(data.settings.jukebox.preliste));
             if(data.settings.jukebox.musique)localStorage.setItem('dv_jukebox_musique',JSON.stringify(data.settings.jukebox.musique));
             if(data.settings.jukebox.mode)localStorage.setItem('dv_jukebox_mode',data.settings.jukebox.mode);
             if(jukeboxActif){
