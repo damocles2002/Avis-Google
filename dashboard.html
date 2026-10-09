@@ -372,6 +372,24 @@
                 </div>
             </div>
             <div class="msg-ok" id="m-logo">✅ Logo mis à jour !</div>
+
+            <div class="fgroup" style="margin-top:14px;">
+                <label class="flabel">💬 Message de bienvenue (affiché aux clients)</label>
+                <input type="text" class="finput" id="i-message" placeholder="Bienvenue chez Chez Maman !">
+                <button class="btn-save" onclick="sauvegarderMessage()" style="margin-top:8px;">💾 Sauvegarder</button>
+                <div class="msg-ok" id="m-message">✅ Message mis à jour !</div>
+            </div>
+
+            <div class="fgroup" style="margin-top:14px;">
+                <label class="flabel">🌅 Photo de couverture (bannière en haut des pages)</label>
+                <img id="cover-preview" src="" alt="Couverture" style="width:100%;height:70px;border-radius:10px;object-fit:cover;background:var(--bg);border:1px solid var(--border);margin-top:6px;">
+                <div style="margin-top:8px;">
+                    <input type="file" id="cover-file" accept="image/*" style="display:none;" onchange="uploaderCouverture(this)">
+                    <button class="btn-save" onclick="document.getElementById('cover-file').click()">📁 Choisir une photo</button>
+                    <button class="btn-save" onclick="supprimerCouverture()" style="background:#fee2e2;color:#991b1b;">🗑 Retirer</button>
+                </div>
+                <div class="msg-ok" id="m-cover">✅ Photo mise à jour !</div>
+            </div>
         </div>
 
         <!-- COMPTE -->
@@ -1049,6 +1067,8 @@ async function syncSettings(){
     const settings={
         nom_display: localStorage.getItem('dv_nom')||'',
         logo: getLogo(),
+        couverture: getCouverture(),
+        message: getMessage(),
         couleur: localStorage.getItem('dv_couleur')||'#1a73e8',
         liens: getLiens(),
         roulette: getRoulette(),
@@ -1062,6 +1082,8 @@ async function loadSettings(){
     if(data?.settings){
         if(data.settings.nom_display)localStorage.setItem('dv_nom',data.settings.nom_display);
         if(data.settings.logo)localStorage.setItem('dv_logo',data.settings.logo);
+        if(data.settings.couverture)localStorage.setItem('dv_couverture',data.settings.couverture);
+        if(data.settings.message)localStorage.setItem('dv_message',data.settings.message);
         if(data.settings.couleur)localStorage.setItem('dv_couleur',data.settings.couleur);
         if(data.settings.liens)localStorage.setItem('dv_liens',JSON.stringify(data.settings.liens));
         if(data.settings.roulette)localStorage.setItem('dv_roulette',JSON.stringify(data.settings.roulette));
@@ -1091,6 +1113,8 @@ function ouvrirParams(){
     document.getElementById('i-nom').value=localStorage.getItem('dv_nom')||nomResto||'';
     document.getElementById('i-email').value=localStorage.getItem('dv_email')||'';
     document.getElementById('logo-preview').src=getLogo();
+    document.getElementById('cover-preview').src=getCouverture();
+    document.getElementById('i-message').value=getMessage();
     const l=getLiens();
     document.getElementById('l-google').value=l.google||'';
     document.getElementById('l-google-placeid').value=l.googlePlaceId||'';
@@ -1157,6 +1181,50 @@ function supprimerLogo(){
     document.getElementById('logo-preview').src = '';
     syncSettings();
     showMsg('m-logo');
+}
+// ── MESSAGE DE BIENVENUE + PHOTO DE COUVERTURE ──
+function getMessage(){
+    return localStorage.getItem('dv_message') || '';
+}
+function sauvegarderMessage(){
+    const m = document.getElementById('i-message').value.trim();
+    localStorage.setItem('dv_message', m);
+    syncSettings();
+    showMsg('m-message');
+}
+function getCouverture(){
+    return localStorage.getItem('dv_couverture') || '';
+}
+function uploaderCouverture(input){
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert('Image trop lourde (max 5 Mo).'); return; }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+            // Redimensionner à 800px de large max (bannière)
+            const maxW = 800;
+            let w = img.width, h = img.height;
+            if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            const base64 = canvas.toDataURL('image/jpeg', 0.8);
+            localStorage.setItem('dv_couverture', base64);
+            document.getElementById('cover-preview').src = base64;
+            syncSettings();
+            showMsg('m-cover');
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+function supprimerCouverture(){
+    localStorage.removeItem('dv_couverture');
+    document.getElementById('cover-preview').src = '';
+    syncSettings();
+    showMsg('m-cover');
 }
 async function sauvegarderEmail(){
     const e=document.getElementById('i-email').value.trim();
