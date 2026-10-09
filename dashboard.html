@@ -249,6 +249,14 @@
             <button onclick="chargerJukebox()" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;">🔄 Actualiser</button>
         </div>
 
+        <!-- QR Code Musique -->
+        <div style="margin-bottom:16px;padding:14px;background:var(--bg);border-radius:10px;text-align:center;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px;">📱 QR Code Musique (à afficher sur les tables)</div>
+            <img id="jk-qrcode" src="" alt="QR Code Musique" style="width:140px;height:140px;margin:0 auto;border-radius:8px;background:#fff;padding:6px;">
+            <p id="jk-qr-lien" style="font-size:11px;color:var(--muted);margin-top:8px;word-break:break-all;"></p>
+            <p style="font-size:11px;color:var(--muted);margin-top:4px;">Clic droit sur le QR code → enregistrer l'image.</p>
+        </div>
+
         <!-- Préliste (musiques que le client peut choisir) -->
         <div style="margin-bottom:16px;padding:14px;background:var(--bg);border-radius:10px;">
             <div style="font-size:13px;font-weight:700;margin-bottom:6px;">📝 Votre préliste (optionnelle)</div>
@@ -295,7 +303,11 @@
                 <option value="playlist">📋 Playlist (le client choisit dans votre liste)</option>
             </select>
         </div>
-        <div id="jukebox-player" style="margin-bottom:14px;"></div>
+        <div id="jukebox-player" style="margin-bottom:10px;"></div>
+        <div style="display:flex;justify-content:center;gap:14px;margin-bottom:14px;">
+            <button onclick="jukeboxPrecedent()" style="background:var(--bg);border:1px solid var(--border);border-radius:50%;width:46px;height:46px;cursor:pointer;font-size:18px;" title="Musique précédente">⏮</button>
+            <button onclick="jukeboxSuivant()" style="background:#1a73e8;color:#fff;border:none;border-radius:50%;width:50px;height:50px;cursor:pointer;font-size:20px;" title="Musique suivante">⏭</button>
+        </div>
         <div id="jukebox-file" style="font-size:13px;color:var(--muted);">Chargement...</div>
     </div>
 
@@ -555,6 +567,7 @@ async function chargerJukebox(){
     chargerMusiqueUI();
     chargerModeUI();
     chargerCleApi();
+    afficherQrJukebox();
     // Restaurer le mode automatique (si le resto l'avait activé)
     modeAuto = localStorage.getItem('dv_jukebox_auto') === '1';
     const cb = document.getElementById('jk-auto');
@@ -582,9 +595,9 @@ function afficherFileJukebox(){
             el.innerHTML = '<i>Playlist vide. Ajoutez des musiques dans « Votre préliste » ci-dessous.</i>';
             return;
         }
-        const idxCourant = (parseInt(localStorage.getItem('dv_jukebox_playlist_index') || '0') || 0) % preliste.length;
+        const idxCourant = parseInt(localStorage.getItem('dv_jukebox_playlist_index') || '-1') || -1;
         el.innerHTML = preliste.map((m, i) => {
-            const enCours = (i === ((idxCourant - 1 + preliste.length) % preliste.length));
+            const enCours = (i === idxCourant);
             return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
                 <span style="width:24px;text-align:center;font-weight:700;color:var(--muted);">${i + 1}.</span>
                 <span style="flex:1;"><strong>${m.titre}</strong> ${m.artiste ? '<span style="color:var(--muted)">— '+m.artiste+'</span>' : ''}</span>
@@ -773,6 +786,37 @@ function basculerModeAuto(){
 async function demarrerLectureAuto(){
     await jouerSuivanteAutomatique();
 }
+// ── Contrôles de lecture (suivant / précédent) ──
+function jukeboxSuivant(){
+    if (getMode() === 'playlist') {
+        const preliste = getPreliste();
+        if (!preliste.length) return;
+        let idxCourant = parseInt(localStorage.getItem('dv_jukebox_playlist_index') || '-1') || -1;
+        let prochaine = (idxCourant + 1) % preliste.length;
+        localStorage.setItem('dv_jukebox_playlist_index', String(prochaine));
+        afficherFileJukebox();
+        creerPlayer(preliste[prochaine].youtube_id);
+    } else {
+        jouerSuivanteAutomatique();
+    }
+}
+function jukeboxPrecedent(){
+    if (getMode() === 'playlist') {
+        const preliste = getPreliste();
+        if (!preliste.length) return;
+        let idxCourant = parseInt(localStorage.getItem('dv_jukebox_playlist_index') || '-1') || -1;
+        let precedente = (idxCourant - 1 + preliste.length) % preliste.length;
+        localStorage.setItem('dv_jukebox_playlist_index', String(precedente));
+        afficherFileJukebox();
+        creerPlayer(preliste[precedente].youtube_id);
+    }
+}
+// ── QR Code Musique ──
+function afficherQrJukebox(){
+    const lien = 'https://damocles2002.github.io/Avis-Google/jukebox.html?id=' + idResto;
+    document.getElementById('jk-qrcode').src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(lien);
+    document.getElementById('jk-qr-lien').innerText = lien;
+}
 function creerPlayer(videoId){
     if (!window.YT || !YT.Player) return;
     // Si le player existe déjà → charger la nouvelle vidéo SANS le recréer.
@@ -811,10 +855,12 @@ async function jouerSuivanteAutomatique(){
             document.getElementById('jukebox-player').innerHTML = '<p style="text-align:center;color:var(--muted);padding:24px;">🎵 Playlist vide — ajoutez des musiques dans « Votre préliste ».</p>';
             return;
         }
-        let idx = (parseInt(localStorage.getItem('dv_jukebox_playlist_index') || '0') || 0) % preliste.length;
-        const m = preliste[idx];
-        localStorage.setItem('dv_jukebox_playlist_index', String((idx + 1) % preliste.length));
-        creerPlayer(m.youtube_id);
+        // L'index stocké pointe vers la musique EN COURS (-1 = pas encore joué)
+        let idxCourant = parseInt(localStorage.getItem('dv_jukebox_playlist_index') || '-1') || -1;
+        let prochaine = (idxCourant + 1) % preliste.length;
+        localStorage.setItem('dv_jukebox_playlist_index', String(prochaine));
+        afficherFileJukebox();
+        creerPlayer(preliste[prochaine].youtube_id);
         return;
     }
 
