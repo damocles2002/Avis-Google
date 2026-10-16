@@ -327,7 +327,10 @@
     </div>
 
     <!-- PLATEFORMES AVEC AVIS -->
-    <div class="section-title" id="l-plat">Plateformes</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+        <div class="section-title" id="l-plat" style="margin:0">Plateformes</div>
+        <button id="btn-connect-google" onclick="connecterGoogle()" style="background:#4285F4;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">🔗 Connecter Google</button>
+    </div>
     <div class="platforms-grid" id="platforms-grid"></div>
 
     <!-- RÉSEAUX SOCIAUX -->
@@ -1363,7 +1366,53 @@ async function chargerDonnees(){
     document.getElementById('avis-list').innerHTML='<div class="loading"><div class="spinner"></div>Chargement...</div>';
     const{data}=await sb.from('avis_internes').select('*').eq('id_restaurant',idResto).order('date_cree',{ascending:false}).limit(50);
     allAvis=(data||[]).map(a=>({id:a.id,auteur:'Client anonyme',note:a.note,texte:a.commentaire,reponse:a.reponse||'',photo:a.photo_url||'',date:a.date_cree,plateforme:'interne'}));
+    // Avis Google (si la fiche est connectée)
+    const ag=await chargerAvisGoogle();
+    if(ag.length){allAvis=allAvis.concat(ag).sort((a,b)=>new Date(b.date)-new Date(a.date));}
+    majBoutonGoogle();
     calculerStats();renderChart();renderPlatformes();renderSocial();renderAvis();
+}
+
+// ── CONNEXION GOOGLE (centralisation des avis) ──────────
+const GOOGLE_CLIENT_ID='1025637408609-hrlgsovi7spuh9mndd4i48rtk6t4l5it.apps.googleusercontent.com';
+function connecterGoogle(){
+    const url='https://accounts.google.com/o/oauth2/v2/auth'
+        +'?client_id='+GOOGLE_CLIENT_ID
+        +'&redirect_uri='+encodeURIComponent('https://damocles2002.github.io/Avis-Google/oauth-callback.html')
+        +'&response_type=code'
+        +'&scope='+encodeURIComponent('https://www.googleapis.com/auth/business.manage')
+        +'&access_type=offline'
+        +'&prompt=consent'
+        +'&state='+idResto;
+    window.location.href=url;
+}
+async function googleAction(action,extra){
+    try{
+        const res=await fetch(CONFIG.SB_URL+'/functions/v1/google',{
+            method:'POST',
+            headers:{'Content-Type':'application/json','Authorization':'Bearer '+CONFIG.SB_KEY},
+            body:JSON.stringify({action,idResto,...extra})
+        });
+        return await res.json();
+    }catch(e){return{ok:false,error:'Erreur réseau'};}
+}
+async function statutGoogle(){
+    const d=await googleAction('statut');
+    return d.connecte===true;
+}
+async function chargerAvisGoogle(){
+    const d=await googleAction('avis');
+    if(d.ok&&d.avis&&d.avis.length){
+        return d.avis.map(a=>({id:'g-'+a.date,auteur:a.nom,note:a.note,texte:a.commentaire,reponse:a.reponse_resto||'',photo:'',date:a.date,plateforme:'google'}));
+    }
+    return [];
+}
+async function majBoutonGoogle(){
+    const btn=document.getElementById('btn-connect-google');
+    if(!btn)return;
+    const c=await statutGoogle();
+    if(c){btn.innerText='✓ Google connecté';btn.style.background='#22c55e';btn.onclick=()=>{if(confirm('Déconnecter Google ?')){googleAction('deconnexion').then(()=>location.reload());}};}
+    else{btn.innerText='🔗 Connecter Google';btn.style.background='#4285F4';btn.onclick=connecterGoogle;}
 }
 
 // ── GRAPHIQUE 30 JOURS ─────────────────────────────────

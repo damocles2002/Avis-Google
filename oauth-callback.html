@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion Google — DAMAVIS</title>
+  <script src="js/config.js"></script>
+  <style>
+    body { font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; background:#f0f4f8; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; }
+    .card { background:#fff; border-radius:16px; padding:36px 28px; max-width:380px; width:100%; text-align:center; box-shadow:0 4px 24px rgba(0,0,0,0.06); }
+    .spinner { width:36px; height:36px; border:3px solid #e2e8f0; border-top-color:#1a73e8; border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 16px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    h1 { font-size:18px; color:#1a202c; margin:0 0 8px; }
+    p { font-size:14px; color:#718096; margin:0 0 16px; }
+    .ok { color:#22c55e; font-weight:600; }
+    .err { color:#ef4444; font-weight:600; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="spinner" id="spinner"></div>
+    <h1 id="titre">Connexion à Google…</h1>
+    <p id="message">Veuillez patienter, nous sécurisons la connexion.</p>
+  </div>
+
+  <script>
+    (async function () {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      const state = params.get('state'); // contient l'id du restaurant
+      const idResto = state;
+
+      const titre = document.getElementById('titre');
+      const message = document.getElementById('message');
+      const spinner = document.getElementById('spinner');
+
+      // Si erreur ou refus de l'utilisateur
+      if (params.get('error')) {
+        spinner.style.display = 'none';
+        titre.textContent = 'Connexion annulée';
+        titre.className = 'err';
+        message.textContent = 'Vous avez refusé l\'autorisation Google.';
+        return;
+      }
+      if (!code || !idResto) {
+        spinner.style.display = 'none';
+        titre.textContent = 'Lien invalide';
+        titre.className = 'err';
+        message.textContent = 'Il manque des informations dans le lien.';
+        return;
+      }
+
+      try {
+        const res = await fetch(CONFIG.SB_URL + '/functions/v1/google', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + CONFIG.SB_KEY,
+          },
+          body: JSON.stringify({ action: 'auth', code, idResto }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          spinner.style.display = 'none';
+          titre.textContent = 'Connexion réussie ✅';
+          titre.className = 'ok';
+          message.textContent = 'Vos avis Google vont maintenant remonter automatiquement dans votre tableau de bord. Vous pouvez fermer cette page.';
+        } else {
+          spinner.style.display = 'none';
+          titre.textContent = 'Connexion impossible';
+          titre.className = 'err';
+          message.textContent = (data.error || 'Erreur inconnue') + ' (L\'accès API est peut-être encore en attente de validation par Google.)';
+        }
+      } catch (e) {
+        spinner.style.display = 'none';
+        titre.textContent = 'Erreur technique';
+        titre.className = 'err';
+        message.textContent = 'Impossible de joindre le serveur. Réessayez plus tard.';
+      }
+    })();
+  </script>
+</body>
+</html>
