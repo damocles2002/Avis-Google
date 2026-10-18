@@ -202,6 +202,7 @@
         <div class="topbar-right">
             <button class="btn-top" onclick="chargerDonnees()">🔄 <span id="b-refresh">Actualiser</span></button>
             <button class="btn-top" onclick="ouvrirParams()">⚙️ <span id="b-params">Paramètres</span></button>
+            <button class="btn-top" onclick="ouvrirQR()">📱 <span>QR codes</span></button>
         </div>
     </div>
 
@@ -1127,6 +1128,7 @@ function ouvrirParams(){
 }
 function fermerParams(){document.getElementById('modal').classList.remove('open');}
 function fermerSiDehors(e){if(e.target===document.getElementById('modal'))fermerParams();}
+function ouvrirQR(){window.open('qrcode.html?id='+idResto,'_blank');}
 
 function setLangue(lang){
     langue=lang;t=i18n[lang];
