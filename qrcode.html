@@ -21,8 +21,11 @@
 
         <div class="mb-4">
             <label class="block text-xs font-semibold text-gray-500 mb-1">ID du restaurant</label>
-            <input type="text" id="id-resto" placeholder="ID du restaurant..."
-                   class="w-full p-3 rounded-lg border border-gray-300 text-sm">
+            <input type="text" id="id-resto" placeholder="ID du restaurant..." class="w-full p-3 rounded-lg border border-gray-300 text-sm">
+        </div>
+        <div class="mb-4">
+            <label class="block text-xs font-semibold text-gray-500 mb-1">Nom du restaurant (sur le QR)</label>
+            <input type="text" id="nom-resto" placeholder="Ex : Le Coq Noir" class="w-full p-3 rounded-lg border border-gray-300 text-sm">
         </div>
         <button onclick="genererTout()" class="w-full bg-[#042C53] text-white font-bold py-3 rounded-lg mb-6">Générer mes QR codes</button>
 
@@ -30,31 +33,36 @@
             <!-- QR Avis -->
             <div class="text-center">
                 <h2 class="font-semibold mb-2 text-lg">⭐ Avis clients</h2>
-                <div class="bg-white p-4 rounded-xl border border-gray-200 inline-block">
+                <div class="bg-[#042C53] p-4 rounded-xl inline-block">
                     <div id="qr-avis"></div>
                 </div>
                 <p class="text-xs text-gray-400 mt-2">Le client scanne → laisse son avis</p>
-                <a id="dl-avis" class="mt-3 inline-block bg-[#1a73e8] text-white text-sm font-medium py-2 px-6 rounded-full cursor-pointer">⬇️ Télécharger</a>
+                <a onclick="composerCarte('avis')" class="mt-3 inline-block bg-[#1a73e8] text-white text-sm font-medium py-2 px-6 rounded-full cursor-pointer">⬇️ Télécharger</a>
             </div>
 
             <!-- QR Jukebox -->
             <div class="text-center">
                 <h2 class="font-semibold mb-2 text-lg">🎵 Musique (jukebox)</h2>
-                <div class="bg-white p-4 rounded-xl border border-gray-200 inline-block">
+                <div class="bg-[#042C53] p-4 rounded-xl inline-block">
                     <div id="qr-jukebox"></div>
                 </div>
                 <p class="text-xs text-gray-400 mt-2">Le client scanne → vote pour la musique</p>
-                <a id="dl-jukebox" class="mt-3 inline-block bg-[#1a73e8] text-white text-sm font-medium py-2 px-6 rounded-full cursor-pointer">⬇️ Télécharger</a>
+                <a onclick="composerCarte('jukebox')" class="mt-3 inline-block bg-[#1a73e8] text-white text-sm font-medium py-2 px-6 rounded-full cursor-pointer">⬇️ Télécharger</a>
             </div>
         </div>
     </div>
     <script>
         const BASE = "https://damocles2002.github.io/Avis-Google/";
 
-        // Pré-remplir l'ID depuis l'URL (?id=...)
+        // Pré-remplir l'ID + le nom depuis l'URL (?id=...&nom=...)
         const params = new URLSearchParams(window.location.search);
         if (params.get('id')) {
             document.getElementById('id-resto').value = params.get('id');
+        }
+        if (params.get('nom')) {
+            document.getElementById('nom-resto').value = params.get('nom');
+        }
+        if (params.get('id')) {
             genererTout();
         }
 
@@ -68,32 +76,70 @@
             document.getElementById('qr-avis').innerHTML = "";
             document.getElementById('qr-jukebox').innerHTML = "";
 
+            // QR blanc sur fond bleu nuit (comme le modèle), 400px pour la netteté
             new QRCode(document.getElementById('qr-avis'), {
-                text: lienAvis, width: 180, height: 180,
-                colorDark: "#042C53", colorLight: "#ffffff",
+                text: lienAvis, width: 400, height: 400,
+                colorDark: "#ffffff", colorLight: "#042C53",
                 correctLevel: QRCode.CorrectLevel.H
             });
             new QRCode(document.getElementById('qr-jukebox'), {
-                text: lienJukebox, width: 180, height: 180,
-                colorDark: "#042C53", colorLight: "#ffffff",
+                text: lienJukebox, width: 400, height: 400,
+                colorDark: "#ffffff", colorLight: "#042C53",
                 correctLevel: QRCode.CorrectLevel.H
             });
 
             document.getElementById('resultats').classList.remove('hidden');
 
-            // Téléchargement (canvas -> PNG)
+            // réduire l'aperçu (le canvas reste 400px pour la carte)
             setTimeout(() => {
                 const cAvis = document.querySelector('#qr-avis canvas');
                 const cJuk = document.querySelector('#qr-jukebox canvas');
-                if (cAvis) {
-                    document.getElementById('dl-avis').href = cAvis.toDataURL('image/png');
-                    document.getElementById('dl-avis').download = 'qrcode-avis-' + id + '.png';
-                }
-                if (cJuk) {
-                    document.getElementById('dl-jukebox').href = cJuk.toDataURL('image/png');
-                    document.getElementById('dl-jukebox').download = 'qrcode-jukebox-' + id + '.png';
-                }
-            }, 300);
+                if (cAvis) { cAvis.style.width = '160px'; cAvis.style.height = '160px'; }
+                if (cJuk) { cJuk.style.width = '160px'; cJuk.style.height = '160px'; }
+            }, 100);
+        }
+
+        // Compose la carte complète (fond bleu nuit + logo + nom + QR + service) et la télécharge
+        function composerCarte(type) {
+            const id = document.getElementById('id-resto').value.trim();
+            const nom = document.getElementById('nom-resto').value.trim() || 'Restaurant';
+            const canvas = document.createElement('canvas');
+            canvas.width = 800; canvas.height = 1000;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#042C53';
+            ctx.fillRect(0, 0, 800, 1000);
+            const logo = new Image();
+            logo.onload = function() {
+                // logo DAMAVIS dans un cercle blanc
+                ctx.beginPath(); ctx.arc(400, 130, 62, 0, Math.PI*2); ctx.fillStyle = '#ffffff'; ctx.fill();
+                ctx.save();
+                ctx.beginPath(); ctx.arc(400, 130, 56, 0, Math.PI*2); ctx.clip();
+                ctx.drawImage(logo, 344, 74, 112, 112);
+                ctx.restore();
+                // DAMAVIS + nom du restaurant
+                ctx.fillStyle = '#ffffff'; ctx.font = 'bold 42px "Times New Roman", serif'; ctx.textAlign = 'center';
+                ctx.fillText('DAMAVIS', 400, 250);
+                ctx.font = '26px "Times New Roman", serif';
+                ctx.fillText(nom, 400, 295);
+                // QR code (blanc sur bleu, net)
+                const sel = '#qr-' + (type === 'avis' ? 'avis' : 'jukebox');
+                const qr = document.querySelector(sel + ' canvas') || document.querySelector(sel + ' img');
+                if (qr) { ctx.drawImage(qr, 200, 330, 400, 400); }
+                // service + instruction
+                const service = (type === 'avis') ? '⭐ Donnez votre avis' : '🎵 Choisissez la musique';
+                ctx.fillStyle = '#EF9F27'; ctx.font = 'bold 34px "Times New Roman", serif';
+                ctx.fillText(service, 400, 800);
+                ctx.fillStyle = '#ffffff'; ctx.font = '22px "Open Sans", sans-serif';
+                ctx.fillText('Scannez ce QR code', 400, 850);
+                // téléchargement
+                const a = document.createElement('a');
+                a.href = canvas.toDataURL('image/png');
+                a.download = 'qrcode-' + (type === 'avis' ? 'avis' : 'jukebox') + '-' + id + '.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            };
+            logo.src = 'logo.png';
         }
     </script>
 </body>
