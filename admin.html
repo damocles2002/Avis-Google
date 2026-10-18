@@ -8,6 +8,7 @@
     <script src="js/config.js"></script>
     <script src="js/supabase.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         :root {
             --bg: #070b14;
@@ -184,6 +185,7 @@
     </div>
     <div class="topbar-right">
         <span id="admin-email" style="font-size:13px;color:var(--muted)"></span>
+        <button class="btn-sm" onclick="ouvrirModalQR()">📱 QR codes</button>
         <button class="btn-sm btn-danger" onclick="deconnecter()">🚪 Déconnexion</button>
     </div>
 </div>
@@ -542,6 +544,7 @@
                     <div class="actions">
                         <button class="btn-action green" onclick="activerAbonnement('${c.id}')">✅ Activer 30j</button>
                         <button class="btn-action blue" onclick="voirDashboard('${c.id}')">📊 Dashboard</button>
+                        <button class="btn-action blue" onclick="ouvrirQRPour('${c.id}')">📱 QR</button>
                         <button class="btn-action green" onclick="voirAvis('${c.id}','${(c.nom||'').replace(/'/g,"\\'")}')">💬 Avis</button>
                         <button class="btn-action yellow" onclick="resetMdp('${c.email_patron||''}','${(c.nom||'').replace(/'/g,"\\'")}')">🔑 Reset MDP</button>
                         <button class="btn-action blue" onclick="toggleJukebox('${c.id}')">🎵 ${(c.settings && c.settings.jukebox && c.settings.jukebox.actif) ? 'Jukebox ON' : 'Jukebox OFF'}${(c.settings && c.settings.jukebox && c.settings.jukebox.musique && c.settings.jukebox.musique.service) ? ' · ' + c.settings.jukebox.musique.service : ''}</button>
@@ -755,6 +758,52 @@
     }
 
     window.addEventListener('load', init);
+</script>
+<!-- MODALE QR CODE -->
+<div id="modal-qr" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:200;align-items:center;justify-content:center;" onclick="if(event.target===this)fermerModalQR()">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;max-width:520px;width:92%;max-height:90vh;overflow-y:auto;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <h3 style="font-size:18px;font-weight:700;margin:0;">📱 QR codes du restaurant</h3>
+            <button onclick="fermerModalQR()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;">✕</button>
+        </div>
+        <label style="font-size:12px;color:var(--muted);">ID du restaurant</label>
+        <input type="text" id="qr-id" placeholder="Collez l'ID du restaurant..." style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);margin:8px 0 12px;outline:none;">
+        <button onclick="genererQRAdmin()" style="width:100%;background:var(--accent);color:white;border:none;border-radius:8px;padding:11px;font-weight:600;cursor:pointer;">Générer les QR codes</button>
+        <div id="qr-result" style="display:none;margin-top:24px;">
+            <div style="display:flex;gap:24px;flex-wrap:wrap;justify-content:center;">
+                <div style="text-align:center;">
+                    <div style="font-size:13px;font-weight:600;margin-bottom:8px;">⭐ Avis clients</div>
+                    <div style="background:#fff;padding:10px;border-radius:10px;display:inline-block;"><div id="qr-avis-a"></div></div>
+                    <a id="dl-avis-a" style="display:inline-block;margin-top:8px;font-size:12px;color:var(--accent2);cursor:pointer;text-decoration:none;">⬇️ Télécharger</a>
+                </div>
+                <div style="text-align:center;">
+                    <div style="font-size:13px;font-weight:600;margin-bottom:8px;">🎵 Musique (jukebox)</div>
+                    <div style="background:#fff;padding:10px;border-radius:10px;display:inline-block;"><div id="qr-jukebox-a"></div></div>
+                    <a id="dl-jukebox-a" style="display:inline-block;margin-top:8px;font-size:12px;color:var(--accent2);cursor:pointer;text-decoration:none;">⬇️ Télécharger</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function ouvrirModalQR(){ document.getElementById('modal-qr').style.display='flex'; }
+function fermerModalQR(){ document.getElementById('modal-qr').style.display='none'; }
+function ouvrirQRPour(id){ document.getElementById('qr-id').value = id; ouvrirModalQR(); genererQRAdmin(); }
+function genererQRAdmin(){
+    var id = document.getElementById('qr-id').value.trim();
+    if(!id){ alert("Collez l'ID du restaurant."); return; }
+    var base = "https://damocles2002.github.io/Avis-Google/";
+    document.getElementById('qr-avis-a').innerHTML = '';
+    document.getElementById('qr-jukebox-a').innerHTML = '';
+    new QRCode(document.getElementById('qr-avis-a'), {text: base+'avis.html?id='+id, width:140, height:140, colorDark:'#042C53', colorLight:'#ffffff', correctLevel:QRCode.CorrectLevel.H});
+    new QRCode(document.getElementById('qr-jukebox-a'), {text: base+'jukebox.html?id='+id, width:140, height:140, colorDark:'#042C53', colorLight:'#ffffff', correctLevel:QRCode.CorrectLevel.H});
+    document.getElementById('qr-result').style.display = 'block';
+    setTimeout(function(){
+        var ca = document.querySelector('#qr-avis-a canvas'); if(ca){ document.getElementById('dl-avis-a').href = ca.toDataURL('image/png'); document.getElementById('dl-avis-a').download = 'qrcode-avis-'+id+'.png'; }
+        var cj = document.querySelector('#qr-jukebox-a canvas'); if(cj){ document.getElementById('dl-jukebox-a').href = cj.toDataURL('image/png'); document.getElementById('dl-jukebox-a').download = 'qrcode-jukebox-'+id+'.png'; }
+    }, 300);
+}
 </script>
 </body>
 </html>
