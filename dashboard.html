@@ -1472,14 +1472,15 @@ function renderPlatformes(){
             widget=`<a href="${p.lien}" target="_blank" class="pcard-link" style="background:#1877F2;color:white">f ${t.voirPage} Facebook</a>`;
         }
 
+        const configBtn = connected ? widget : `<button onclick="ouvrirParams()" class="pcard-link" style="background:var(--border);color:var(--text);margin-top:8px;border:none;width:100%;padding:9px;border-radius:8px;cursor:pointer;font-size:13px">➕ Configurer ce lien</button>`;
         return`<div class="pcard">
             <div class="pcard-header">
                 <div class="pcard-logo" style="background:${p.color}">${p.emoji}</div>
                 <div class="pcard-name">${p.name}</div>
                 <span class="pcard-status ${statusClass}">${statusTxt}</span>
             </div>
-            <div class="pcard-count" style="color:var(--muted);font-size:13px">${connected?'Lien configuré — cliquez pour voir vos avis':'Ajoutez votre lien dans les Paramètres ⚙️'}</div>
-            ${widget}
+            <div class="pcard-count" style="color:var(--muted);font-size:13px">${connected?'Lien configuré — cliquez pour voir vos avis':'Aucun lien configuré'}</div>
+            ${configBtn}
         </div>`;
     }).join('');
 }
