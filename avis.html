@@ -6,12 +6,12 @@
     <title>Donner un avis</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/supabase.js"></script>
     <style>
-        body { font-family: 'Roboto', sans-serif !important; }
+        body { font-family: 'Open Sans', sans-serif !important; }
         .star { cursor: pointer; transition: transform 0.15s, color 0.15s; color: #e5e7eb; font-size: 2rem; line-height: 1; }
         .star-globale { font-size: 2.9rem; }
         .star:hover { transform: scale(1.2); }
@@ -25,7 +25,10 @@
         .roulette-wrap { position: relative; width: 280px; height: 280px; margin: 20px auto; }
         #roulette-canvas { transition: transform 4s cubic-bezier(0.15, 0.85, 0.15, 0.85); border-radius: 50%; }
         .roulette-pointer { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); font-size: 28px; z-index: 2; }
+    
+        .section-title, .title, .hero h1, .modal-title, .success-title, .stat-box-val { font-family: 'Times New Roman', 'Liberation Serif', Georgia, serif; font-weight: bold; }
     </style>
+    <link rel="icon" type="image/png" href="icons/favicon-32.png">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a73e8">
 </head>

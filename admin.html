@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/supabase.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #070b14;
@@ -24,7 +24,7 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        body { font-family: 'Open Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
         /* TOPBAR */
         .topbar {
@@ -38,10 +38,10 @@
         }
         .brand { display: flex; align-items: center; gap: 12px; }
         .brand-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 0 20px rgba(108,99,255,0.4); }
-        .brand-name { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 20px; }
+        .brand-name { font-family: 'Open Sans', sans-serif; font-weight: 800; font-size: 20px; }
         .admin-badge { background: rgba(108,99,255,0.15); border: 1px solid rgba(108,99,255,0.3); color: var(--accent); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.5px; }
         .topbar-right { display: flex; align-items: center; gap: 12px; }
-        .btn-sm { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text); font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+        .btn-sm { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text); font-family: 'Open Sans', sans-serif; transition: all 0.15s; }
         .btn-sm:hover { background: rgba(255,255,255,0.1); }
         .btn-danger { background: rgba(244,63,94,0.1); border-color: rgba(244,63,94,0.3); color: var(--red); }
         .btn-danger:hover { background: rgba(244,63,94,0.2); }
@@ -57,16 +57,16 @@
         }
         .stat-box::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--accent-color, var(--accent)); }
         .stat-box-label { font-size: 12px; color: var(--muted); font-weight: 500; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .stat-box-val { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; letter-spacing: -1px; }
+        .stat-box-val { font-family: 'Open Sans', sans-serif; font-size: 32px; font-weight: 800; letter-spacing: -1px; }
         .stat-box-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
         /* SECTION HEADER */
         .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
-        .section-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; }
+        .section-title { font-family: 'Open Sans', sans-serif; font-size: 18px; font-weight: 700; }
         .search-bar { display: flex; align-items: center; gap: 10px; }
         .search-input {
             background: var(--card); border: 1px solid var(--border); border-radius: 10px;
-            padding: 9px 16px; font-size: 13px; color: var(--text); font-family: 'DM Sans', sans-serif;
+            padding: 9px 16px; font-size: 13px; color: var(--text); font-family: 'Open Sans', sans-serif;
             outline: none; width: 240px; transition: border-color 0.2s;
         }
         .search-input:focus { border-color: var(--accent); }
@@ -74,7 +74,7 @@
         .btn-add {
             background: var(--accent); color: white; border: none; border-radius: 10px;
             padding: 9px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
-            font-family: 'DM Sans', sans-serif; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+            font-family: 'Open Sans', sans-serif; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
         }
         .btn-add:hover { background: #7c74ff; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(108,99,255,0.3); }
 
@@ -107,7 +107,7 @@
         .btn-action {
             font-size: 11px; font-weight: 600; padding: 5px 10px; border-radius: 7px;
             border: 1px solid var(--border); background: rgba(255,255,255,0.04);
-            cursor: pointer; color: var(--text); font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+            cursor: pointer; color: var(--text); font-family: 'Open Sans', sans-serif; transition: all 0.15s;
             white-space: nowrap;
         }
         .btn-action:hover { background: rgba(255,255,255,0.1); }
@@ -133,16 +133,16 @@
         .modal { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 32px; width: 480px; max-width: 100%; max-height: 90vh; overflow-y: auto; animation: popIn 0.2s ease-out; }
         @keyframes popIn { from { opacity:0; transform: scale(0.95); } to { opacity:1; transform: scale(1); } }
         .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-        .modal-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; }
+        .modal-title { font-family: 'Open Sans', sans-serif; font-size: 18px; font-weight: 700; }
         .modal-close { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; padding: 4px; }
 
         .field { margin-bottom: 16px; }
         .field-label { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 7px; text-transform: uppercase; letter-spacing: 0.5px; display: block; }
-        .field-input { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; font-size: 14px; color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.2s; }
+        .field-input { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; font-size: 14px; color: var(--text); font-family: 'Open Sans', sans-serif; outline: none; transition: border-color 0.2s; }
         .field-input:focus { border-color: var(--accent); }
         .field-input::placeholder { color: var(--muted); }
 
-        .btn-primary { width: 100%; background: var(--accent); color: white; border: none; border-radius: 10px; padding: 13px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; margin-top: 8px; }
+        .btn-primary { width: 100%; background: var(--accent); color: white; border: none; border-radius: 10px; padding: 13px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Open Sans', sans-serif; transition: all 0.2s; margin-top: 8px; }
         .btn-primary:hover { background: #7c74ff; }
         .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -164,7 +164,10 @@
             .main { padding: 16px; }
             .topbar { padding: 0 16px; }
         }
+    
+        .section-title, .title, .hero h1, .modal-title, .success-title, .stat-box-val { font-family: 'Times New Roman', 'Liberation Serif', Georgia, serif; font-weight: bold; }
     </style>
+    <link rel="icon" type="image/png" href="icons/favicon-32.png">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a73e8">
 </head>
@@ -174,18 +177,7 @@
 <div class="topbar">
     <div class="brand">
         <div class="brand-icon" style="background:none;box-shadow:none;padding:0">
-            <svg width="36" height="36" viewBox="0 0 210 210" xmlns="http://www.w3.org/2000/svg">
-                <path d="M105,15 L175,50 L175,120 Q175,175 105,195 Q35,175 35,120 L35,50 Z" fill="#042C53"/>
-                <path d="M105,25 L165,57 L165,118 Q165,168 105,186 Q45,168 45,118 L45,57 Z" fill="#185FA5"/>
-                <path d="M105,38 L155,66 L155,115 Q155,158 105,174 Q55,158 55,115 L55,66 Z" fill="#378ADD" opacity="0.35"/>
-                <circle cx="105" cy="85" r="28" fill="#042C53" opacity="0.25"/>
-                <circle cx="105" cy="85" r="20" fill="white" opacity="0.12"/>
-                <polygon points="105,52 113,75 138,75 119,89 126,112 105,98 84,112 91,89 72,75 97,75" fill="#EF9F27"/>
-                <polygon points="105,58 112,78 133,78 117,90 123,110 105,97 87,110 93,90 77,78 98,78" fill="#FAC775" opacity="0.6"/>
-                <path d="M78,130 L93,112 L105,122 L117,112 L132,130" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                <line x1="72" y1="143" x2="138" y2="143" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
-                <line x1="83" y1="155" x2="127" y2="155" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
-            </svg>
+            
         </div>
         <span class="brand-name">DAMAVIS</span>
         <span class="admin-badge">ADMIN</span>

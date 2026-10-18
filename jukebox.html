@@ -4,21 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Choisir la musique</title>
+    <link rel="icon" type="image/png" href="icons/favicon-32.png">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a73e8">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/supabase.js"></script>
     <style>
-        body { font-family: 'Roboto', sans-serif !important; }
+        body { font-family: 'Open Sans', sans-serif !important; }
         .btn-musique { display:flex; align-items:center; gap:10px; width:100%; text-align:left; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; transition:0.2s; cursor:pointer; background:#fff; }
         .btn-musique:hover { border-color:#1a73e8; background:#f8fbff; }
         .btn-musique:active { transform: scale(0.98); }
         .animate-in { animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity:0; transform:translateY(6px);} to { opacity:1; transform:translateY(0);} }
+    
+        .section-title, .title, .hero h1, .modal-title, .success-title, .stat-box-val { font-family: 'Times New Roman', 'Liberation Serif', Georgia, serif; font-weight: bold; }
     </style>
 </head>
 <body class="bg-[#f8f9fa] min-h-screen flex items-center justify-center p-4 font-sans text-[#202124]">

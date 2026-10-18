@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DAMAVIS — Gestion de réputation</title>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #0a0a0f; --surface: #12121a; --border: #2a2a3d; --accent: #6c63ff; --text: #f0f0f8; --muted: #7070a0; --green: #00d4aa; --red: #ff6584; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; overflow-x: hidden; }
+        body { font-family: 'Open Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; overflow-x: hidden; }
         .bg-orbs { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
         .orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.14; animation: float 9s ease-in-out infinite; }
         .orb1 { width: 420px; height: 420px; background: var(--accent); top: -120px; left: -120px; }
@@ -19,19 +19,19 @@
         .container { position: relative; z-index: 1; max-width: 560px; width: 100%; text-align: center; }
         .logo { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 28px; animation: slideUp 0.5s ease-out both; }
         .logo-icon { width: 60px; height: 60px; flex-shrink: 0; }
-        .logo-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 34px; letter-spacing: -1px; }
+        .logo-text { font-family: 'Open Sans', sans-serif; font-weight: 800; font-size: 34px; letter-spacing: -1px; }
         .logo-tagline { font-size: 12px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
 
         .hero { margin-bottom: 40px; animation: slideUp 0.5s ease-out 0.1s both; }
-        .hero h1 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 28px; margin-bottom: 12px; line-height: 1.2; }
+        .hero h1 { font-family: 'Open Sans', sans-serif; font-weight: 700; font-size: 28px; margin-bottom: 12px; line-height: 1.2; }
         .hero p { font-size: 15px; color: var(--muted); line-height: 1.6; max-width: 420px; margin: 0 auto; }
 
         .cards { display: flex; flex-direction: column; gap: 14px; margin-bottom: 40px; }
         .btn-card { display: flex; align-items: center; gap: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 20px 22px; cursor: pointer; text-decoration: none; color: var(--text); text-align: left; transition: all 0.2s; animation: slideUp 0.5s ease-out both; }
         .btn-card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 10px 30px rgba(108,99,255,0.18); }
         .btn-card .ic { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
-        .btn-card .txt strong { display: block; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; margin-bottom: 2px; }
+        .btn-card .txt strong { display: block; font-family: 'Open Sans', sans-serif; font-weight: 700; font-size: 16px; margin-bottom: 2px; }
         .btn-card .txt span { font-size: 13px; color: var(--muted); }
         .btn-card .arrow { margin-left: auto; color: var(--muted); font-size: 20px; transition: transform 0.2s; }
         .btn-card:hover .arrow { transform: translateX(4px); color: var(--accent); }
@@ -40,11 +40,14 @@
 
         .client-note { background: rgba(255,255,255,0.03); border: 1px dashed var(--border); border-radius: 18px; padding: 22px; animation: slideUp 0.5s ease-out 0.4s both; }
         .client-note .emoji { font-size: 28px; margin-bottom: 8px; }
-        .client-note strong { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; }
+        .client-note strong { font-family: 'Open Sans', sans-serif; font-weight: 700; font-size: 16px; }
         .client-note p { font-size: 13px; color: var(--muted); margin-top: 6px; line-height: 1.6; }
 
         .footer { margin-top: 36px; font-size: 12px; color: var(--muted); animation: slideUp 0.5s ease-out 0.5s both; }
+    
+        .section-title, .title, .hero h1, .modal-title, .success-title, .stat-box-val { font-family: 'Times New Roman', 'Liberation Serif', Georgia, serif; font-weight: bold; }
     </style>
+    <link rel="icon" type="image/png" href="icons/favicon-32.png">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a73e8">
 </head>
@@ -60,21 +63,10 @@
     <!-- Logo -->
     <div class="logo">
         <div class="logo-icon">
-            <svg width="60" height="60" viewBox="0 0 210 210" xmlns="http://www.w3.org/2000/svg">
-                <path d="M105,15 L175,50 L175,120 Q175,175 105,195 Q35,175 35,120 L35,50 Z" fill="#042C53"/>
-                <path d="M105,25 L165,57 L165,118 Q165,168 105,186 Q45,168 45,118 L45,57 Z" fill="#185FA5"/>
-                <path d="M105,38 L155,66 L155,115 Q155,158 105,174 Q55,158 55,115 L55,66 Z" fill="#378ADD" opacity="0.35"/>
-                <circle cx="105" cy="85" r="28" fill="#042C53" opacity="0.25"/>
-                <circle cx="105" cy="85" r="20" fill="white" opacity="0.12"/>
-                <polygon points="105,52 113,75 138,75 119,89 126,112 105,98 84,112 91,89 72,75 97,75" fill="#EF9F27"/>
-                <polygon points="105,58 112,78 133,78 117,90 123,110 105,97 87,110 93,90 77,78 98,78" fill="#FAC775" opacity="0.6"/>
-                <path d="M78,130 L93,112 L105,122 L117,112 L132,130" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                <line x1="72" y1="143" x2="138" y2="143" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
-                <line x1="83" y1="155" x2="127" y2="155" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
-            </svg>
+            
         </div>
         <div style="text-align:left">
-            <div class="logo-text">DAMAVIS</div>
+            <div class="logo-text" style="display:flex;align-items:center;gap:12px;"><img src="logo.svg" alt="DAMAVIS" style="width:42px;height:42px;border-radius:10px;flex-shrink:0;"><span style="color:#042C53;">AMAVIS</span></div>
             <div class="logo-tagline">Gestion de réputation</div>
         </div>
     </div>

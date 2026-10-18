@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DAMAVIS — Connexion</title>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/supabase.js"></script>
     <style>
         :root { --bg: #0a0a0f; --surface: #12121a; --border: #2a2a3d; --accent: #6c63ff; --text: #f0f0f8; --muted: #7070a0; --green: #00d4aa; --red: #ff6584; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow-y: auto; padding: 16px; }
+        body { font-family: 'Open Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow-y: auto; padding: 16px; }
         .bg-orbs { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
         .orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.15; animation: float 8s ease-in-out infinite; }
         .orb1 { width: 400px; height: 400px; background: var(--accent); top: -100px; left: -100px; }
@@ -22,19 +22,19 @@
         @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 36px; }
         .logo-icon { width: 44px; height: 44px; background: var(--accent); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 0 24px rgba(108,99,255,0.4); }
-        .logo-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -0.5px; }
+        .logo-text { font-family: 'Open Sans', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -0.5px; }
         .logo-tagline { font-size: 11px; color: var(--muted); letter-spacing: 0.5px; }
-        .title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 22px; margin-bottom: 6px; }
+        .title { font-family: 'Open Sans', sans-serif; font-weight: 700; font-size: 22px; margin-bottom: 6px; }
         .subtitle { font-size: 14px; color: var(--muted); margin-bottom: 32px; }
         .tabs { display: flex; background: rgba(255,255,255,0.04); border-radius: 12px; padding: 4px; margin-bottom: 28px; gap: 4px; }
         .tab { flex: 1; padding: 9px; text-align: center; border-radius: 9px; font-size: 14px; font-weight: 500; cursor: pointer; color: var(--muted); transition: all 0.2s; }
         .tab.active { background: var(--accent); color: white; }
         .form-group { margin-bottom: 18px; }
         label { display: block; font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
-        input { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+        input { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; color: var(--text); font-family: 'Open Sans', sans-serif; font-size: 15px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
         input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(108,99,255,0.15); }
         input::placeholder { color: var(--muted); }
-        .btn { width: 100%; background: var(--accent); color: white; border: none; border-radius: 12px; padding: 15px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.2s; margin-top: 8px; }
+        .btn { width: 100%; background: var(--accent); color: white; border: none; border-radius: 12px; padding: 15px; font-family: 'Open Sans', sans-serif; font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.2s; margin-top: 8px; }
         .btn:hover { background: #7c74ff; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(108,99,255,0.35); }
         .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
@@ -42,7 +42,7 @@
         .btn-github {
             width: 100%; background: #24292e; color: white;
             border: 1px solid #444d56; border-radius: 12px;
-            padding: 14px 15px; font-family: 'DM Sans', sans-serif;
+            padding: 14px 15px; font-family: 'Open Sans', sans-serif;
             font-weight: 600; font-size: 15px; cursor: pointer;
             transition: all 0.2s; margin-top: 12px;
             display: flex; align-items: center; justify-content: center; gap: 10px;
@@ -65,9 +65,12 @@
         .forgot a:hover { color: var(--accent); }
         .success-state { display: none; text-align: center; padding: 20px 0; animation: slideUp 0.4s ease-out both; }
         .success-icon { width: 64px; height: 64px; background: rgba(0,212,170,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 16px; border: 1px solid rgba(0,212,170,0.3); }
-        .success-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 20px; margin-bottom: 8px; }
+        .success-title { font-family: 'Open Sans', sans-serif; font-weight: 700; font-size: 20px; margin-bottom: 8px; }
         .success-sub { font-size: 14px; color: var(--muted); }
+    
+        .section-title, .title, .hero h1, .modal-title, .success-title, .stat-box-val { font-family: 'Times New Roman', 'Liberation Serif', Georgia, serif; font-weight: bold; }
     </style>
+    <link rel="icon" type="image/png" href="icons/favicon-32.png">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a73e8">
 </head>
@@ -82,21 +85,10 @@
 <div class="card">
     <div class="logo">
         <div class="logo-icon" style="background:none;box-shadow:none;padding:0">
-            <svg width="44" height="44" viewBox="0 0 210 210" xmlns="http://www.w3.org/2000/svg">
-                <path d="M105,15 L175,50 L175,120 Q175,175 105,195 Q35,175 35,120 L35,50 Z" fill="#042C53"/>
-                <path d="M105,25 L165,57 L165,118 Q165,168 105,186 Q45,168 45,118 L45,57 Z" fill="#185FA5"/>
-                <path d="M105,38 L155,66 L155,115 Q155,158 105,174 Q55,158 55,115 L55,66 Z" fill="#378ADD" opacity="0.35"/>
-                <circle cx="105" cy="85" r="28" fill="#042C53" opacity="0.25"/>
-                <circle cx="105" cy="85" r="20" fill="white" opacity="0.12"/>
-                <polygon points="105,52 113,75 138,75 119,89 126,112 105,98 84,112 91,89 72,75 97,75" fill="#EF9F27"/>
-                <polygon points="105,58 112,78 133,78 117,90 123,110 105,97 87,110 93,90 77,78 98,78" fill="#FAC775" opacity="0.6"/>
-                <path d="M78,130 L93,112 L105,122 L117,112 L132,130" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                <line x1="72" y1="143" x2="138" y2="143" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
-                <line x1="83" y1="155" x2="127" y2="155" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
-            </svg>
+            
         </div>
         <div>
-            <div class="logo-text">DAMAVIS</div>
+            <div class="logo-text" style="display:flex;align-items:center;gap:10px;"><img src="logo.svg" alt="DAMAVIS" style="width:34px;height:34px;border-radius:8px;flex-shrink:0;"><span style="color:#042C53;">AMAVIS</span></div>
             <div class="logo-tagline">Gestion de réputation</div>
         </div>
     </div>
