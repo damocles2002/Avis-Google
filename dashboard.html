@@ -412,7 +412,7 @@
             <div class="fgroup">
                 <label class="flabel">🔵 Google Maps (URL de votre fiche)</label>
                 <input type="url" class="finput" id="l-google" placeholder="https://maps.google.com/...">
-                <p class="finput-hint">Optionnel : Place ID Google pour afficher la carte interactive</p>
+                <p class="finput-hint">Optionnel : Place ID Google pour ouvrir la fiche avec les avis (recommandé)</p>
                 <input type="text" class="finput" id="l-google-placeid" placeholder="Place ID : ChIJ..." style="margin-top:6px">
             </div>
             <div class="fgroup">
@@ -1459,7 +1459,8 @@ function renderPlatformes(){
         // Widget spécifique par plateforme
         let widget='';
         if(p.id==='google'&&p.lien){
-            widget+=`<a href="${p.lien}" target="_blank" class="pcard-link" style="background:#4285F4;color:white;margin-top:8px">⭐ ${t.voirAvis} Google</a>`;
+            const voirUrl = p.placeId ? `https://search.google.com/local/writereview?placeid=${encodeURIComponent(p.placeId)}` : p.lien;
+            widget+=`<a href="${voirUrl}" target="_blank" class="pcard-link" style="background:#4285F4;color:white;margin-top:8px">⭐ ${t.voirAvis} Google</a>`;
             widget+=`<a href="https://business.google.com/reviews" target="_blank" class="pcard-link" style="background:#1a73e8;color:white;margin-top:8px">✍️ Répondre aux avis Google</a>`;
         }
         if(p.id==='tripadvisor'&&p.lien){
